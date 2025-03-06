@@ -1,0 +1,84 @@
+<div class="sidebar">
+  <h2 class="sidebar-title">My Account</h2>
+
+  <div class="menu-item">
+    <a href="/userProfile" class="menu-link">Dashboard</a>
+  </div>
+
+  <div class="menu-item">
+    <a href="/loadAddresses" class="menu-link">Addresses</a>
+  </div>
+
+  <div class="menu-item">
+    <a href="/cart" class="menu-link">Cart</a>
+  </div>
+
+  <div class="menu-item">
+    <a href="/wishlist" class="menu-link">Wishlist</a>
+  </div>
+
+  <div class="menu-item">
+    <a href="/orderList" class="menu-link">Orders</a>
+  </div>
+
+  <div class="menu-item">
+    <a href="/wallet" class="menu-link">Wallet</a>
+  </div>
+
+
+</div>
+
+<style>
+/* Sidebar Styling */
+.sidebar {
+  width: 230px;
+  background-color: #fff;
+  height: calc(100vh - 150px);
+  position: absolute;
+  top: 126px;
+  left: 0;
+  padding: 20px;
+  box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+  font-family: 'Poppins', sans-serif;
+}
+
+/* Sidebar Title */
+.sidebar-title {
+  text-align: center;
+  margin-bottom: 20px;
+  font-size: 1.4rem;
+  font-weight: 600;
+  color: #333;
+}
+
+/* Menu Items */
+.menu-item {
+  margin-bottom: 10px;
+}
+
+/* Menu Links */
+.menu-link {
+  display: block;
+  padding: 12px 15px;
+  font-size: 1rem;
+  font-weight: 500;
+  text-decoration: none;
+  color: #333;
+  background: rgba(0, 0, 0, 0.05);
+  border-radius: 5px;
+  transition: all 0.3s ease;
+}
+
+/* Hover Effect */
+.menu-link:hover {
+  background: #ff3f6c;
+  color: #fff;
+  transform: scale(1.05);
+}
+
+/* Active Menu */
+.menu-link:active {
+  background: #e62e5c;
+  color: #fff;
+}
+</style>

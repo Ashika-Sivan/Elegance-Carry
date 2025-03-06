@@ -1,0 +1,416 @@
+<%- include("../layouts/user/header.ejs") %>
+<%- include("../layouts/user/sidebar.ejs") %>
+<body>
+    <style>
+        body {
+            font-family: 'Whitney', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #fafbfc;
+            color: #282c3f;
+        }
+        .orders-container {
+            max-width: 1000px;
+            margin: 20px auto;
+            padding: 20px;
+            background: white;
+            border-radius: 4px;
+            box-shadow: 0 1px 3px rgba(40,44,63,0.1);
+        }
+        .order-card {
+            border-bottom: 1px solid #eaeaec;
+            padding: 16px 0;
+        }
+        .order-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .order-id {
+            font-size: 14px;
+            color: #535766;
+        }
+        .order-status {
+            font-size: 14px;
+            font-weight: 600;
+            padding: 4px 8px;
+            border-radius: 4px;
+        }
+        /* Status-specific colors */
+        .order-status[data-status="Delivered"] {
+            color: #03a685;
+        }
+        .order-status[data-status="Cancelled"] {
+            color: #ff3f3f;
+        }
+        .order-status[data-status="Pending"] {
+            color: #f39c12;
+        }
+        .order-status[data-status="Processing"] {
+            color: #3498db;
+        }
+        .order-status[data-status="Return Request"] {
+            color: #9b59b6;
+        }
+        .order-status[data-status="Returned"] {
+            color: #e74c3c;
+        }
+        .order-items {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        .order-image img {
+            width: 60px;
+            height: 80px;
+            object-fit: cover;
+            border-radius: 4px;
+        }
+        .order-details {
+            flex-grow: 1;
+        }
+        .product-name {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 4px;
+            color: #282c3f;
+        }
+        .product-price {
+            font-size: 14px;
+            font-weight: 600;
+            color: #282c3f;
+        }
+        .order-actions {
+            margin-top: 10px;
+            display: flex;
+            gap: 10px;
+        }
+        .view-btn, .cancel-btn, .return-btn {
+            padding: 8px 14px;
+            border: none;
+            border-radius: 4px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            text-transform: uppercase;
+        }
+        .view-btn {
+            background: #526cd0;
+            color: white;
+        }
+        .cancel-btn {
+            background: #ff3f6c;
+            color: white;
+        }
+        .return-btn {
+            background: #9b59b6;
+            color: white;
+        }
+        .cancel-btn:disabled, .return-btn:disabled {
+            background: #cccccc;
+            cursor: not-allowed;
+        }
+        .order-date {
+            font-size: 12px;
+            color: #686b78;
+            margin-top: 4px;
+        }
+        .order-summary {
+            margin-top: 8px;
+            font-size: 13px;
+            color: #686b78;
+        }
+        /* Add styles for return form modal */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.4);
+        }
+        .modal-content {
+            background-color: #fefefe;
+            margin: 10% auto;
+            padding: 20px;
+            border-radius: 5px;
+            width: 50%;
+            max-width: 500px;
+        }
+        .close-btn {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+        }
+        .form-control {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .submit-btn {
+            background: #9b59b6;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+    </style>
+    <main>
+        <div class="orders-container">
+            <h2>My Orders</h2>
+            <% if (orders && orders.length > 0) { %>
+                <% orders.forEach((order) => { %>
+                    <div class="order-card">
+                        <div class="order-header">
+                            <div>
+                                <span class="order-id">Order ID: <%= order.orderId %></span>
+                                <div class="order-date">Ordered on: <%= order.invoiceDate %></div>
+                            </div>
+                            <span class="order-status" data-status="<%= order.status %>"><%= order.status %></span>
+                        </div>
+                        <% if (order.orderedItems && order.orderedItems.length > 0) { %>
+                            <% order.orderedItems.forEach((item, index) => { %>
+                                <div class="order-items">
+                                    <div class="order-image">
+                                        <img src="/img/<%= item.product.productImage ? item.product.productImage[0] : 'default.png' %>"
+                                             alt="<%= item.product.productName %>">
+                                    </div>
+                                    <div class="order-details">
+                                        <div class="product-name"><%= item.product.productName %></div>
+                                        <div class="product-price">₹<%= item.price %> x <%= item.quantity %></div>
+                                    </div>
+                                </div>
+                            <% }) %>
+                        <% } %>
+                        <div class="order-summary">
+                            <% if (order.discount > 0) { %>
+                                <div>Discount Applied: ₹<%= order.discount %></div>
+                            <% } %>
+                            <div>Total Amount: ₹<%= order.finalAmount %></div>
+                        </div>
+                        <div class="order-actions">
+                            <button onclick="window.location.href='/order/<%=order._id %>'" class="view-btn">View Details</button>
+                            
+                            <button class="cancel-btn" onclick="cancelOrder('<%= order.orderId %>')" 
+                                    <%= ['Delivered', 'Cancelled', 'Return Request', 'Returned', 'Shipped'].includes(order.status) ? 'disabled' : '' %>>
+                                Cancel Order
+                            </button>
+                            
+                            <button class="return-btn" onclick="openReturnModal('<%= order.orderId %>')"
+                                <%= order.status === 'Delivered' ? '' : 'disabled' %>>
+                            Return Order
+                        </button>
+                        </div>
+                    </div>
+                <% }) %>
+            <% } else { %>
+                <p>No orders found.</p>
+            <% } %>
+        </div>
+    </main>
+    
+    <!-- Return Order Modal -->
+    <div id="returnModal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeReturnModal()">&times;</span>
+            <h3>Return Order</h3>
+            <form id="returnForm">
+                <input type="hidden" id="returnOrderId" name="orderId">
+                
+                <div class="form-group">
+                    <label for="returnReason">Reason for Return:</label>
+                    <select id="returnReason" name="returnReason" class="form-control" required>
+                        <option value="">Select a reason</option>
+                        <option value="Damaged Product">Damaged Product</option>
+                        <option value="Wrong Product">Wrong Product</option>
+                        <option value="Quality Issue">Quality Issue</option>
+                        <option value="Not as Described">Not as Described</option>
+                        <option value="Better Price Available">Better Price Available</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="returnComments">Additional Comments:</label>
+                    <textarea id="returnComments" name="returnComments" class="form-control" rows="4"></textarea>
+                </div>
+                
+                <button type="submit" class="submit-btn">Submit Return Request</button>
+            </form>
+        </div>
+    </div>
+</body>
+
+<script>
+// Cancel Order Function
+function cancelOrder(orderId) {
+    // First confirmation
+    Swal.fire({
+        title: 'Cancel Order',
+        text: 'Are you sure you want to cancel this order?',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#ff3f6c',
+        cancelButtonColor: '#3f4254',
+        confirmButtonText: 'Yes, cancel it!',
+        cancelButtonText: 'No, keep it'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            // Make the API call
+            fetch(`/cancel-order/${orderId}`, {
+                method: 'POST',
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Success message
+                    Swal.fire({
+                        title: 'Cancelled!',
+                        text: data.message || 'Order has been cancelled successfully.',
+                        icon: 'success',
+                        confirmButtonColor: '#ff3f6c'
+                    }).then(() => {
+                        window.location.reload();
+                    });
+                } else {
+                    // Error message
+                    Swal.fire({
+                        title: 'Error!',
+                        text: data.message || 'Failed to cancel order',
+                        icon: 'error',
+                        confirmButtonColor: '#ff3f6c'
+                    });
+                }
+            })
+            .catch(error => {
+                // Network or other error
+                console.error('Error:', error);
+                Swal.fire({
+                    title: 'Error!',
+                    text: 'An error occurred while cancelling the order',
+                    icon: 'error',
+                    confirmButtonColor: '#ff3f6c'
+                });
+            });
+        }
+    });
+}
+
+// Return Order Functions
+const returnModal = document.getElementById('returnModal');
+const returnForm = document.getElementById('returnForm');
+const returnOrderIdInput = document.getElementById('returnOrderId');
+
+// Open return modal
+function openReturnModal(orderId) {
+    returnOrderIdInput.value = orderId;
+    returnModal.style.display = 'block';
+}
+
+// Close return modal
+function closeReturnModal() {
+    returnModal.style.display = 'none';
+    returnForm.reset();
+}
+
+// Close modal if clicked outside of it
+window.onclick = function(event) {
+    if (event.target === returnModal) {
+        closeReturnModal();
+    }
+}
+
+// Handle return form submission
+returnForm.addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const orderId = returnOrderIdInput.value;
+    const returnReason = document.getElementById('returnReason').value;
+    const returnComments = document.getElementById('returnComments').value;
+    
+    // First confirmation
+    Swal.fire({
+        title: 'Return Order',
+        text: 'Are you sure you want to request a return for this order?',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#9b59b6',
+        cancelButtonColor: '#3f4254',
+        confirmButtonText: 'Yes, proceed!',
+        cancelButtonText: 'No, cancel'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            // Make the API call
+            fetch(`/return-order/${orderId}`, {
+                method: 'POST',
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    reason: returnReason,
+                    comments: returnComments
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                closeReturnModal();
+                
+                if (data.success) {
+                    // Success message
+                    Swal.fire({
+                        title: 'Return Requested!',
+                        text: data.message || 'Return request has been submitted successfully.',
+                        icon: 'success',
+                        confirmButtonColor: '#9b59b6'
+                    }).then(() => {
+                        window.location.reload();
+                    });
+                } else {
+                    // Error message
+                    Swal.fire({
+                        title: 'Error!',
+                        text: data.message || 'Failed to submit return request',
+                        icon: 'error',
+                        confirmButtonColor: '#9b59b6'
+                    });
+                }
+            })
+            .catch(error => {
+                closeReturnModal();
+                
+                // Network or other error
+                console.error('Error:', error);
+                Swal.fire({
+                    title: 'Error!',
+                    text: 'An error occurred while submitting return request',
+                    icon: 'error',
+                    confirmButtonColor: '#9b59b6'
+                });
+            });
+        }
+    });
+});
+</script>
+
+<%- include("../layouts/user/footer.ejs") %>

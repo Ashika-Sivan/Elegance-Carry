@@ -1,0 +1,320 @@
+<%- include('../layouts/admin/header') %>
+
+<style>
+    :root {
+        --primary-color: #2563eb;
+        --success-color: #059669;
+        --warning-color: #d97706;
+        --danger-color: #dc2626;
+        --text-primary: #111827;
+        --text-secondary: #4b5563;
+        --border-color: #e5e7eb;
+        --bg-secondary: #f3f4f6;
+    }
+
+    .order-details-container {
+        max-width: 1200px;
+        margin: 2rem auto 2rem 20rem;
+        padding: 1.5rem;
+    }
+
+    .page-title {
+        font-size: 1.875rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 1.5rem;
+        padding-bottom: 0.75rem;
+        border-bottom: 2px solid var(--border-color);
+    }
+
+    .details-card {
+        background: white;
+        border-radius: 0.75rem;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        transition: transform 0.2s ease;
+    }
+
+    .details-card:hover {
+        transform: translateY(-2px);
+    }
+
+    .section-title {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 1.25rem;
+        padding-bottom: 0.75rem;
+        border-bottom: 2px solid var(--border-color);
+        display: flex;
+        align-items: center;
+    }
+
+    .info-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1.5rem;
+    }
+
+    .info-item {
+        margin-bottom: 1rem;
+    }
+
+    .info-label {
+        font-size: 0.875rem;
+        color: var(--text-secondary);
+        margin-bottom: 0.375rem;
+        font-weight: 500;
+    }
+
+    .info-value {
+        font-size: 1rem;
+        color: var(--text-primary);
+        font-weight: 500;
+    }
+
+    .products-table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0;
+        margin-top: 1rem;
+    }
+
+    .products-table th,
+    .products-table td {
+        padding: 1rem;
+        text-align: left;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .products-table th {
+        background-color: var(--bg-secondary);
+        font-weight: 600;
+        color: var(--text-primary);
+        text-transform: uppercase;
+        font-size: 0.75rem;
+        letter-spacing: 0.05em;
+    }
+
+    .products-table tr:hover {
+        background-color: #f9fafb;
+    }
+
+    .product-image {
+        width: 70px;
+        height: 70px;
+        border-radius: 0.5rem;
+        object-fit: cover;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+
+    .status-badge {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.375rem 0.875rem;
+        border-radius: 9999px;
+        font-size: 0.875rem;
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.025em;
+    }
+
+    .status-Processing {
+        background-color: #fef3c7;
+        color: #92400e;
+    }
+
+    .status-Shipped {
+        background-color: #dbeafe;
+        color: #1e40af;
+    }
+
+    .status-Delivered {
+        background-color: #d1fae5;
+        color: #065f46;
+    }
+
+    .status-Cancelled {
+        background-color: #fee2e2;
+        color: #991b1b;
+    }
+
+    .order-totals {
+        margin-top: 1.5rem;
+        padding-top: 1.5rem;
+        border-top: 1px solid var(--border-color);
+    }
+
+    .total-row {
+        display: flex;
+        justify-content: flex-end;
+        align-items: center;
+        margin-bottom: 0.5rem;
+        font-size: 0.875rem;
+        color: var(--text-secondary);
+    }
+
+    .total-row.final {
+        font-size: 1.125rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-top: 0.75rem;
+        padding-top: 0.75rem;
+        border-top: 2px solid var(--border-color);
+    }
+
+    .total-label {
+        margin-right: 1rem;
+    }
+
+    .total-value {
+        min-width: 120px;
+        text-align: right;
+    }
+
+    @media (max-width: 1024px) {
+        .order-details-container {
+            margin-left: 1rem;
+            margin-right: 1rem;
+        }
+
+        .info-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .products-table {
+            display: block;
+            overflow-x: auto;
+            white-space: nowrap;
+        }
+    }
+</style>
+
+<div class="order-details-container">
+    <h1 class="page-title">Order Details</h1>
+
+    <!-- Order Summary -->
+    <div class="details-card">
+        <h2 class="section-title">Order Summary</h2>
+        <div class="info-grid">
+            <div class="info-item">
+                <div class="info-label">Order ID</div>
+                <div class="info-value">#<%= order._id %></div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">Order Date</div>
+                <div class="info-value"><%= new Date(order.createdAt).toLocaleDateString() %></div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">Status</div>
+                <div class="info-value">
+                    <span class="status-badge status-<%= order.status %>">
+                        <%= order.status %>
+                    </span>
+                </div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">Total Amount</div>
+                <div class="info-value">₹<%= order.finalAmount.toLocaleString() %></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Customer Details -->
+    <div class="details-card">
+        <h2 class="section-title">Customer Information</h2>
+        <div class="info-grid">
+            <div class="info-item">
+                <div class="info-label">Name</div>
+                <div class="info-value"><%= order.user ? order.user.name : 'N/A' %></div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">Email</div>
+                <div class="info-value"><%= order.user ? order.user.email : 'N/A' %></div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">Phone</div>
+                <div class="info-value"><%= order.user ? order.user.phone : 'N/A' %></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Shipping Address -->
+    <div class="details-card">
+        <h2 class="section-title">Shipping Address</h2>
+        <div class="info-grid">
+            <div class="info-item">
+                <div class="info-label">Street Address</div>
+                <div class="info-value"><%= order.address.street %></div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">City</div>
+                <div class="info-value"><%= order.address.city %></div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">State</div>
+                <div class="info-value"><%= order.address.state %></div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">PIN Code</div>
+                <div class="info-value"><%= order.address.pincode %></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Ordered Products -->
+    <div class="details-card">
+        <h2 class="section-title">Ordered Products</h2>
+        <div class="table-container">
+            <table class="products-table">
+                <thead>
+                    <tr>
+                        <th>Product</th>
+                        <th>Name</th>
+                        <th>Price</th>
+                        <th>Quantity</th>
+                        <th>Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% order.orderedItems.forEach(item => { %>
+                    <tr>
+                        <td>
+                            <img src="/img/<%= item.product.productImage[0] %>" 
+                                alt="<%= item.product.productName %>" 
+                                class="product-image">
+                        </td>
+                        <td><%= item.product.productName %></td>
+                        <td>₹<%= item.price.toLocaleString() %></td>
+                        <td><%= item.quantity %></td>
+                        <td>₹<%= (item.price * item.quantity).toLocaleString() %></td>
+                    </tr>
+                    <% }) %>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Order Totals -->
+        <div class="order-totals">
+            <div class="total-row">
+                <span class="total-label">Subtotal:</span>
+                <span class="total-value">₹<%= order.totalPrice.toLocaleString() %></span>
+            </div>
+            <% if (order.discount) { %>
+            <div class="total-row">
+                <span class="total-label">Discount:</span>
+                <span class="total-value">-₹<%= order.discount.toLocaleString() %></span>
+            </div>
+            <% } %>
+            <div class="total-row final">
+                <span class="total-label">Final Total:</span>
+                <span class="total-value">₹<%= order.finalAmount.toLocaleString() %></span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<%- include('../layouts/admin/footer') %>

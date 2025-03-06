@@ -1,0 +1,118 @@
+<%- include("../layouts/user/header.ejs") %>
+<%- include("../layouts/user/sidebar.ejs")%>
+
+<div style="margin-bottom: 10rem;">
+  <!-- Edit Profile Container -->
+  <div class="profile-container">
+    <div class="profile-box">
+      <h1>Edit Profile</h1>
+      <form action="/edit-profile" method="POST">
+        <ul class="profile-info">
+          <li>
+            <label>Full Name:</label>
+            <input type="text" name="fullName" value="<%= user.name %>" required>
+          </li>
+          <li>
+            <label>Phone:</label>
+            <input type="text" name="phone" value="<%= user.phone %>" required>
+          </li>
+        </ul>
+        <div class="save-changes">
+          <button type="submit">Save Changes</button>
+          <button type="button" onclick="window.location.href='/userProfile';">Cancel</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<%- include("../layouts/user/footer.ejs") %>
+
+<style>
+  /* Existing styles from your profile page */
+  .profile-container {
+    margin-left: 270px;
+    padding: 20px;
+  }
+
+  .profile-box {
+    background-color: #fff;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    max-width: 600px;
+    margin: auto;
+  }
+
+  /* Additional styles for the edit form */
+  .profile-info {
+    list-style: none;
+    padding: 0;
+  }
+
+  .profile-info li {
+    margin-bottom: 20px;
+  }
+
+  .profile-info label {
+    display: block;
+    font-weight: bold;
+    margin-bottom: 5px;
+    color: #555;
+  }
+
+  .profile-info input {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 16px;
+  }
+
+  .profile-info input:focus {
+    outline: none;
+    border-color: #0044cc;
+    box-shadow: 0 0 5px rgba(0, 68, 204, 0.2);
+  }
+
+  .save-changes {
+    text-align: center;
+    margin-top: 20px;
+  }
+
+  .save-changes button {
+    background-color: #0044cc;
+    color: #fff;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 4px;
+    cursor: pointer;
+    margin: 0 10px;
+    font-size: 16px;
+  }
+
+  .save-changes button[type="button"] {
+    background-color: #666;
+  }
+
+  .save-changes button:hover {
+    opacity: 0.9;
+  }
+
+  @media screen and (max-width: 768px) {
+    .profile-container {
+      margin-left: 220px;
+    }
+  }
+
+  @media screen and (max-width: 480px) {
+    .profile-container {
+      margin-left: 120px;
+    }
+    
+    .save-changes button {
+      width: 100%;
+      margin: 5px 0;
+    }
+  }
+</style>

@@ -1,0 +1,134 @@
+<%- include("../../views/layouts/admin/header") %>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - Add Coupon</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+</head>
+<body>
+    <div class="container mt-5 " style="margin-left: 270px;">
+        <h2 class="text-center">Add New Coupon</h2>
+
+        <% if (message) { %>
+            <div class="alert alert-info"><%= message %></div>
+        <% } %>
+
+    <form action="/admin/createCoupon" method="POST" class="mt-4">
+            <div class="mb-3">
+                <label for="name" class="form-label">Coupon Name:</label>
+                <input type="text" id="name" name="name" class="form-control" required>
+            </div>
+
+            <div class="mb-3">
+                <label for="expiryOn" class="form-label">Expiry Date:</label>
+                <input type="date" id="expiryOn" name="expiryOn" class="form-control" required>
+            </div>
+
+             <div class="mb-3">
+                <label for="discountAmount" class="form-label">Discount Amount:</label>
+                <input type="number" id="discountAmount" name="discountAmount" class="form-control" required>
+            </div> 
+
+            <!-- <div class="mb-3">
+                <label for="discountPercentage" class="form-label">Discount Percentage (Optional):</label>
+                <input type="number" id="discountPercentage" name="discountPercentage" class="form-control">
+            </div>  -->
+
+            <div class="mb-3">
+                <label for="minimumPrice" class="form-label">Minimum Purchase Price:</label>
+                <input type="number" id="minimumPrice" name="minimumPrice" class="form-control" required>
+            </div>
+
+            <div class="mb-3">
+                <label for="maxUsage" class="form-label">Maximum Usage:</label>
+                <input type="number" id="maxUsage" name="maxUsage" class="form-control" required>
+            </div>
+
+            <button type="submit" class="btn btn-primary">Add Coupon</button>
+        </form>
+
+        <hr>
+
+        <h3 class="text-center">Existing Coupons</h3>
+        <table class="table table-bordered mt-3">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Expiry Date</th>
+                    <th>Discount Amount</th>
+                    <!-- <th>Discount %</th> -->
+                    <th>Min Purchase</th>
+                    <!-- <th>Max Usage</th> -->
+                    <th>Used Count</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                <% coupons.forEach(coupon => { %>
+                    <tr>
+                        <td><%= coupon.name %></td>
+                        <td><%= new Date(coupon.expiryOn).toLocaleDateString() %></td>
+                        <td>₹<%= coupon.discountAmount %></td>
+                        <td>₹<%= coupon.minimumPrice %></td>
+                        <td><%=coupon.maxUsage%></td>
+                        <td><%= coupon.usedCount %></td>
+                        <td>
+                            <form id="delete-form-<%= coupon._id %>" action="/admin/deleteCoupon/<%= coupon._id %>" method="POST">
+                                <button type="button" class="btn btn-danger btn-sm delete-coupon-btn" data-coupon-id="<%= coupon._id %>">Delete</button>
+                            </form>
+                        </td>
+                    </tr>
+                <% }) %>
+            </tbody>
+        </table>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.all.min.js"></script>
+
+<script>
+    <% if (message) { %>
+            Swal.fire({
+                title: '<%= message.includes("successfully") ? "Success" : "Error" %>',
+                text: '<%= message %>',
+                icon: '<%= message.includes("successfully") ? "success" : "error" %>',
+                confirmButtonText: 'OK'
+            });
+        <% } %>
+
+        // Delete button logic with SweetAlert2
+        document.querySelectorAll('.delete-coupon-btn').forEach(button => {
+            button.addEventListener('click', function () {
+                const couponId = this.getAttribute('data-coupon-id');
+
+                Swal.fire({
+                    title: 'Are you sure?',
+                    text: "You won't be able to revert this!",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#3085d6',
+                    cancelButtonColor: '#d33',
+                    confirmButtonText: 'Yes, delete it!',
+                    cancelButtonText: 'No, keep it'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        const form = document.getElementById(`delete-form-${couponId}`);
+                        form.submit();
+                    }
+                });
+            });
+        });
+</script>
+
+
+
+
+
+
+
+
+</body>
+</html>
+<%- include("../../views/layouts/admin/footer") %>

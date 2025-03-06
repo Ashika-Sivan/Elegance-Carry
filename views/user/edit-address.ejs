@@ -1,0 +1,415 @@
+<%- include("../../views/layouts/user/header") %>
+<%- include("../layouts/user/sidebar.ejs")%>
+
+<style>
+  .address-container {
+    max-width: 1200px;
+    margin-left: 20rem;
+    padding: 20px;
+    background-color: #fff;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
+  }
+
+  .page-title {
+    color: #282c3f;
+    font-size: 24px;
+    font-weight: 600;
+    margin-bottom: 40px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #eaeaec;
+  }
+
+  .address-form {
+    background: #fff;
+    padding: 30px;
+    border-radius: 4px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
+  }
+
+  .form-row {
+    display: flex;
+    gap: 24px;
+    margin-bottom: 24px;
+  }
+
+  .form-group {
+    flex: 1;
+  }
+
+  label {
+    display: block;
+    color: #282c3f;
+    font-size: 14px;
+    font-weight: 500;
+    margin-bottom: 8px;
+  }
+
+  .form-input,
+  .form-control {
+    width: 100%;
+    padding: 12px 16px;
+    border: 1px solid #d4d5d9;
+    border-radius: 4px;
+    font-size: 14px;
+    color: #282c3f;
+    transition: all 0.3s ease;
+  }
+
+  .form-input:focus,
+  .form-control:focus {
+    border-color: #ff3f6c;
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(255, 63, 108, 0.1);
+  }
+
+  .form-input:hover,
+  .form-control:hover {
+    border-color: #282c3f;
+  }
+
+  .submit-btn,
+  .btn-primary {
+    background: #ff3f6c;
+    color: #fff;
+    border: none;
+    padding: 12px 45px;
+    font-size: 14px;
+    font-weight: 600;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-transform: uppercase;
+    margin-top: 20px;
+    width: 100%;
+  }
+
+  .submit-btn:hover,
+  .btn-primary:hover {
+    background: #ff527b;
+  }
+
+  .text-danger {
+    color: #ff3f6c;
+    font-size: 12px;
+    margin-top: 4px;
+  }
+
+  /* Responsive Design */
+  @media (max-width: 768px) {
+    .form-row {
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .address-form {
+      padding: 20px;
+    }
+  }
+
+  /* Input type number - remove arrows */
+  input[type="number"]::-webkit-inner-spin-button,
+  input[type="number"]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+
+</style>
+
+<div class="address-container">
+   <h3 class="page-title">Edit User Address</h3>
+   <form id="addressForm" method="POST" action="/editAddress?id=<%= address._id.toLocaleString() %>" class="address-form">
+      <div class="form-row">
+        <div class="form-group">
+            <label for="addressType">Address Type</label>
+            <select class="form-input" id="addressType" name="addressType" required>
+                <option value="" disabled>Select Address Type</option>
+                <option value="Home" <%= address.addressType === 'home' ? 'selected' : '' %>>Home</option>
+                <option value="Office" <%= address.addressType === 'Office' ? 'selected' : '' %>>Office</option>
+                <option value="Other" <%= address.addressType === 'Other' ? 'selected' : '' %>>Other</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="name">Name</label>
+            <input type="text" class="form-control" value="<%= address.name %>" id="name" name="name" required>
+        </div>
+
+        <div class="form-group">
+            <label for="city">City</label>
+            <input type="text" class="form-control" value="<%= address.city %>" id="city" name="city" required>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+            <label for="landMark">Landmark</label>
+            <input type="text" class="form-control" value="<%= address.landMark %>" id="landMark" name="landMark" required>
+        </div>
+
+        <div class="form-group">
+            <label for="state">State</label>
+            <select class="form-input" id="state" name="state" required>
+                <option value="" disabled selected>Select State</option>
+                <option value="Andhra Pradesh">Andhra Pradesh</option>
+                <option value="Arunachal Pradesh">Arunachal Pradesh</option>
+                <option value="Assam">Assam</option>
+                <option value="Bihar">Bihar</option>
+                <option value="Chhattisgarh">Chhattisgarh</option>
+                <option value="Goa">Goa</option>
+                <option value="Gujarat">Gujarat</option>
+                <option value="Haryana">Haryana</option>
+                <option value="Himachal Pradesh">Himachal Pradesh</option>
+                <option value="Jharkhand">Jharkhand</option>
+                <option value="Karnataka">Karnataka</option>
+                <option value="Kerala">Kerala</option>
+                <option value="Madhya Pradesh">Madhya Pradesh</option>
+                <option value="Maharashtra">Maharashtra</option>
+                <option value="Manipur">Manipur</option>
+                <option value="Meghalaya">Meghalaya</option>
+                <option value="Mizoram">Mizoram</option>
+                <option value="Nagaland">Nagaland</option>
+                <option value="Odisha">Odisha</option>
+                <option value="Punjab">Punjab</option>
+                <option value="Rajasthan">Rajasthan</option>
+                <option value="Sikkim">Sikkim</option>
+                <option value="Tamil Nadu">Tamil Nadu</option>
+                <option value="Telangana">Telangana</option>
+                <option value="Tripura">Tripura</option>
+                <option value="Uttar Pradesh">Uttar Pradesh</option>
+                <option value="Uttarakhand">Uttarakhand</option>
+                <option value="West Bengal">West Bengal</option>
+                <option value="Andaman and Nicobar Islands">Andaman and Nicobar Islands</option>
+                <option value="Chandigarh">Chandigarh</option>
+                <option value="Dadra and Nagar Haveli and Daman and Diu">Dadra and Nagar Haveli and Daman and Diu</option>
+                <option value="Lakshadweep">Lakshadweep</option>
+                <option value="Delhi">Delhi</option>
+                <option value="Puducherry">Puducherry</option>
+            </select>
+        </div>  
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+            <label for="pincode">Pincode</label>
+            <input type="number" class="form-control" value="<%= address.pincode %>" id="pincode" name="pincode" required>
+        </div>
+
+        <div class="form-group">
+            <label for="phone">Phone</label>
+            <input type="number" class="form-control" value="<%= address.phone %>" id="phone" name="phone" required>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+            <label for="altPhone">Alternate Phone</label>
+            <input type="number" class="form-control" value="<%= address.altPhone %>" id="altPhone" name="altPhone" required>
+        </div>
+      </div>
+
+      <button type="submit" class="btn-primary">Save Address</button>
+   </form>
+</div>
+
+
+<script>
+   document.getElementById('submitButton').addEventListener('click', function (event) {
+       if (!validateForm()) {
+           event.preventDefault();
+       }
+   });
+
+   function validateForm() {
+       let isValid = true;
+       const requiredFields = ["addressType", "name", "city", "landMark", "state", "pincode", "phone", "altPhone"];
+       requiredFields.forEach(function (field) {
+           const input = document.getElementById(field);
+           if (input.value.trim() === "") {
+               Swal.fire({
+                   title: 'Error',
+                   text: `Please fill all the fields.`,
+                   icon: 'error'
+               });
+               isValid = false;
+           }
+       });
+       return isValid;
+   }
+
+   // Name validation
+function isValidName(name) {
+    if (name.length < 4) {
+        return { valid: false, message: "Name must be at least 4 characters long" };
+    }
+    return { valid: true };
+}
+
+// Phone number validation
+function isValidPhoneNumber(phone) {
+    // Check if it's exactly 10 digits
+    if (!/^\d{10}$/.test(phone)) {
+        return { valid: false, message: "Please enter a 10-digit phone number" };
+    }
+
+    // Check if first digit is 6 or above
+    if (parseInt(phone[0]) < 6) {
+        return { valid: false, message: "Phone number must start with 6, 7, 8, or 9" };
+    }
+
+    // Check for continuous zeros or ones
+    if (phone.includes('000') || phone.includes('111')) {
+        return { valid: false, message: "Phone number cannot have 3 zeros or ones in a row" };
+    }
+
+    // Check for repeated numbers (e.g., 9999999999)
+    if (/^(\d)\1{9}$/.test(phone)) {
+        return { valid: false, message: "Phone number cannot be 10 repeated digits" };
+    }
+
+    return { valid: true };
+}
+
+// Pincode validation
+function isValidPincode(pincode) {
+    // Check if it's exactly 6 digits and starts with 6
+    if (!/^\d{6}$/.test(pincode)) {
+        return { valid: false, message: "Pincode must be exactly 6 digits" };
+    }
+
+    if (pincode[0] !== '6') {
+        return { valid: false, message: "Pincode must start with 6" };
+    }
+
+    return { valid: true };
+}
+
+// Set up input restrictions for phone numbers and pincode
+function setupInputRestrictions() {
+    const phoneInputs = document.querySelectorAll('input[type="number"]');
+    phoneInputs.forEach(input => {
+        input.addEventListener('input', function() {
+            if (this.id === 'pincode') {
+                this.value = this.value.slice(0, 6);
+            } else {
+                this.value = this.value.slice(0, 10);
+            }
+        });
+
+        // Prevent typing non-numeric characters
+        input.addEventListener('keypress', function(e) {
+            if (!/^\d$/.test(e.key)) {
+                e.preventDefault();
+            }
+        });
+
+        // Prevent paste of invalid content
+        input.addEventListener('paste', function(e) {
+            e.preventDefault();
+            const pastedText = (e.clipboardData || window.clipboardData).getData('text');
+            if (/^\d+$/.test(pastedText)) {
+                if (this.id === 'pincode') {
+                    this.value = pastedText.slice(0, 6);
+                } else {
+                    this.value = pastedText.slice(0, 10);
+                }
+            }
+        });
+    });
+}
+
+// Main form validation
+function validateForm() {
+    const requiredFields = ["addressType", "name", "city", "landMark", "state", "pincode", "phone", "altPhone"];
+    
+    // Check required fields
+    for (const field of requiredFields) {
+        const input = document.getElementById(field);
+        if (!input.value.trim()) {
+            Swal.fire({
+                title: 'Missing Information',
+                text: 'Please fill in all empty fields',
+                icon: 'error'
+            });
+            return false;
+        }
+    }
+
+    // Validate name
+    const name = document.getElementById('name').value;
+    const nameValidation = isValidName(name);
+    if (!nameValidation.valid) {
+        Swal.fire({
+            title: 'Name Error',
+            text: nameValidation.message,
+            icon: 'error'
+        });
+        return false;
+    }
+
+    // Validate pincode
+    const pincode = document.getElementById('pincode').value;
+    const pincodeValidation = isValidPincode(pincode);
+    if (!pincodeValidation.valid) {
+        Swal.fire({
+            title: 'Pincode Error',
+            text: pincodeValidation.message,
+            icon: 'error'
+        });
+        return false;
+    }
+
+    // Validate phone number
+    const phoneNumber = document.getElementById('phone').value;
+    const phoneValidation = isValidPhoneNumber(phoneNumber);
+    if (!phoneValidation.valid) {
+        Swal.fire({
+            title: 'Phone Number Error',
+            text: phoneValidation.message,
+            icon: 'error'
+        });
+        return false;
+    }
+
+    // Validate alternate phone number
+    const altPhoneNumber = document.getElementById('altPhone').value;
+    const altPhoneValidation = isValidPhoneNumber(altPhoneNumber);
+    if (!altPhoneValidation.valid) {
+        Swal.fire({
+            title: 'Alternate Phone Error',
+            text: altPhoneValidation.message,
+            icon: 'error'
+        });
+        return false;
+    }
+
+    // Check if phone numbers are different
+    if (phoneNumber === altPhoneNumber) {
+        Swal.fire({
+            title: 'Phone Number Error',
+            text: 'Main phone and alternate phone numbers cannot be the same',
+            icon: 'error'
+        });
+        return false;
+    }
+
+    return true;
+}
+
+// Initialize form validation
+document.addEventListener('DOMContentLoaded', function() {
+    // Set up input restrictions
+    setupInputRestrictions();
+
+    // Set up form submission handling
+    const form = document.getElementById('addressForm');
+    form.addEventListener('submit', function(event) {
+        event.preventDefault(); // Always prevent default first
+        if (validateForm()) {
+            this.submit(); // Only submit if validation passes
+        }
+    });
+});
+</script>
+
+<%- include("../../views/layouts/user/footer") %>

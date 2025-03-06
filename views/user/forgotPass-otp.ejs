@@ -1,0 +1,165 @@
+<%- include("../layouts/user/header.ejs") %>
+    <style>
+        body {
+            background-color: #f8f9fa;
+            font-family: 'Arial', sans-serif;
+        }
+        .auth-container {
+            max-width: 400px;
+            margin: 5% auto;
+            background: #fff;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+        .auth-container h1 {
+            font-weight: 600;
+            font-size: 24px;
+            color: #333;
+            margin-bottom: 10px;
+        }
+        .form-control {
+            border-radius: 20px;
+            text-align: center;
+        }
+        .btn-primary {
+            background-color: #ff3f6c;
+            border: none;
+            border-radius: 20px;
+            padding: 10px;
+            width: 100%;
+        }
+        .btn-primary:hover {
+            background-color: #e6375a;
+        }
+        .timer-container {
+            margin: 10px 0;
+            font-size: 14px;
+            color: #565959;
+        }
+        .resend-button {
+            background: none;
+            border: none;
+            color: #ff3f6c;
+            font-size: 14px;
+            cursor: pointer;
+            text-decoration: underline;
+        }
+        .resend-button:hover {
+            color: #c45500;
+        }
+    </style>
+</head>
+<body>
+    <div class="auth-container">
+        <h1>Verification Required</h1>
+        <p>Enter the verification code sent to your email.</p>
+        <form action="/verify-passForgot-otp" method="POST" onsubmit="return validateOtpForm()">
+            <input type="text" id="otp" name="otp" class="form-control mb-3" placeholder="Enter OTP" required>
+            <div class="timer-container">
+                <span id="otpTimer">Time remaining: 1:00</span>
+                <button type="button" class="resend-button" onclick="resendOtp()">Resend Code</button>
+            </div>
+            <button type="submit" class="btn-primary">Continue</button>
+        </form>
+    </div>
+    <script>
+
+
+        let otpTimerInterval;
+        let timer = 60;
+        function startOtpTimer() {
+            const timerElement = document.getElementById('otpTimer');
+            otpTimerInterval = setInterval(function() {
+                const minutes = Math.floor(timer / 60);
+                const seconds = timer % 60;
+                timerElement.textContent = `Time remaining: ${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+                if (--timer < 0) {
+                    clearInterval(otpTimerInterval);
+                    timerElement.textContent = 'Code expired';
+                }
+            }, 1000);
+        }
+        function initializeOtpTimer() {
+            clearInterval(otpTimerInterval);
+            timer = 60;
+            startOtpTimer();
+        }
+        function validateOtpForm() {
+            const otpInput = document.getElementById('otp').value;
+            $.ajax({
+                type: 'POST',
+                url: '/verify-passForgot-otp',
+                data: { otp: otpInput },
+                success: function(response) {
+                    if (response.success) {
+                        window.location.href = '/reset-password';
+                    } else {
+                        Swal.fire({ icon: 'error', title: 'Error', text: response.message });
+                    }
+                },
+                error: function() {
+                    Swal.fire({ icon: 'error', title: 'Error', text: 'Please try again' });
+                }
+            });
+            return false;
+        }
+        function resendOtp() {
+    const resendButton = document.querySelector('.resend-button');
+    resendButton.disabled = true;
+    
+    console.log("Resend OTP button clicked");
+    $.ajax({
+        type: 'POST',
+        url: '/resend-forgot-otp',
+        contentType: "application/json",
+        data: JSON.stringify({}),
+        success: function(response) {
+            console.log("Response received:", response);
+            if (response.success) {
+                initializeOtpTimer();
+                Swal.fire({ icon: 'success', title: 'Code sent', text: 'New OTP sent to email' });
+            } else {
+                Swal.fire({ icon: 'error', title: 'Error', text: response.message || 'Please try again' });
+            }
+        },
+        error: function(xhr) {
+            console.error("Error response:", xhr);
+            Swal.fire({ icon: 'error', title: 'Error', text: 'Please try again' });
+        },
+        complete: function() {
+            resendButton.disabled = false;
+        }
+    });
+}
+        // function resendOtp() {
+
+        //     console.log("Resend OTP button clicked");
+        //     $.ajax({
+        //         type: 'POST',
+        //         url: '/resend-forgot-otp',
+        //         contentType: "application/json",
+        //         dataType: "json",
+        //         success: function(response) {
+        //             console.log("Response received:", response);
+        //             if (response.success) {
+        //                 initializeOtpTimer();
+        //                 Swal.fire({ icon: 'success', title: 'Code sent', text: 'New OTP sent to email' });
+        //             } else {
+        //                 Swal.fire({ icon: 'error', title: 'Error', text: 'Please try again' });
+        //             }
+        //         },
+        //         error: function() {
+        //             Swal.fire({ icon: 'error', title: 'Error', text: 'Please try again' });
+        //         }
+        //     });
+        // }
+        
+        
+        initializeOtpTimer();
+    </script>
+</body>
+
+</html>
+<%- include("../layouts/user/footer.ejs") %>

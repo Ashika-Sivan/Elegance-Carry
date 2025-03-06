@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Elegance Carry - Login</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@300;400;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css"
+    />
+    <style>
+      .fa-google {
+        font-size: 30px;
+        color: #e63258;
+      }
+      body {
+        background: #f5f5f5;
+        font-family: "Nunito Sans", sans-serif;
+      }
+      .login-container {
+        display: flex;
+        max-width: 900px;
+        margin: auto;
+        background: white;
+        border-radius: 10px;
+        overflow: hidden;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+      }
+      .login-form-section {
+        flex: 1;
+        padding: 40px;
+      }
+      .login-image-section {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(135deg #a777e3);
+      }
+      .login-image-section img {
+        max-width: 80%;
+      }
+      .form-control {
+        border-radius: 5px;
+      }
+      .btn-primary {
+        background: #ff3f6c;
+        border: none;
+        font-weight: 600;
+      }
+      .btn-primary:hover {
+        background: #e63258;
+      }
+      .social-login {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+      }
+      .social-login img {
+        width: 40px;
+        height: 40px;
+      }
+      .forgot-password-link {
+        font-size: 0.875rem;
+        color:#e63258ff;
+        text-decoration: none;
+      }
+      .forgot-password-link:hover {
+        text-decoration: underline;
+      }
+      .sign-up-link {
+        text-align: center;
+        margin-top: 10px;
+      }
+      .password-wrapper {
+        position: relative;
+      }
+      .toggle-password {
+        position: absolute;
+        right: 10px;
+        top: 75%;
+        transform: translateY(-50%);
+        cursor: pointer;
+      }
+    
+    </style>
+  </head>
+  <body>
+    <div class="container py-5">
+      <div class="login-container">
+        <div class="login-form-section">
+          <h3 class="text-center">Log In</h3>
+          <form id="loginform" method="post" action="/login">
+            <div class="mb-3">
+              <label for="email" class="form-label">Email address</label>
+              <input type="email" class="form-control" name="email" id="email" placeholder="Enter email" />
+              <div id="error1" class="text-danger small"></div>
+            </div>
+            <div class="mb-3 password-wrapper">
+              <label for="password" class="form-label">Password</label>
+              <input type="password" class="form-control" name="password" id="password" placeholder="Password" />
+              <i class="fa fa-eye toggle-password" id="togglePassword"></i>
+              <div id="error2" class="text-danger small"></div>
+            </div>
+            <div class="d-flex justify-content-between align-items-center">
+              <a href="/forgot-password" class="forgot-password-link">Forgot Password?</a>
+            </div>
+            <%if(locals.message && message.length>0){%>
+            <div class="alert alert-danger text-center mt-2">
+              <%=message%>
+            </div>
+            <%}%>
+            <button type="submit" class="btn btn-primary w-100 mt-3">Log In</button>
+          </form>
+          <div class="text-center mt-3">
+            <p>or log in with</p>
+            <div class="social-login">
+              <a href="/auth/google">
+                <i class="fa-brands fa-google" ></i>
+                <!-- <img src="/img/googlesign.webp" alt="Google Login" /> -->
+              </a>
+            </div>
+          </div>
+          <div class="sign-up-link">
+            <p>Not registered? <a href="/signup" class="signup-color">Sign up</a></p>
+          </div>
+        </div>
+        <div class="login-image-section">
+          <img src="/img/logo.png" alt="Shopping Site" />
+          
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
+    <script>
+      const emailid = document.getElementById("email");
+      const passid = document.getElementById("password");
+      const error1 = document.getElementById("error1");
+      const error2 = document.getElementById("error2");
+      const loginform = document.getElementById("loginform");
+
+      function emailValidateChecking(e) {
+        const emailval = emailid.value;
+        const emailpattern =
+          /^[a-zA-Z0-9._-]+@([a-zA-Z0-9.-]+)\.([a-zA-Z]{2,4})$/;
+
+        if (!emailpattern.test(emailval)) {
+          error1.style.display = "block";
+          error1.innerHTML = "Invalid Format";
+        } else {
+          error1.style.display = "none";
+          error1.innerHTML = "";
+        }
+      }
+
+      function passValidateChecking(e) {
+        const passval = passid.value;
+        if (passval.length < 4) {
+          error2.style.display = "block";
+          error2.innerHTML = "Should contain at least 8 characters";
+        } else {
+          error2.style.display = "none";
+          error2.innerHTML = "";
+        }
+      }
+
+      document.addEventListener("DOMContentLoaded", function () {
+        loginform.addEventListener("submit", function (e) {
+          emailValidateChecking();
+          passValidateChecking();
+
+          if (!emailid || !passid || !error1 || !error2 || !loginform) {
+            console.error("One or more elements not found");
+          }
+
+          if (error1.innerHTML || error2.innerHTML) {
+            e.preventDefault();
+          }
+        });
+      });
+
+
+      document.getElementById("togglePassword").addEventListener("click", function() {
+        const passwordField = document.getElementById("password");
+        if (passwordField.type === "password") {
+          passwordField.type = "text";
+          this.classList.remove("fa-eye");
+          this.classList.add("fa-eye-slash");
+        } else {
+          passwordField.type = "password";
+          this.classList.remove("fa-eye-slash");
+          this.classList.add("fa-eye");
+        }
+      });
+    </script>
+
+<script src="https://kit.fontawesome.com/your-kit-code.js" crossorigin="anonymous"></script>

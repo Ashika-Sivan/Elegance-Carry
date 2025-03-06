@@ -1,0 +1,321 @@
+<%- include("../layouts/user/header.ejs") %>
+<%- include("../layouts/user/sidebar.ejs") %>
+<body>
+    <style>
+        :root {
+            --primary-pink: #ff3f6c;
+            --primary-text: #282c3f;
+            --secondary-text: #535766;
+            --border-color: #eaeaec;
+            --success-green: #03a685;
+            --background-grey: #f5f5f6;
+        }
+
+        body {
+            background: #f5f5f6;
+            color: var(--primary-text);
+            font-family: -apple-system, "Helvetica Neue", sans-serif;
+        }
+
+        .order-details-container {
+            max-width: 1000px;
+            margin: 30px auto;
+            padding: 24px;
+            background: white;
+            border-radius: 4px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+        }
+
+        .order-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 20px;
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 24px;
+        }
+
+        .order-info h2 {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: var(--primary-text);
+        }
+
+        .order-info p {
+            color: var(--secondary-text);
+            font-size: 14px;
+            margin: 4px 0;
+        }
+
+        .order-status {
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: 500;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .order-status.delivered {
+            background: #e8f5e9;
+            color: var(--success-green);
+        }
+
+        .order-status.processing {
+            background: #fff3e0;
+            color: #f57c00;
+        }
+
+        .section-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin: 30px 0 20px;
+            color: var(--primary-text);
+        }
+
+        .item-card {
+            display: flex;
+            padding: 20px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            margin-bottom: 16px;
+            transition: box-shadow 0.3s ease;
+        }
+
+        .item-card:hover {
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        }
+
+        .item-image {
+            width: 120px;
+            margin-right: 20px;
+        }
+
+        .item-image img {
+            width: 100%;
+            height: 150px;
+            object-fit: cover;
+            border-radius: 4px;
+        }
+
+        .item-details {
+            flex: 1;
+        }
+
+        .item-name {
+            font-size: 16px;
+            font-weight: 500;
+            margin-bottom: 8px;
+            color: var(--primary-text);
+        }
+
+        .item-price {
+            font-size: 14px;
+            color: var(--secondary-text);
+            margin-bottom: 8px;
+        }
+
+        .delivery-address {
+            background: var(--background-grey);
+            padding: 20px;
+            border-radius: 4px;
+            margin: 20px 0;
+        }
+
+        .delivery-address p {
+            margin: 8px 0;
+            font-size: 14px;
+            color: var(--secondary-text);
+        }
+
+        .delivery-address strong {
+            color: var(--primary-text);
+        }
+
+        .price-breakdown {
+            background: var(--background-grey);
+            padding: 20px;
+            border-radius: 4px;
+        }
+
+        .price-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            font-size: 14px;
+            color: var(--secondary-text);
+        }
+
+        .price-row.total {
+            border-top: 1px solid #d4d5d9;
+            margin-top: 10px;
+            padding-top: 15px;
+            font-weight: 600;
+            font-size: 16px;
+            color: var(--primary-text);
+        }
+
+        .payment-info {
+            margin-top: 24px;
+            padding: 20px;
+            background: #fff3e0;
+            border-radius: 4px;
+        }
+
+        .payment-info p {
+            margin: 8px 0;
+            font-size: 14px;
+            color: var(--secondary-text);
+        }
+
+        .payment-info strong {
+            color: var(--primary-text);
+        }
+
+        .cancel-btn {
+            background: var(--primary-pink);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 4px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 24px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            transition: background-color 0.3s ease;
+        }
+
+        .cancel-btn:hover {
+            background: #e6395f;
+        }
+
+        .cancel-btn:disabled {
+            background: #d4d5d9;
+            cursor: not-allowed;
+        }
+
+        @media (max-width: 768px) {
+            .order-details-container {
+                margin: 10px;
+                padding: 15px;
+            }
+
+            .item-image {
+                width: 80px;
+            }
+
+            .item-image img {
+                height: 100px;
+            }
+        }
+    </style>
+
+    <div class="order-details-container">
+        <div class="order-header">
+            <div class="order-info">
+                <h2>Order Details</h2>
+                <p>Order ID: <%= order.orderId %></p>
+                <p>Ordered on: <%= new Date(order.createdAt).toLocaleDateString() %></p>
+            </div>
+            <div class="order-status <%= order.status.toLowerCase() %>"><%= order.status %></div>
+        </div>
+
+        <div class="section-title">Items Ordered</div>
+        <div class="order-items">
+            <% order.orderedItems.forEach(item => { %>
+                <div class="item-card">
+                    <div class="item-image">
+                        <img src="/img/<%= item.product.productImage ? item.product.productImage[0] : 'default.png' %>"
+                             alt="<%= item.product.productName %>">
+                    </div>
+                    <div class="item-details">
+                        <div class="item-name"><%= item.product.productName %></div>
+                        <div class="item-price">₹<%= item.price %> × <%= item.quantity %></div>
+                    
+                    </div>
+                </div>
+            <% }) %>
+        </div>
+
+        <div class="section-title">Delivery Address</div>
+        <div class="delivery-address">
+            <p><strong><%= order.address.name %></strong></p>
+            <p><%= order.address.landMark %></p>
+            <p><%= order.address.city %>, <%= order.address.state %> - <%= order.address.pincode %></p>
+            <p>Phone: <%= order.address.phone %></p>
+            <p>Alternative Phone: <%= order.address.altPhone %></p>
+        </div>
+
+        <div class="section-title">Price Details</div>
+        <div class="price-breakdown">
+            <div class="price-row">
+                <span>Subtotal</span>
+                <span>₹<%= order.subTotal %></span>
+            </div>
+            <% if (order.deliveryCharge) { %>
+            <div class="price-row">
+                <span>Delivery Charge</span>
+                <span>₹<%= order.deliveryCharge %></span>
+            </div>
+            <% } %>
+            <% if (order.discount > 0) { %>
+            <div class="price-row">
+                <span>Discount</span>
+                <span>-₹<%= order.discount %></span>
+            </div>
+            <% } %>
+            <% if (order.couponDiscount > 0) { %>
+            <div class="price-row">
+                <span>Coupon Discount (<%= order.couponCode %>)</span>
+                <span>-₹<%= order.couponDiscount %></span>
+            </div>
+            <% } %>
+            <div class="price-row total">
+                <span>Total Amount</span>
+                <span>₹<%= order.finalAmount %></span>
+            </div>
+        </div>
+
+        <div class="payment-info">
+            <p><strong>Payment Method:</strong> <%= order.paymentMethod %></p>
+            <p><strong>Payment Status:</strong> <%= order.paymentStatus %></p>
+        </div>
+
+        <% if (order.status !== 'Delivered' && order.status !== 'Cancelled') { %>
+            <button class="cancel-btn" onclick="cancelOrder('<%= order._id %>')">
+                Cancel Order
+            </button>
+        <% } %>
+    </div>
+
+    <script>
+        function cancelOrder(orderId) {
+            if (confirm('Are you sure you want to cancel this order?')) {
+                fetch(`/cancel-order/${orderId}`, {
+                    method: 'POST',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert(data.message);
+                        window.location.reload();
+                    } else {
+                        alert(data.message || 'Failed to cancel order');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('An error occurred while cancelling the order');
+                });
+            }
+        }
+    </script>
+</body>
+<%- include("../layouts/user/footer.ejs") %>
