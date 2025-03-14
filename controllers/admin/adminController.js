@@ -3,6 +3,9 @@ const bcrypt = require('bcrypt');
 const mongoose=require('mongoose')
 const Order=require("../../models/orderSchema")
 const Product=require("../../models/productSchema")
+const Category=require("../../models/categorySchema")
+const Brand=require("../../models/brandSchema")
+const { walletReturnRefund } = require('../user/orderController');
 const PDFDocument = require('pdfkit');
 const ExcelJS = require('exceljs');
 
@@ -14,9 +17,7 @@ const pageerror = async (req, res) => {
     res.render("admin/pageerror", { errorMessage, errorCode });
   };
 
-// const pageerror=async(req,res)=>{
-//     res.render("admin/pageerror")
-// }
+
 
 const loadLogin = async (req, res) => {
     // console.log('Accessed /admin/login');
@@ -56,19 +57,9 @@ const login = async (req, res) => {
     }
 };
 
-const loadDashboard = async (req, res) => {
-    
-        try {
-            if (req.session.admin) {
-            res.render('dashboard',{currentPage:"dashboard"});
-            }
-         else {
-            res.redirect('/admin/login');
-        }
-        } catch (error) {
-            res.redirect('/pageerror');
-        }
-};
+
+
+
 
 const logout=async(req,res)=>{
     try {
@@ -567,70 +558,419 @@ const getSalesReport = async (req, res) => {
     }
 };
 
-const approveReturnRequest=async(req,res)=>{
-    try {
-        const {orderId}=req.body
-        if(!mongoose.Types.ObjectId.isValid(orderId)){
-            return res.status(400).json({
-                success:false,
-                message:'Invalid Order ID'
-            })
-        }
+// const approveReturnRequest=async(req,res)=>{
+//     try {
+//         const {orderId}=req.body
+//         if(!mongoose.Types.ObjectId.isValid(orderId)){
+//             return res.status(400).json({
+//                 success:false,
+//                 message:'Invalid Order ID'
+//             })
+//         }
 
-        const order=await Order.findById(orderId).populate('orderedItems.product')
-        if(!order){
-            return res.status(404).json({
-                success:false,
-                message:'Order not Found'
-            })
-        }
-        if(order.status!=='Return Request'){
-            return res.status(400).json({
-                success:false,
-                message:'Order is not in return Request Status',
+//         const order=await Order.findById(orderId).populate('orderedItems.product')
+//         if(!order){
+//             return res.status(404).json({
+//                 success:false,
+//                 message:'Order not Found'
+//             })
+//         }
+//         if(order.status!=='Return Request'){
+//             return res.status(400).json({
+//                 success:false,
+//                 message:'Order is not in return Request Status',
 
-            });
-        }
-        for(const item of order.orderedItems){
-            await Product.updateOne(
-                {_id:item.product._id},
-                {$inc:{quantity:item.quantity}} //it is toi increment the quantity
-            )
-        }
+//             });
+//         }
+//         for(const item of order.orderedItems){
+//             await Product.updateOne(
+//                 {_id:item.product._id},
+//                 {$inc:{quantity:item.quantity}} //it is toi increment the quantity
+//             )
+//         }
 
-        //refund
-        const user=await User.findById(order.user);
-        if(!user){
-            return res.status(404).json({
-                success:false,
-                messsage:"user not found"
-            })
-        }
-        user.walletBalance+=order.finalAmount
-        await user.save();
-        const updatedOrder=await Order.findByIdAndUpdate(
-            orderId,
-            {
-                status:'Returned',
-                returnApprovalDate:new Date()
-            },
-            {new:true}
-        )
-        res.jsonn({
-            success:true,
-            message:'Return request approved ,stock updated,and amount refunded successfully',
-            order:updatedOrder
-        })
-    } catch (error) {
-        console.error('Error approving return request:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Failed to approve return request',
-        });
+//         //refund
+//         const user=await User.findById(order.user);
+//         if(!user){
+//             return res.status(404).json({
+//                 success:false,
+//                 messsage:"user not found"
+//             })
+//         }
+//         user.walletBalance+=order.finalAmount
+//         await user.save();
+//         const updatedOrder=await Order.findByIdAndUpdate(
+//             orderId,
+//             {
+//                 status:'Returned',
+//                 returnApprovalDate:new Date()
+//             },
+//             {new:true}
+//         )
+//         res.jsonn({
+//             success:true,
+//             message:'Return request approved ,stock updated,and amount refunded successfully',
+//             order:updatedOrder
+//         })
+//     } catch (error) {
+//         console.error('Error approving return request:', error);
+//         res.status(500).json({
+//             success: false,
+//             message: 'Failed to approve return request',
+//         });
         
-    }
-}
+//     }
+// }
 
+const loadDashboard = async (req, res) => {
+    try {
+        const { filterValue, startDate, endDate } = req.query;
+        const today = new Date();
+        let dayStart, dayEnd;
+
+        // Setting up date range
+        switch (filterValue) {
+            case 'daily':
+                dayStart = new Date(today.setHours(0, 0, 0, 0));
+                dayEnd = new Date(today.setHours(23, 59, 59, 999));
+                break;
+            case 'weekly':
+                const firstDayOfWeek = today.getDate() - today.getDay();
+                dayStart = new Date(today.getFullYear(), today.getMonth(), firstDayOfWeek);
+                dayStart.setHours(0, 0, 0, 0);
+                dayEnd = new Date(today.getFullYear(), today.getMonth(), firstDayOfWeek + 6);
+                dayEnd.setHours(23, 59, 59, 999);
+                break;
+            case 'monthly':
+                dayStart = new Date(today.getFullYear(), today.getMonth(), 1);
+                dayStart.setHours(0, 0, 0, 0);
+                dayEnd = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+                dayEnd.setHours(23, 59, 59, 999);
+                break;
+            case 'yearly':
+                dayStart = new Date(today.getFullYear(), 0, 1);
+                dayStart.setHours(0, 0, 0, 0);
+                dayEnd = new Date(today.getFullYear(), 11, 31);
+                dayEnd.setHours(23, 59, 59, 999);
+                break;
+            case 'custom':
+                if (startDate && endDate) {
+                    dayStart = new Date(startDate);
+                    dayEnd = new Date(endDate);
+                    dayEnd.setHours(23, 59, 59, 999);
+                }
+                break;
+            default:
+                dayStart = new Date(0);
+                dayEnd = new Date();
+        }
+
+        // Find top 10 products
+        const topProducts = await Product.aggregate([
+            {
+                $match: { isBlocked: false }
+            },
+            {
+                $lookup: {
+                    from: "orders",
+                    localField: "_id",
+                    foreignField: "orderedItems.product",
+                    as: "orders"
+                }
+            },
+            { $unwind: "$orders" },
+            { $unwind: "$orders.orderedItems" },
+            {
+                $match: {
+                    $expr: { $eq: ["$_id", "$orders.orderedItems.product"] },
+                    "orders.status": { $nin: ["Cancelled", "Returned", "Return Request"] },
+                    "orders.createdAt": { $gte: dayStart, $lte: dayEnd }
+                }
+            },
+            {
+                $group: {
+                    _id: "$_id",
+                    productName: { $first: "$productName" },
+                    productImage: { $first: "$productImage" },
+                    totalQuantity: { $sum: "$orders.orderedItems.quantity" },
+                    totalRevenue: {
+                        $sum: {
+                            $multiply: [
+                                "$orders.orderedItems.quantity",
+                                "$orders.orderedItems.price"
+                            ]
+                        }
+                    }
+                }
+            },
+            { $sort: { totalQuantity: -1 } },
+            { $limit: 10 },
+            {
+                $project: {
+                    _id: 1,
+                    productName: 1,
+                    productImage: 1,
+                    totalQuantity: 1,
+                    totalRevenue: 1
+                }
+            }
+        ]);
+
+        // Top 10 brands
+        const topBrand = await Order.aggregate([
+            { $unwind: "$orderedItems" },
+            {
+                $lookup: {
+                    from: "products",
+                    localField: "orderedItems.product",
+                    foreignField: "_id",
+                    as: "productDetails"
+                }
+            },
+            { $unwind: "$productDetails" },
+            {
+                $lookup: {
+                    from: "brands",
+                    localField: "productDetails.brand",
+                    foreignField: "_id",
+                    as: "brandDetails"
+                }
+            },
+            { $unwind: "$brandDetails" },
+            {
+                $match: {
+                    "productDetails.isBlocked": false,
+                    "brandDetails.isBlocked": false,
+                    "status": { $nin: ["Cancelled", "Returned", "Return Request"] },
+                    "createdAt": { $gte: dayStart, $lte: dayEnd }
+                }
+            },
+            {
+                $group: {
+                    _id: {
+                        brandId: "$brandDetails._id",
+                        orderId: "$_id"
+                    },
+                    brandName: { $first: "$brandDetails.name" },
+                    totalSales: {
+                        $sum: {
+                            $multiply: ["$orderedItems.quantity", "$orderedItems.price"]
+                        }
+                    },
+                    totalQuantity: { $sum: "$orderedItems.quantity" }
+                }
+            },
+            {
+                $group: {
+                    _id: "$_id.brandId",
+                    brandName: { $first: "$brandName" },
+                    totalSales: { $sum: "$totalSales" },
+                    totalQuantity: { $sum: "$totalQuantity" },
+                    totalOrders: { $sum: 1 }
+                }
+            },
+            {
+                $addFields: {
+                    averageOrderValue: { $divide: ["$totalSales", "$totalOrders"] }
+                }
+            },
+            { $sort: { totalSales: -1 } },
+            { $limit: 10 }
+        ]);
+
+        // Top 10 categories
+        const topCategories = await Order.aggregate([
+            {
+                $match: {
+                    status: { $nin: ["Cancelled", "Returned", "Return Request"] },
+                    createdAt: { $gte: dayStart, $lte: dayEnd }
+                }
+            },
+            { $unwind: "$orderedItems" },
+            {
+                $lookup: {
+                    from: "products",
+                    localField: "orderedItems.product",
+                    foreignField: "_id",
+                    as: "product"
+                }
+            },
+            { $unwind: "$product" },
+            {
+                $lookup: {
+                    from: "categories",
+                    localField: "product.category",
+                    foreignField: "_id",
+                    as: "category"
+                }
+            },
+            { $unwind: "$category" },
+            {
+                $match: {
+                    "category.isListed": true,
+                    "product.isBlocked": false
+                }
+            },
+            {
+                $group: {
+                    _id: "$category._id",
+                    categoryName: { $first: "$category.name" },
+                    totalOrders: { $sum: 1 },
+                    totalQuantitySold: { $sum: "$orderedItems.quantity" },
+                    totalRevenue: {
+                        $sum: {
+                            $multiply: ["$orderedItems.price", "$orderedItems.quantity"]
+                        }
+                    }
+                }
+            },
+            {
+                $project: {
+                    _id: 1,
+                    categoryName: 1,
+                    totalOrders: 1,
+                    totalQuantitySold: 1,
+                    totalRevenue: { $round: ["$totalRevenue", 2] },
+                    averageOrderValue: {
+                        $round: [{ $divide: ["$totalRevenue", "$totalOrders"] }, 2]
+                    }
+                }
+            },
+            { $sort: { totalRevenue: -1 } },
+            { $limit: 10 }
+        ]);
+
+        // Additional calculations for dashboard overview
+        const totalRevenue = await Order.aggregate([
+            {
+                $match: {
+                    status: { $nin: ["Cancelled", "Returned", "Return Request"] },
+                    createdAt: { $gte: dayStart, $lte: dayEnd }
+                }
+            },
+            {
+                $group: {
+                    _id: null,
+                    total: { $sum: "$finalAmount" }
+                }
+            }
+        ]);
+
+        const totalOrders = await Order.countDocuments({
+            status: { $nin: ["Cancelled", "Returned", "Return Request"] },
+            createdAt: { $gte: dayStart, $lte: dayEnd }
+        });
+
+        const totalCustomers = await User.countDocuments({
+            isAdmin: false,
+            createdAt: { $gte: dayStart, $lte: dayEnd }
+        });
+
+        // Chart Data: Revenue Trend over Time
+        let groupByStage;
+        let labelFormat;
+
+        switch (filterValue) {
+            case 'daily':
+                // Group by hour for daily filter
+                groupByStage = {
+                    $group: {
+                        _id: { $hour: "$createdAt" },
+                        totalRevenue: { $sum: "$finalAmount" }
+                    }
+                };
+                labelFormat = (hour) => `Hour ${hour}`;
+                break;
+            case 'weekly':
+                // Group by day for weekly filter
+                groupByStage = {
+                    $group: {
+                        _id: { $dayOfWeek: "$createdAt" },
+                        totalRevenue: { $sum: "$finalAmount" }
+                    }
+                };
+                labelFormat = (day) => {
+                    const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+                    return days[day - 1];
+                };
+                break;
+            case 'monthly':
+                // Group by day for monthly filter
+                groupByStage = {
+                    $group: {
+                        _id: { $dayOfMonth: "$createdAt" },
+                        totalRevenue: { $sum: "$finalAmount" }
+                    }
+                };
+                labelFormat = (day) => `Day ${day}`;
+                break;
+            case 'yearly':
+                // Group by month for yearly filter
+                groupByStage = {
+                    $group: {
+                        _id: { $month: "$createdAt" },
+                        totalRevenue: { $sum: "$finalAmount" }
+                    }
+                };
+                labelFormat = (month) => {
+                    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                    return months[month - 1];
+                };
+                break;
+            case 'custom':
+                // Group by day for custom range (or adjust based on range length)
+                groupByStage = {
+                    $group: {
+                        _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
+                        totalRevenue: { $sum: "$finalAmount" }
+                    }
+                };
+                labelFormat = (date) => date;
+                break;
+            default:
+                // Group by month for all time
+                groupByStage = {
+                    $group: {
+                        _id: { $dateToString: { format: "%Y-%m", date: "$createdAt" } },
+                        totalRevenue: { $sum: "$finalAmount" }
+                    }
+                };
+                labelFormat = (date) => date;
+        }
+
+        const revenueTrend = await Order.aggregate([
+            {
+                $match: {
+                    status: { $nin: ["Cancelled", "Returned", "Return Request"] },
+                    createdAt: { $gte: dayStart, $lte: dayEnd }
+                }
+            },
+            groupByStage,
+            { $sort: { "_id": 1 } }
+        ]);
+
+        // Prepare chart data
+        const chartLabels = revenueTrend.map(item => labelFormat(item._id));
+        const chartData = revenueTrend.map(item => item.totalRevenue);
+
+        return res.render("dashboard", {
+            topProducts: topProducts || [],
+            topBrand: topBrand || [],
+            topCategories: topCategories || [],
+            totalRevenue: totalRevenue.length > 0 ? totalRevenue[0].total : 0,
+            totalOrders,
+            totalCustomers,
+            selectedFilter: filterValue || 'all',
+            startDate: startDate ? new Date(startDate).toISOString().split('T')[0] : '',
+            endDate: endDate ? new Date(endDate).toISOString().split('T')[0] : '',
+            chartLabels: chartLabels || [],
+            chartData: chartData || []
+        });
+    } catch (error) {
+        console.error('Error in dashboard analytics:', error);
+        throw error;
+    }
+};
 
 
 
@@ -641,7 +981,6 @@ module.exports = {
     pageerror,
     logout,
     getSalesReport,
-    approveReturnRequest
-    // getFilteredSalesReport
+    // approveReturnRequest,
    
 }

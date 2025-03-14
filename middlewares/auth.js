@@ -4,6 +4,7 @@ const User = require("../models/userSchema");
 // User Authentication Middleware
 const userAuth = async (req, res, next) => {
     try {
+        
         // Add this before database query
      if (!req.session.user||!req.session.user.match(/^[0-9a-fA-F]{24}$/)) {
       return res.redirect("/login");
@@ -30,16 +31,22 @@ const userAuth = async (req, res, next) => {
 
 
 
-// Admin Authentication Middleware
+
 
 
 
 const adminAuth = async (req, res, next) => {
     try {
-        // console.log("Admin session value:", req.session.admin); // Debug log
+        console.log("Admin session value:", req.session.admin);
         
         if (!req.session.admin) {
             console.log("No admin session found.");
+            if (req.xhr || req.headers.accept.includes('application/json')) {
+                return res.status(401).json({
+                    success: false,
+                    message: 'Unauthorized. Please log in again.',
+                });
+            }
             return res.redirect("/admin/login");
         }
 
@@ -49,6 +56,12 @@ const adminAuth = async (req, res, next) => {
             if (adminUser) {
                 req.session.admin = adminUser._id.toString();
             } else {
+                if (req.xhr || req.headers.accept.includes('application/json')) {
+                    return res.status(401).json({
+                        success: false,
+                        message: 'No admin user found. Please log in again.',
+                    });
+                }
                 return res.redirect("/admin/login");
             }
         }

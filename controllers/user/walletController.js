@@ -83,20 +83,15 @@ const getWalletPage = async (req, res) => {
             await wallet.save();
         }
 
-        // Pagination parameters
         const page = parseInt(req.query.page) || 1;
         const limit = parseInt(req.query.limit) || 10; // Number of transactions per page
         const startIndex = (page - 1) * limit;
         const endIndex = page * limit;
 
-        // Sort transactions by date (newest first)
         const sortedHistory = wallet.walletHistory.sort((a, b) => b.date - a.date);
         const totalTransactions = sortedHistory.length;
-        
-        // Get paginated transactions
         const paginatedHistory = sortedHistory.slice(startIndex, endIndex);
 
-        // Calculate pagination details
         const totalPages = Math.ceil(totalTransactions / limit);
 
         res.render("wallet", {
@@ -187,7 +182,7 @@ const verifyRazorpayPayment = async (req, res) => {
         // Update wallet balance
         wallet.balance += amountInRupees;
 
-        // Ensure walletHistory exists and push new transaction
+        // walletHistory exists and push new transaction
         wallet.walletHistory = wallet.walletHistory || [];
         wallet.walletHistory.push({
             date: new Date(),
@@ -207,73 +202,57 @@ const verifyRazorpayPayment = async (req, res) => {
     }
 };
 
-// const walletRefund=async(userId,amount,description)=>{
-//     try {
-//         let wallet=await Wallet.findOne({userId});
-//         if(!wallet){
-//             wallet=new Wallet({userId,balance:0,walletHistory:[]})
-//         }
-//         wallet.balance+=amount
-//         wallet.walletHistory.push({
-//             transactionId:uuidv4(),
-//             transactionType:'credit',
-//             amount:amount,
-//             date:new Date(),
-//             description:description,
-//         })
-//         await wallet.save()
-//         return wallet;
 
-        
-//     } catch (error) {
-//         console.error('Error in walletRefund:', error);
-//         throw new Error('Failed to process wallet refund');
-    
-        
-//     }
-// }
 
 const walletRefund = async (userId, amount, orderId) => {
     try {
+        console.log(`Starting wallet refund process - User: ${userId}, Amount: ${amount}, Order: ${orderId}`);
+        
+        let wallet = await Wallet.findOne({ userId });
+        if (!wallet) {
+            console.log(`Wallet not found for user ${userId}, creating new wallet`);
+            wallet = new Wallet({ userId, balance: 0, walletHistory: [] });
+        }
+        
+        const oldBalance = wallet.balance;
+        // console.log("///////////////////",oldBalance)
+        wallet.balance += amount;
+        
+        console.log(`Wallet update - Old balance: ${oldBalance}, Amount to add: ${amount}, New balance: ${wallet.balance}`);
+        
+        const transactionId = uuidv4();
+        wallet.walletHistory.push({
+            transactionId: transactionId,
+            transactionType: 'credit',
+            amount: amount,
+            date: new Date(),
+            description: "Refund",// More descriptive message
+            orderId: orderId
+        });
+        
+        const savedWallet = await wallet.save();
+        console.log(`Refund transaction saved - ID: ${transactionId}, New wallet balance: ${savedWallet.balance}`);
+        
+        return savedWallet;
+    } catch (error) {
+        console.error('Error in walletRefund:', error);
+        throw new Error(`Failed to process wallet refund: ${error.message}`);
+    }
+}
+const deductWalletBalance = async (userId, amount, orderId) => {
+    try {
+        
         let wallet = await Wallet.findOne({ userId });
         if (!wallet) {
             wallet = new Wallet({ userId, balance: 0, walletHistory: [] });
         }
         
-        wallet.balance += amount;
-        wallet.walletHistory.push({
-            transactionId: uuidv4(),
-            transactionType: 'credit',
-            amount: amount,
-            date: new Date(),
-            description: "Refund", // Use the predefined enum value
-            orderId: orderId // Add the orderId to the wallet history
-        });
-        
-        await wallet.save();
-        return wallet;
-    } catch (error) {
-        console.error('Error in walletRefund:', error);
-        throw new Error('Failed to process wallet refund');
-    }
-}
-
-const deductWalletBalance = async (userId, amount, orderId) => {
-    try {
-        
-        let wallet = await Wallet.findOne({ userId });
-        
-        
-        if (!wallet) {
-            throw new Error('Wallet not found');
-        }
-
-        
         if (wallet.balance < amount) {
             throw new Error('Insufficient wallet balance');
         }
-
+        console.log("Wallet balance before deduction:", wallet.balance);
         wallet.balance -= amount;
+        console.log("Wallet balance after deduction:", wallet.balance);
 
        
         wallet.walletHistory.push({
@@ -304,7 +283,6 @@ module.exports={
     addFund,
     verifyRazorpayPayment,
     walletRefund,
-    // walletRefund,
     deductWalletBalance
 
 

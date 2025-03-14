@@ -421,10 +421,12 @@ const addAddress = async (req, res) => {
         const userData = await User.findOne({ _id: userId });
         const userAddresses = await Address.findOne({ userId: userData._id });
 
-        // Ensure addresses is always an array
         const addresses = userAddresses ? userAddresses.address : [];
+        
+        // Pass the 'from' query parameter to the view
+        const from = req.query.from || ''; // Default to empty string if not provided
 
-        res.render("add-address", { user: userData, addresses:addresses });
+        res.render("add-address", { user: userData, addresses:addresses ,from:from});
 
     } catch (error) {
         console.error("Error loading address list:", error);
@@ -439,16 +441,12 @@ const postAddAddress = async(req, res) => {
         const userData = await User.findOne({_id: userId});
         
         // Get form data
-        let {addressType, name, city, landMark, state, pincode, phone, altPhone} = req.body;
+        let {addressType, name, city, landMark, state, pincode, phone, altPhone,from} = req.body;
         
         // Make sure addressType matches exact enum case
         if (addressType) {
-            // Convert to proper case: first letter uppercase, rest lowercase
             addressType = addressType.toLowerCase();
         }
-        
-        // No need to modify state if it's from a select dropdown
-        // But if you're getting the error, ensure it matches exactly
         
         console.log(`Processing address with type: ${addressType} and state: ${state}`);
         
@@ -481,7 +479,11 @@ const postAddAddress = async(req, res) => {
             });
             await userAddress.save();
         }
-        res.redirect('/loadAddresses');
+        if (from === 'checkout') {
+            res.redirect('/check-out');
+        } else {
+            res.redirect('/loadAddresses');
+        }
         
     } catch (error) {
         console.error('Error adding address:', error);

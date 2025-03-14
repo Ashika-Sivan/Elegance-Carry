@@ -108,7 +108,7 @@
                             <button onclick="updateQuantity('<%= item.productId._id %>', 1)">+</button>
                         </div>
                     </div>
-                    <i class="fa fa-trash" style="cursor:pointer; color: #ff3f6c;" onclick="removeItem('<%= item.productId._id %>')">Remove</i>
+                    <i class="fa fa-trash" style="cursor:pointer; color: #ff3f6c;" onclick="removeItem('<%= item.productId._id %>')"></i>
                 </div>
             <% }); %>
         <% } else { %>
@@ -125,6 +125,7 @@
 
 
 
+
 function updateQuantity(productId, change) {
     fetch('/update-cart', {
         method: 'POST',
@@ -133,8 +134,6 @@ function updateQuantity(productId, change) {
         },
         body: JSON.stringify({ productId, change })
     })
-
-    
     .then(res => res.json())
     .then(data => {
         if (data.success) {
@@ -145,25 +144,29 @@ function updateQuantity(productId, change) {
             }
             
             // Update total amount
-    
-
             const summaryElement = document.querySelector('.cart-summary');
             if (summaryElement) {
                 summaryElement.innerText = 'Total: ₹' + data.totalAmount.toFixed(2);
             }
-
-
-
         } else {
-            alert(data.message);
+            Swal.fire({
+                icon: 'error',
+                title: 'Oops...',
+                text: data.message || 'Something went wrong'
+            });
         }
     })
-    
     .catch(error => {
         console.error('Error:', error);
-        alert('Failed to update quantity');
+        Swal.fire({
+            icon: 'error',
+            title: 'Error!',
+            text: 'Failed to update quantity'
+        });
     });
 }
+
+
 function removeItem(productId) {
     Swal.fire({
         title: "Are you sure?",

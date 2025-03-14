@@ -97,6 +97,12 @@ const postAddToCart = async (req, res) => {
             );
 
             if (existingItem) {
+                if (existingItem.quantity >= 3) {
+                    return res.json({ 
+                        success: false, 
+                        message: "Maximum quantity of this product added to cart is 3" 
+                    });
+                }
                 if (existingItem.quantity >= product.quantity) {
                     return res.json({ 
                         success: false, 
@@ -127,7 +133,6 @@ const postAddToCart = async (req, res) => {
         res.status(500).json({ success: false, message: "Internal server error" });
     }
 };
-
 
 const updateCartQuantity = async (req, res) => {
     try {
@@ -167,6 +172,13 @@ const updateCartQuantity = async (req, res) => {
             return res.status(400).json({
                 success: false,
                 message: "Quantity cannot be less than 1"
+            });
+        }
+
+        if (newQuantity > 3) {
+            return res.status(400).json({
+                success: false,
+                message: "Maximum quantity of this product added to cart is 3"
             });
         }
 
@@ -356,10 +368,21 @@ const updateCartQuantity = async (req, res) => {
             const finalAmount = Math.max(totalAmount + deliveryCharge - couponDiscount, 0);
     
             const orderData = await Order.findOne({ userId });
-            const wallet =await Wallet.findOne({userId})
-            if(!wallet){
-                return res.status(404).json({message:"wallet not found"})
-            }
+            // const wallet =await Wallet.findOne({userId})
+            let wallet = await Wallet.findOne({userId});
+if(!wallet){
+    wallet = new Wallet({
+        userId,
+        balance: 0,
+        walletHistory: [{
+            transactionType: "credit",
+            amount: 0,
+            description: "Initial balance"
+        }],
+    });
+    await wallet.save();
+    console.log("New wallet created for user:", userId);
+}
     
             res.render("check-out", { 
                 user: userData,
@@ -382,7 +405,7 @@ const updateCartQuantity = async (req, res) => {
             res.status(500).render("errorPage", { 
                 message: "Failed to load checkout page" 
             });
-        }``
+        }
     };
 
 

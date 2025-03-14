@@ -115,6 +115,11 @@
             color: var(--secondary-text);
             margin-bottom: 8px;
         }
+        .item-regularPrice{
+            font-size: 14px;
+            color:var(--secondary-text);
+            margin-bottom: 8px;
+        }
 
         .delivery-address {
             background: var(--background-grey);
@@ -211,85 +216,115 @@
                 height: 100px;
             }
         }
+
+        .action-buttons {
+        margin-top: 20px;
+        display: flex;
+        gap: 10px;
+    }
+    .download-btn {
+        padding: 10px 20px;
+        background-color: #28a745;
+        color: white;
+        text-decoration: none;
+        border-radius: 5px;
+        cursor: pointer;
+    }
+    .download-btn:hover {
+        background-color: #218838;
+    }
+    .cancel-btn {
+        padding: 10px 20px;
+        background-color: #dc3545;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+    }
+    .cancel-btn:hover {
+        background-color: #c82333;
+    }
     </style>
 
-    <div class="order-details-container">
-        <div class="order-header">
-            <div class="order-info">
-                <h2>Order Details</h2>
-                <p>Order ID: <%= order.orderId %></p>
-                <p>Ordered on: <%= new Date(order.createdAt).toLocaleDateString() %></p>
-            </div>
-            <div class="order-status <%= order.status.toLowerCase() %>"><%= order.status %></div>
+<div class="order-details-container">
+    <div class="order-header">
+        <div class="order-info">
+            <h2>Order Details</h2>
+            <p>Order ID: <%= order.orderId %></p>
+            <p>Ordered on: <%= new Date(order.createdAt).toLocaleDateString() %></p>
         </div>
-
-        <div class="section-title">Items Ordered</div>
-        <div class="order-items">
-            <% order.orderedItems.forEach(item => { %>
-                <div class="item-card">
-                    <div class="item-image">
-                        <img src="/img/<%= item.product.productImage ? item.product.productImage[0] : 'default.png' %>"
-                             alt="<%= item.product.productName %>">
-                    </div>
-                    <div class="item-details">
-                        <div class="item-name"><%= item.product.productName %></div>
-                        <div class="item-price">₹<%= item.price %> × <%= item.quantity %></div>
-                    
-                    </div>
-                </div>
-            <% }) %>
-        </div>
-
-        <div class="section-title">Delivery Address</div>
-        <div class="delivery-address">
-            <p><strong><%= order.address.name %></strong></p>
-            <p><%= order.address.landMark %></p>
-            <p><%= order.address.city %>, <%= order.address.state %> - <%= order.address.pincode %></p>
-            <p>Phone: <%= order.address.phone %></p>
-            <p>Alternative Phone: <%= order.address.altPhone %></p>
-        </div>
-
-        <div class="section-title">Price Details</div>
-        <div class="price-breakdown">
-            <div class="price-row">
-                <span>Subtotal</span>
-                <span>₹<%= order.subTotal %></span>
-            </div>
-            <% if (order.deliveryCharge) { %>
-            <div class="price-row">
-                <span>Delivery Charge</span>
-                <span>₹<%= order.deliveryCharge %></span>
-            </div>
-            <% } %>
-            <% if (order.discount > 0) { %>
-            <div class="price-row">
-                <span>Discount</span>
-                <span>-₹<%= order.discount %></span>
-            </div>
-            <% } %>
-            <% if (order.couponDiscount > 0) { %>
-            <div class="price-row">
-                <span>Coupon Discount (<%= order.couponCode %>)</span>
-                <span>-₹<%= order.couponDiscount %></span>
-            </div>
-            <% } %>
-            <div class="price-row total">
-                <span>Total Amount</span>
-                <span>₹<%= order.finalAmount %></span>
-            </div>
-        </div>
-
-        <div class="payment-info">
-            <p><strong>Payment Method:</strong> <%= order.paymentMethod %></p>
-            <p><strong>Payment Status:</strong> <%= order.paymentStatus %></p>
-        </div>
-
-        <% if (order.status !== 'Delivered' && order.status !== 'Cancelled') { %>
-            <button class="cancel-btn" onclick="cancelOrder('<%= order._id %>')">
-                Cancel Order
-            </button>
-        <% } %>
+        <div class="order-status <%= order.status.toLowerCase() %>"><%= order.status %></div>
     </div>
+
+    <div class="section-title">Items Ordered</div>
+    <div class="order-items">
+        <% order.orderedItems.forEach(item => { %>
+            <div class="item-card">
+                <div class="item-image">
+                    <img src="/img/<%= item.product.productImage ? item.product.productImage[0] : 'default.png' %>"
+                         alt="<%= item.product.productName %>">
+                </div>
+                <div class="item-details">
+                    <div class="item-name"><%= item.product.productName %></div>
+                    <div class="item-price">Total Price:₹<%= item.price %> × <%= item.quantity %></div>
+                    
+                </div>
+            </div>
+        <% }) %>
+    </div>
+
+    <div class="section-title">Delivery Address</div>
+    <div class="delivery-address">
+        <p><strong><%= order.address.name %></strong></p>
+        <p><%= order.address.landMark %></p>
+        <p><%= order.address.city %>, <%= order.address.state %> - <%= order.address.pincode %></p>
+        <p>Phone: <%= order.address.phone %></p>
+        <p>Alternative Phone: <%= order.address.altPhone %></p>
+    </div>
+
+    <div class="section-title">Price Details</div>
+    <div class="price-breakdown">
+        <div class="price-row">
+            <span>Subtotal</span>
+            <span>₹<%= order.subTotal %></span>
+        </div>
+        <% if (order.deliveryCharge) { %>
+        <div class="price-row">
+            <span>Delivery Charge</span>
+            <span>₹<%= order.deliveryCharge %></span>
+        </div>
+        <% } %>
+        <% if (order.discount > 0) { %>
+        <div class="price-row">
+            <span>Discount</span>
+            <span>-₹<%= order.discount %></span>
+        </div>
+        <% } %>
+        <% if (order.couponDiscount > 0) { %>
+        <div class="price-row">
+            <span>Coupon Discount (<%= order.couponCode %>)</span>
+            <span>-₹<%= order.couponDiscount %></span>
+        </div>
+        <% } %>
+        <div class="price-row total">
+            <span>Total Amount</span>
+            <span>₹<%= order.finalAmount %></span>
+        </div>
+    </div>
+
+    <div class="payment-info">
+        <p><strong>Payment Method:</strong> <%= order.paymentMethod %></p>
+        <p><strong>Payment Status:</strong> <%= order.paymentStatus %></p>
+    </div>
+
+    <div class="action-buttons">
+        <!-- Download Invoice Button -->
+        <a href="/download-invoice/<%= order._id %>" class="download-btn">
+            Download Invoice
+        </a>
+
+    </div>
+</div>
 
     <script>
         function cancelOrder(orderId) {

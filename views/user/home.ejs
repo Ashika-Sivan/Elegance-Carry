@@ -71,7 +71,7 @@
                     <strike>₹<%= product.regularPrice.toLocaleString('en-IN') %></strike>
                   </span>
                 </p>
-                <button class="btn btn-primary btn-sm" onclick="addToCart('<%=product._id%>')">Add to Cart</button>
+                <button class="btn btn-sm" style="background-color: #ff3f6c; border-color: #ff3f6c; color: white;" onclick="addToCart('<%=product._id%>')">Add to Cart</button>
               </div>
             </div>
           </div>          
@@ -92,13 +92,19 @@
 </section>
 
 
-
 <section class="featured-product mt-5 mb-5">
   <div class="container">
     <h2 class="text-center mb-4">Featured Products</h2>
     <div class="row g-4">
-      <% if (featuredProducts && featuredProducts.length > 0) { %>
-        <% featuredProducts.forEach(product => { %>
+      <% 
+        // If no featured products, use random products from the general products list
+        let displayProducts = featuredProducts && featuredProducts.length > 0 ? 
+          featuredProducts : 
+          products.sort(() => 0.5 - Math.random()).slice(0, 3); // Get 3 random products
+      %>
+      
+      <% if (displayProducts && displayProducts.length > 0) { %>
+        <% displayProducts.forEach(product => { %>
           <div class="col-12 col-md-4">
             <div class="card h-100">
               <button class="wishlist-btn position-absolute top-0 end-0 p-2" 
@@ -121,19 +127,19 @@
                 <h5 class="card-title"><%= product.productName %></h5>
                 <p class="text-muted">Brand: <%= product.brand?.name || 'N/A' %></p>
                 <p>Price: ₹<%= product.salePrice.toLocaleString('en-IN') %></p>
+                <button class="btn btn-sm" style="background-color: #ff3f6c; border-color: #ff3f6c; color: white;" onclick="addToCart('<%=product._id%>')">Add to Cart</button>
               </div>
             </div>
           </div>
         <% }); %>
       <% } else { %>
         <div class="col-12">
-          <p class="text-center">No featured products available</p>
+          <p class="text-center">No products available</p>
         </div>
       <% } %>
     </div>
   </div>
 </section>
-
 
 <script>
 function addToCart(productId) {
@@ -330,13 +336,13 @@ body {
 }
 
 .featured-product .btn-primary {
-  background-color: #0d6efd;
+  background-color: #ff3f6c;
   border: none;
   padding: 0.5rem 1rem;
 }
 
 .featured-product .btn-primary:hover {
-  background-color: #0b5ed7;
+  background-color: #ff3f6c;
 }
 
 .wishlist-btn {

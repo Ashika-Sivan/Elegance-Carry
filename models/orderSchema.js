@@ -73,6 +73,19 @@ const orderSchema = new Schema(
             type: Number,
             default: 0,
           },
+          status: {  // New field for individual item status
+            type: String,
+            default: "Processing",
+            enum: [
+              "Pending",
+              "Processing",
+              "Shipped",
+              "Delivered",
+              "Cancelled",
+              "Return Request",
+              "Returned",
+            ],
+          },
         },
       ],
   

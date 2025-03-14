@@ -12,16 +12,16 @@
     
     .stats-grid {
         display: flex;
-        flex-wrap: nowrap; /* Prevents wrapping to new line */
-        gap: 1.5rem; /* Consistent spacing between cards */
+        flex-wrap: nowrap;
+        gap: 1.5rem;
         margin-bottom: 1.5rem;
-        overflow-x: auto; /* Allows horizontal scrolling if needed on smaller screens */
-        justify-content: space-between; /* Distributes space evenly */
+        overflow-x: auto;
+        justify-content: space-between;
     }
     
     .stat-card {
-        flex: 1; /* Makes each card take equal space */
-        min-width: 200px; /* Minimum width to prevent squashing */
+        flex: 1;
+        min-width: 200px;
         background-color: #fff;
         border-radius: 8px;
         box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
@@ -51,26 +51,24 @@
         margin: 0;
     }
     
-    /* Responsive adjustments */
     @media (max-width: 768px) {
         .stats-grid {
-            flex-wrap: wrap; /* Allows wrapping on smaller screens */
+            flex-wrap: wrap;
             justify-content: center;
         }
         
         .stat-card {
-            flex: 0 1 45%; /* Two cards per row on medium screens */
+            flex: 0 1 45%;
             margin-bottom: 1rem;
         }
     }
     
     @media (max-width: 480px) {
         .stat-card {
-            flex: 0 1 100%; /* One card per row on small screens */
+            flex: 0 1 100%;
         }
     }
     
-    /* Rest of your existing styles for tables, etc. */
     .admin-orders-container table {
         font-size: 0.9rem;
         width: 100%;
@@ -118,226 +116,212 @@
         background-color: #cccccc;
         cursor: not-allowed;
     }
-    </style>
+</style>
 <section class="content-main">
-
-<div class="admin-orders-container">
     <div class="admin-orders-container">
-        <div class="stats-grid">
-            <div class="stat-card">
-                <h3>Total Orders</h3>
-                <p><%= totalOrders %></p>
-            </div>
-            <div class="stat-card">
-                <h3>Total Revenue</h3>
-                <p>₹<%= totalRevenue.toLocaleString() %></p>
-            </div>
-            <div class="stat-card">
-                <h3>Pending Orders</h3>
-                <p><%= orderCounts['Processing'] || 0 %></p>
-            </div>
-            <div class="stat-card">
-                <h3>Delivered Orders</h3>
-                <p><%= orderCounts['Delivered'] || 0 %></p>
+        <div class="admin-orders-container">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <h3>Total Orders</h3>
+                    <p><%= totalOrders %></p>
+                </div>
+                <div class="stat-card">
+                    <h3>Total Revenue</h3>
+                    <p>₹<%= totalRevenue.toLocaleString() %></p>
+                </div>
+                <div class="stat-card">
+                    <h3>Pending Orders</h3>
+                    <p><%= orderCounts['Processing'] || 0 %></p>
+                </div>
+                <div class="stat-card">
+                    <h3>Delivered Orders</h3>
+                    <p><%= orderCounts['Delivered'] || 0 %></p>
+                </div>
             </div>
         </div>
-    </div>
 
-    <div class="bg-white rounded-lg shadow p-4 mb-6">
-        <form method="GET" class="flex gap-4 items-center">
-            <label class="text-sm font-medium text-gray-700">Filter by Status:</label>
-            <select name="status" class="form-select rounded-md border-gray-300 p-2" onchange="this.form.submit()">
-                <option value="">All Status</option>
-                <option value="Processing" <%= selectedStatus === 'Processing' ? 'selected' : '' %>>Processing</option>
-                <option value="Shipped" <%= selectedStatus === 'Shipped' ? 'selected' : '' %>>Shipped</option>
-                <option value="Delivered" <%= selectedStatus === 'Delivered' ? 'selected' : '' %>>Delivered</option>
-                <option value="Cancelled" <%= selectedStatus === 'Cancelled' ? 'selected' : '' %>>Cancelled</option>
-            </select>
-        </form>
-    </div>
+        <div class="bg-white rounded-lg shadow p-4 mb-6">
+            <form method="GET" class="flex gap-4 items-center">
+                <label class="text-sm font-medium text-gray-700">Filter by Status:</label>
+                <select name="status" class="form-select rounded-md border-gray-300 p-2" onchange="this.form.submit()">
+                    <option value="">All Status</option>
+                    <option value="Processing" <%= selectedStatus === 'Processing' ? 'selected' : '' %>>Processing</option>
+                    <option value="Shipped" <%= selectedStatus === 'Shipped' ? 'selected' : '' %>>Shipped</option>
+                    <option value="Delivered" <%= selectedStatus === 'Delivered' ? 'selected' : '' %>>Delivered</option>
+                    <option value="Cancelled" <%= selectedStatus === 'Cancelled' ? 'selected' : '' %>>Cancelled</option>
+                </select>
+            </form>
+        </div>
 
-    <div class="table-container bg-white rounded-lg shadow">
-        <table class="min-w-full text-sm">
-            <thead class="bg-gray-100">
-                <tr>
-                    <th class="p-4 text-left font-medium text-gray-600">Order No</th>
-                    <th class="p-4 text-left font-medium text-gray-600">Customer</th>
-                    <th class="p-4 text-left font-medium text-gray-600">Items</th>
-                    <th class="p-4 text-left font-medium text-gray-600">Total</th>
-                    <th class="p-4 text-left font-medium text-gray-600">Status</th>
-                    <th class="p-4 text-left font-medium text-gray-600">Date</th>
-                    <th class="p-4 text-left font-medium text-gray-600">Actions</th>
-                </tr>
-            </thead>
-            <tbody class="bg-white divide-y divide-gray-200">
-                <% orders.forEach((order, index) => { %>
-                    <tr class="hover:bg-gray-50">
-                        <td class="p-4 text-gray-800 font-medium"><%= index + 1 %></td>
-
-                        <td class="p-4">
-                            <% if (order.user) { %>
-                                <p class="text-gray-900 font-medium"><%= order.user.name %></p>
-                                <p class="text-gray-500 text-xs"><%= order.user.email %></p>
-                            <% } else { %>
-                                <p class="text-gray-900 font-medium">User Deleted</p>
-                                <p class="text-gray-500 text-xs">No user data available</p>
-                            <% } %>
-                            </td>
-                        
-                        <td class="p-4">
-                            <% order.orderedItems.forEach(item => { %>
-                                <% if (item.product) { %>
-                                    <div class="flex items-center gap-3 mb-2">
-                                        <img src="/img/<%= item.product.productImage ? item.product.productImage[0] : 'default.jpg' %>" 
-                                             alt="<%= item.product.productName || 'Unknown Product' %>" class="rounded">
-                                        <span><%= item.product.productName || 'Product Removed' %> x <%= item.quantity %></span>
-                                    </div>
-                                <% } else { %>
-                                    <div class="flex items-center gap-3 mb-2">
-                                        <span class="text-red-500">Product Not Available</span>
-                                    </div>
-                                <% } %>
-                            <% }) %>
-                            
-                        </td>
-                        <td class="p-4 font-medium text-gray-800">₹<%= order.finalAmount %></td>
-                        <td class="p-4">
-    <select class="form-select rounded-md border-gray-300 p-3 margin-left-20" data-order-id="<%= order._id %>">
-        <option value="Pending" 
-                <%= order.status === 'Pending' ? 'selected' : '' %> 
-                <%= order.status === 'Processing' || order.status === 'Shipped' || order.status === 'Delivered' || order.status === 'Cancelled' || order.status === 'Return Request' || order.status === 'Returned' ? 'disabled' : '' %>>Pending</option>
-        <option value="Processing" 
-                <%= order.status === 'Processing' ? 'selected' : '' %> 
-                <%= order.status === 'Shipped' || order.status === 'Delivered' || order.status === 'Cancelled' || order.status === 'Return Request' || order.status === 'Returned' ? 'disabled' : '' %>>Processing</option>
-        <option value="Shipped" 
-                <%= order.status === 'Shipped' ? 'selected' : '' %> 
-                <%= order.status === 'Delivered' || order.status === 'Cancelled' || order.status === 'Return Request' || order.status === 'Returned' ? 'disabled' : '' %>>Shipped</option>
-        <option value="Delivered" 
-                <%= order.status === 'Delivered' ? 'selected' : '' %> 
-                <%= order.status === 'Cancelled' || order.status === 'Returned' ? 'disabled' : '' %>>Delivered</option>
-        <option value="Cancelled" 
-                <%= order.status === 'Cancelled' ? 'selected' : '' %> 
-                <%= order.status === 'Shipped' || order.status === 'Delivered' || order.status === 'Return Request' || order.status === 'Returned' ? 'disabled' : '' %>>Cancelled</option>
-        <option value="Return Request" 
-                <%= order.status === 'Return Request' ? 'selected' : '' %> 
-                <%= order.status !== 'Delivered' ? 'disabled' : '' %>>Return Request</option>
-        <option value="Returned" 
-                <%= order.status === 'Returned' ? 'selected' : '' %> 
-                <%= order.status !== 'Return Request' ? 'disabled' : '' %>>Returned</option>
-    </select>
-</td>
-                        <td class="p-4 text-gray-800"><%= new Date(order.createdAt).toLocaleDateString() %></td>
-                        <td class="p-4">
-                        
-                            <button onclick="window.location.href='/admin/order/<%=order._id %>'" class="text-blue-600 hover:underline">View Details</button>
-                            <% if (order.status === 'Return Request') { %>
-                                <button class="approve-btn" onclick="approveReturn('<%= order._id %>')">Approve Return</button>
-                            <% } %>
-                        </td>
+        <div class="table-container bg-white rounded-lg shadow">
+            <table class="min-w-full text-sm">
+                <thead class="bg-gray-100">
+                    <tr>
+                        <th class="p-4 text-left font-medium text-gray-600">Order No</th>
+                        <th class="p-4 text-left font-medium text-gray-600">Customer</th>
+                        <th class="p-4 text-left font-medium text-gray-600">Items</th>
+                        <th class="p-4 text-left font-medium text-gray-600">Total</th>
+                        <th class="p-4 text-left font-medium text-gray-600">Date</th>
+                        <th class="p-4 text-left font-medium text-gray-600">Actions</th>
                     </tr>
-                <% }) %>
-            </tbody>
-            
-        </table>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    <% orders.forEach((order, index) => { %>
+                        <tr class="hover:bg-gray-50">
+                            <td class="p-4 text-gray-800 font-medium"><%= index + 1 %></td>
+                            <td class="p-4">
+                                <% if (order.user) { %>
+                                    <p class="text-gray-900 font-medium"><%= order.user.name %></p>
+                                    <p class="text-gray-500 text-xs"><%= order.user.email %></p>
+                                <% } else { %>
+                                    <p class="text-gray-900 font-medium">User Deleted</p>
+                                    <p class="text-gray-500 text-xs">No user data available</p>
+                                <% } %>
+                            </td>
+                            <td class="p-4">
+                                <% order.orderedItems.forEach(item => { %>
+                                    <% if (item.product) { %>
+                                        <div class="flex items-center gap-3 mb-2">
+                                            <img src="/img/<%= item.product.productImage ? item.product.productImage[0] : 'default.jpg' %>" 
+                                                 alt="<%= item.product.productName || 'Unknown Product' %>" class="rounded">
+                                            <div class="flex flex-col">
+                                                <span><%= item.product.productName || 'Product Removed' %> x <%= item.quantity %></span>
+                                                <select class="form-select product-status-select rounded-md border-gray-300 p-2 mt-1" 
+                                                        data-order-id="<%= order._id %>" 
+                                                        data-item-id="<%= item._id %>">
+                                                    <option value="Pending" 
+                                                            <%= item.status === 'Pending' ? 'selected' : '' %> 
+                                                            <%= ['Processing', 'Shipped', 'Delivered', 'Cancelled', 'Return Request', 'Returned'].includes(item.status) ? 'disabled' : '' %>>Pending</option>
+                                                    <option value="Processing" 
+                                                            <%= item.status === 'Processing' ? 'selected' : '' %> 
+                                                            <%= ['Shipped', 'Delivered', 'Cancelled', 'Return Request', 'Returned'].includes(item.status) ? 'disabled' : '' %>>Processing</option>
+                                                    <option value="Shipped" 
+                                                            <%= item.status === 'Shipped' ? 'selected' : '' %> 
+                                                            <%= ['Delivered', 'Cancelled', 'Return Request', 'Returned'].includes(item.status) ? 'disabled' : '' %>>Shipped</option>
+                                                    <option value="Delivered" 
+                                                            <%= item.status === 'Delivered' ? 'selected' : '' %> 
+                                                            <%= ['Cancelled', 'Returned'].includes(item.status) ? 'disabled' : '' %>>Delivered</option>
+                                                    <option value="Cancelled" 
+                                                            <%= item.status === 'Cancelled' ? 'selected' : '' %> 
+                                                            <%= ['Shipped', 'Delivered', 'Return Request', 'Returned'].includes(item.status) ? 'disabled' : '' %>>Cancelled</option>
+                                                    <option value="Return Request" 
+                                                            <%= item.status === 'Return Request' ? 'selected' : '' %> 
+                                                            <%= item.status !== 'Delivered' ? 'disabled' : '' %>>Return Request</option>
+                                                    <option value="Returned" 
+                                                            <%= item.status === 'Returned' ? 'selected' : '' %> 
+                                                            <%= item.status !== 'Return Request' ? 'disabled' : '' %>>Returned</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    <% } else { %>
+                                        <div class="flex items-center gap-3 mb-2">
+                                            <span class="text-red-500">Product Not Available</span>
+                                        </div>
+                                    <% } %>
+                                <% }) %>
+                            </td>
+                            <td class="p-4 font-medium text-gray-800">₹<%= order.finalAmount %></td>
+                            <td class="p-4 text-gray-800"><%= new Date(order.createdAt).toLocaleDateString() %></td>
+                            <td class="p-4">
+                                <button onclick="window.location.href='/admin/order/<%=order._id %>'" class="text-blue-600 hover:underline">View Details</button>
+                                <% if (order.orderedItems.some(item => item.status === 'Return Request')) { %>
+                                    <button class="approve-btn" onclick="approveReturn('<%= order._id %>')">Approve Return</button>
+                                <% } %>
+                            </td>
+                        </tr>
+                    <% }) %>
+                </tbody>
+            </table>
+        </div>
     </div>
-</div>
 </section>
 
 <script>
     async function checkResponse(response) {
-    const contentType = response.headers.get('content-type');
-    // if (!contentType || !contentType.includes('application/json')) {
-    //     throw new Error('Received non-JSON response. You might need to log in again.');
-    // }
-    return response.json();
-}
-
-// In adminOrderList.ejs <script>
-    async function checkResponse(response) {
-    // Check for 401 Unauthorized
-    if (response.status === 401) {
-        alert('Session expired. Redirecting to login page...');
-        window.location.href = '/admin/login';
-        throw new Error('Session expired');
-    }
-
-    const contentType = response.headers.get('content-type');
-    if (!contentType || !contentType.includes('application/json')) {
-        throw new Error('Received non-JSON response. You might need to log in again.');
-    }
-    return response.json();
-}
-
-// Update status change
-document.querySelectorAll('.form-select').forEach(select => {
-    select.addEventListener('change', async function() {
-        const orderId = this.dataset.orderId;
-        const status = this.value;
-        const originalStatus = this.querySelector('[selected]').value;
-
-        if (this.querySelector(`option[value="${status}"]`).disabled) {
-            this.value = originalStatus;
-            return;
+        if (response.status === 401) {
+            alert('Session expired. Redirecting to login page...');
+            window.location.href = '/admin/login';
+            throw new Error('Session expired');
         }
 
-        try {
-            const response = await fetch('/admin/order/update-status', {
-                method: 'POST',
-                headers: { 
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json'
-                },
-                body: JSON.stringify({ orderId, status })
-            });
-            const data = await checkResponse(response);
+        const contentType = response.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+            throw new Error('Received non-JSON response. You might need to log in again.');
+        }
+        return response.json();
+    }
 
-            if (data.success) {
-                const successMessage = document.createElement('div');
-                successMessage.className = 'text-green-500 text-sm mt-2';
-                successMessage.textContent = 'Status updated successfully';
-                this.parentNode.appendChild(successMessage);
-                setTimeout(() => successMessage.remove(), 3000);
-            } else {
-                throw new Error(data.message || 'Failed to update status');
+    // Update status change for individual products
+    document.querySelectorAll('.product-status-select').forEach(select => {
+        select.addEventListener('change', async function() {
+            const orderId = this.dataset.orderId;
+            const itemId = this.dataset.itemId;
+            const status = this.value;
+            const originalStatus = this.querySelector('[selected]').value;
+
+            if (this.querySelector(`option[value="${status}"]`).disabled) {
+                this.value = originalStatus;
+                return;
             }
-        } catch (error) {
-            console.error('Error:', error);
-            const errorMessage = document.createElement('div');
-            errorMessage.className = 'text-red-500 text-sm mt-2';
-            errorMessage.textContent = error.message || 'Failed to update status';
-            this.parentNode.appendChild(errorMessage);
-            setTimeout(() => errorMessage.remove(), 3000);
-            this.value = originalStatus;
-        }
+
+            try {
+                const response = await fetch('/admin/order/update-item-status', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({ orderId, itemId, status })
+                });
+                const data = await checkResponse(response);
+
+                if (data.success) {
+                    const successMessage = document.createElement('div');
+                    successMessage.className = 'text-green-500 text-sm mt-2';
+                    successMessage.textContent = 'Product status updated successfully';
+                    this.parentNode.appendChild(successMessage);
+                    setTimeout(() => successMessage.remove(), 3000);
+                } else {
+                    throw new Error(data.message || 'Failed to update status');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                const errorMessage = document.createElement('div');
+                errorMessage.className = 'text-red-500 text-sm mt-2';
+                errorMessage.textContent = error.message || 'Failed to update status';
+                this.parentNode.appendChild(errorMessage);
+                setTimeout(() => errorMessage.remove(), 3000);
+                this.value = originalStatus;
+            }
+        });
     });
-});
 
-// Update approveReturn
-async function approveReturn(orderId) {
-    if (confirm('Are you sure you want to approve this return request? This will update stock and refund the user.')) {
-        try {
-            const response = await fetch('/admin/order/approve-return', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json'
-                },
-                body: JSON.stringify({ orderId })
-            });
-            const data = await checkResponse(response);
+    // Approve Return
+    async function approveReturn(orderId) {
+        if (confirm('Are you sure you want to approve this return request? This will update stock and refund the user.')) {
+            try {
+                const response = await fetch('/admin/order/approve-return', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({ orderId })
+                });
+                const data = await checkResponse(response);
 
-            if (data.success) {
-                alert('Return approved successfully!');
-                window.location.reload();
-            } else {
-                throw new Error(data.message || 'Failed to approve return');
+                if (data.success) {
+                    alert('Return approved successfully!');
+                    window.location.reload();
+                } else {
+                    throw new Error(data.message || 'Failed to approve return');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert(error.message || 'Failed to approve return');
             }
-        } catch (error) {
-            console.error('Error:', error);
-            alert(error.message || 'Failed to approve return');
         }
     }
-}
 </script>
 
 <%- include('../layouts/admin/footer') %>

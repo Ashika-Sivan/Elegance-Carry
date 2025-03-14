@@ -170,247 +170,394 @@
             cursor: pointer;
             font-weight: 600;
         }
+        .retry-btn {
+    background: #f39c12;
+    color: white;
+    padding: 8px 14px;
+    border: none;
+    border-radius: 4px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    text-transform: uppercase;
+}
+.retry-btn:disabled {
+    background: #cccccc;
+    cursor: not-allowed;
+}
+.refund-info {
+    color: #03a685;
+    font-size: 13px;
+    margin-top: 4px;
+}
     </style>
-    <main>
-        <div class="orders-container">
-            <h2>My Orders</h2>
-            <% if (orders && orders.length > 0) { %>
-                <% orders.forEach((order) => { %>
-                    <div class="order-card">
-                        <div class="order-header">
-                            <div>
-                                <span class="order-id">Order ID: <%= order.orderId %></span>
-                                <div class="order-date">Ordered on: <%= order.invoiceDate %></div>
-                            </div>
-                            <span class="order-status" data-status="<%= order.status %>"><%= order.status %></span>
-                        </div>
-                        <% if (order.orderedItems && order.orderedItems.length > 0) { %>
-                            <% order.orderedItems.forEach((item, index) => { %>
-                                <div class="order-items">
-                                    <div class="order-image">
-                                        <img src="/img/<%= item.product.productImage ? item.product.productImage[0] : 'default.png' %>"
-                                             alt="<%= item.product.productName %>">
-                                    </div>
-                                    <div class="order-details">
-                                        <div class="product-name"><%= item.product.productName %></div>
-                                        <div class="product-price">₹<%= item.price %> x <%= item.quantity %></div>
-                                    </div>
-                                </div>
-                            <% }) %>
-                        <% } %>
-                        <div class="order-summary">
-                            <% if (order.discount > 0) { %>
-                                <div>Discount Applied: ₹<%= order.discount %></div>
-                            <% } %>
-                            <div>Total Amount: ₹<%= order.finalAmount %></div>
-                        </div>
-                        <div class="order-actions">
-                            <button onclick="window.location.href='/order/<%=order._id %>'" class="view-btn">View Details</button>
-                            
-                            <button class="cancel-btn" onclick="cancelOrder('<%= order.orderId %>')" 
-                                    <%= ['Delivered', 'Cancelled', 'Return Request', 'Returned', 'Shipped'].includes(order.status) ? 'disabled' : '' %>>
-                                Cancel Order
-                            </button>
-                            
-                            <button class="return-btn" onclick="openReturnModal('<%= order.orderId %>')"
-                                <%= order.status === 'Delivered' ? '' : 'disabled' %>>
-                            Return Order
-                        </button>
+<main>
+    <div class="orders-container">
+        <h2>My Orders</h2>
+        <% if (orders && orders.length > 0) { %>
+            <% orders.forEach((order) => { %>
+                <div class="order-card">
+                    <div class="order-header">
+                        <div>
+                            <span class="order-id">Order ID: <%= order.orderId %></span>
+                            <div class="order-date">Ordered on: <%= order.invoiceDate || new Date(order.createdAt).toLocaleDateString() %></div>
                         </div>
                     </div>
-                <% }) %>
-            <% } else { %>
-                <p>No orders found.</p>
-            <% } %>
-        </div>
-    </main>
-    
-    <!-- Return Order Modal -->
-    <div id="returnModal" class="modal">
-        <div class="modal-content">
-            <span class="close-btn" onclick="closeReturnModal()">&times;</span>
-            <h3>Return Order</h3>
-            <form id="returnForm">
-                <input type="hidden" id="returnOrderId" name="orderId">
-                
-                <div class="form-group">
-                    <label for="returnReason">Reason for Return:</label>
-                    <select id="returnReason" name="returnReason" class="form-control" required>
-                        <option value="">Select a reason</option>
-                        <option value="Damaged Product">Damaged Product</option>
-                        <option value="Wrong Product">Wrong Product</option>
-                        <option value="Quality Issue">Quality Issue</option>
-                        <option value="Not as Described">Not as Described</option>
-                        <option value="Better Price Available">Better Price Available</option>
-                        <option value="Other">Other</option>
-                    </select>
+  
+                    <% if (order.orderedItems && order.orderedItems.length > 0) { %>
+                        <% order.orderedItems.forEach((item, index) => { %>
+                            <div class="order-items">
+                                <div class="order-image">
+                                    <img
+                                        src="/img/<%= item.product.productImage ? item.product.productImage[0] : 'default.png' %>"
+                                        alt="<%= item.product.productName %>"
+                                    >
+                                </div>
+                                <div class="order-details">
+                                    <div class="product-name"><%= item.product.productName %></div>
+                                    <div class="product-price">₹<%= item.price %> x <%= item.quantity %></div>
+                                    <div class="item-status">Status: <%= item.status %></div>
+                                    <% if (item.status === 'Returned') { %>
+                                        <div class="refund-info">Refunded: ₹<%= item.price * item.quantity %></div>
+                                    <% } %>
+                                    <p><strong>Payment Status:</strong> <%= order.paymentStatus %></p>
+                                </div>
+                                <div class="item-actions">
+                                    <button
+                                        class="cancel-btn"
+                                        onclick="cancelOrderItem('<%= order.orderId %>', '<%= item._id %>')"
+                                        <%= !['Pending', 'Processing'].includes(item.status) ? 'disabled' : '' %>
+                                    >
+                                        Cancel Item
+                                    </button>
+                                    <button
+                                        class="return-btn"
+                                        onclick="openReturnModal('<%= order.orderId %>', '<%= item._id %>')"
+                                        <%= item.status.trim() === 'Delivered' ? '' : 'disabled' %>
+                                    >
+                                        Return Item
+                                    </button>
+                                </div>
+                            </div>
+                        <% }) %>
+                    <% } %>
+  
+                    <div class="order-summary">
+                        <% if (order.discount > 0) { %>
+                            <div>Discount Applied: ₹<%= order.discount %></div>
+                        <% } %>
+                        <div>Total Amount: ₹<%= order.finalAmount %></div>
+                    </div>
+                    <div class="order-actions">
+                        <button onclick="window.location.href='/order/<%= order._id %>'" class="view-btn">
+                            View Details
+                        </button>
+                        <% if (order.paymentMethod === 'Razorpay' && order.paymentStatus === 'Failed') { %>
+                            <button class="retry-btn" onclick="retryPayment('<%= order._id %>', '<%= order.razorpayOrderId %>')">
+                                Retry Payment
+                            </button>
+                        <% } %>
+                    </div>
                 </div>
-                
-                <div class="form-group">
-                    <label for="returnComments">Additional Comments:</label>
-                    <textarea id="returnComments" name="returnComments" class="form-control" rows="4"></textarea>
-                </div>
-                
-                <button type="submit" class="submit-btn">Submit Return Request</button>
-            </form>
-        </div>
+            <% }) %>
+        <% } else { %>
+            <p>No orders found.</p>
+        <% } %>
     </div>
-</body>
+  </main>
+
+<!-- Return Order Modal -->
+<div id="returnModal" class="modal">
+    <div class="modal-content">
+        <span class="close-btn" onclick="closeReturnModal()">×</span>
+        <h3>Return Item</h3>
+        <form id="returnForm">
+            <input type="hidden" id="returnOrderId" name="orderId">
+            <input type="hidden" id="returnItemId" name="itemId">
+            <div class="form-group">
+                <label for="returnReason">Reason for Return:</label>
+                <select id="returnReason" name="returnReason" class="form-control" required>
+                    <option value="">Select a reason</option>
+                    <option value="Damaged Product">Damaged Product</option>
+                    <option value="Wrong Product">Wrong Product</option>
+                    <option value="Quality Issue">Quality Issue</option>
+                    <option value="Not as Described">Not as Described</option>
+                    <option value="Better Price Available">Better Price Available</option>
+                    <option value="Other">Other</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="returnComments">Additional Comments:</label>
+                <textarea id="returnComments" name="returnComments" class="form-control" rows="4"></textarea>
+            </div>
+            <button type="submit" class="submit-btn">Submit Return Request</button>
+        </form>
+    </div>
+  </div>
 
 <script>
-// Cancel Order Function
-function cancelOrder(orderId) {
-    // First confirmation
-    Swal.fire({
-        title: 'Cancel Order',
-        text: 'Are you sure you want to cancel this order?',
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#ff3f6c',
-        cancelButtonColor: '#3f4254',
-        confirmButtonText: 'Yes, cancel it!',
-        cancelButtonText: 'No, keep it'
-    }).then((result) => {
-        if (result.isConfirmed) {
-            // Make the API call
-            fetch(`/cancel-order/${orderId}`, {
-                method: 'POST',
-                headers: {
-                    'Accept': 'application/json',
-                    'Content-Type': 'application/json'
-                }
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    // Success message
-                    Swal.fire({
-                        title: 'Cancelled!',
-                        text: data.message || 'Order has been cancelled successfully.',
-                        icon: 'success',
-                        confirmButtonColor: '#ff3f6c'
-                    }).then(() => {
-                        window.location.reload();
-                    });
-                } else {
-                    // Error message
-                    Swal.fire({
-                        title: 'Error!',
-                        text: data.message || 'Failed to cancel order',
-                        icon: 'error',
-                        confirmButtonColor: '#ff3f6c'
-                    });
-                }
-            })
-            .catch(error => {
-                // Network or other error
-                console.error('Error:', error);
-                Swal.fire({
-                    title: 'Error!',
-                    text: 'An error occurred while cancelling the order',
-                    icon: 'error',
-                    confirmButtonColor: '#ff3f6c'
-                });
-            });
-        }
-    });
+// Cancel Item Function
+function cancelOrderItem(orderId, itemId) {
+  Swal.fire({
+      title: 'Cancel Item',
+      text: 'Are you sure you want to cancel this item?',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#ff3f6c',
+      cancelButtonColor: '#3f4254',
+      confirmButtonText: 'Yes, cancel it!',
+      cancelButtonText: 'No, keep it',
+  }).then((result) => {
+      if (result.isConfirmed) {
+          fetch(`/cancel-order/${orderId}/${itemId}`, {
+              method: 'POST',
+              headers: {
+                  'Accept': 'application/json',
+                  'Content-Type': 'application/json',
+              },
+          })
+              .then((response) => response.json())
+              .then((data) => {
+                  if (data.success) {
+                      Swal.fire({
+                          title: 'Cancelled!',
+                          text: data.message || 'Item has been cancelled successfully.',
+                          icon: 'success',
+                          confirmButtonColor: '#ff3f6c',
+                      }).then(() => {
+                          window.location.reload();
+                      });
+                  } else {
+                      Swal.fire({
+                          title: 'Error!',
+                          text: data.message || 'Failed to cancel item',
+                          icon: 'error',
+                          confirmButtonColor: '#ff3f6c',
+                      });
+                  }
+              })
+              .catch((error) => {
+                  console.error('Error:', error);
+                  Swal.fire({
+                      title: 'Error!',
+                      text: 'An error occurred while cancelling the item',
+                      icon: 'error',
+                      confirmButtonColor: '#ff3f6c',
+                  });
+              });
+      }
+  });
 }
 
 // Return Order Functions
 const returnModal = document.getElementById('returnModal');
 const returnForm = document.getElementById('returnForm');
 const returnOrderIdInput = document.getElementById('returnOrderId');
+const returnItemIdInput = document.getElementById('returnItemId');
 
-// Open return modal
-function openReturnModal(orderId) {
-    returnOrderIdInput.value = orderId;
-    returnModal.style.display = 'block';
+function openReturnModal(orderId, itemId) {
+  returnOrderIdInput.value = orderId;
+  returnItemIdInput.value = itemId;
+  returnModal.style.display = 'block';
 }
 
-// Close return modal
 function closeReturnModal() {
-    returnModal.style.display = 'none';
-    returnForm.reset();
+  returnModal.style.display = 'none';
+  returnForm.reset();
 }
 
-// Close modal if clicked outside of it
-window.onclick = function(event) {
-    if (event.target === returnModal) {
-        closeReturnModal();
-    }
-}
+window.onclick = function (event) {
+  if (event.target === returnModal) {
+      closeReturnModal();
+  }
+};
 
-// Handle return form submission
-returnForm.addEventListener('submit', function(e) {
-    e.preventDefault();
-    
-    const orderId = returnOrderIdInput.value;
-    const returnReason = document.getElementById('returnReason').value;
-    const returnComments = document.getElementById('returnComments').value;
-    
-    // First confirmation
+returnForm.addEventListener('submit', function (e) {
+  e.preventDefault();
+
+  const orderId = returnOrderIdInput.value;
+  const itemId = returnItemIdInput.value;
+  const returnReason = document.getElementById('returnReason').value;
+  const returnComments = document.getElementById('returnComments').value;
+
+  Swal.fire({
+      title: 'Return Item',
+      text: 'Are you sure you want to request a return for this item?',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#9b59b6',
+      cancelButtonColor: '#3f4254',
+      confirmButtonText: 'Yes, proceed!',
+      cancelButtonText: 'No, cancel',
+  }).then((result) => {
+      if (result.isConfirmed) {
+          fetch(`/return-order/${orderId}/${itemId}`, { // Use existing endpoint
+              method: 'POST',
+              headers: {
+                  'Accept': 'application/json',
+                  'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                  reason: returnReason,
+                  comments: returnComments
+              }),
+          })
+              .then((response) => response.json())
+              .then((data) => {
+                  closeReturnModal();
+                  if (data.success) {
+                      Swal.fire({
+                          title: 'Return Requested!',
+                          text: data.message || 'Return request has been submitted successfully.',
+                          icon: 'success',
+                          confirmButtonColor: '#9b59b6',
+                      }).then(() => {
+                          window.location.reload();
+                      });
+                  } else {
+                      Swal.fire({
+                          title: 'Error!',
+                          text: data.message || 'Failed to submit return request',
+                          icon: 'error',
+                          confirmButtonColor: '#9b59b6',
+                      });
+                  }
+              })
+              .catch((error) => {
+                  closeReturnModal();
+                  console.error('Error:', error);
+                  Swal.fire({
+                      title: 'Error!',
+                      text: 'An error occurred while submitting return request',
+                      icon: 'error',
+                      confirmButtonColor: '#9b59b6',
+                  });
+              });
+      }
+  });
+});
+function retryPayment(orderId, amount, razorpayOrderId) {
+    console.log("Retry Payment Data:", { orderId, razorpayOrderId }); // Removed amount from log
     Swal.fire({
-        title: 'Return Order',
-        text: 'Are you sure you want to request a return for this order?',
-        icon: 'warning',
+        title: 'Retry Payment',
+        text: 'Would you like to retry the payment for this order?',
+        icon: 'question',
         showCancelButton: true,
-        confirmButtonColor: '#9b59b6',
+        confirmButtonColor: '#f39c12',
         cancelButtonColor: '#3f4254',
-        confirmButtonText: 'Yes, proceed!',
+        confirmButtonText: 'Yes, retry!',
         cancelButtonText: 'No, cancel'
     }).then((result) => {
         if (result.isConfirmed) {
-            // Make the API call
-            fetch(`/return-order/${orderId}`, {
+            fetch('/retryPayment', {
                 method: 'POST',
                 headers: {
-                    'Accept': 'application/json',
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
-                    reason: returnReason,
-                    comments: returnComments
-                })
+                    orderId: orderId,
+                    razorpayOrderId: razorpayOrderId
+                }) // Removed amount from request
             })
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) {
+                    console.error("Retry Payment Failed with Status:", response.status);
+                    return response.text().then(text => {
+                        throw new Error(`Server returned ${response.status}: ${text}`);
+                    });
+                }
+                return response.json();
+            })
             .then(data => {
-                closeReturnModal();
-                
                 if (data.success) {
-                    // Success message
-                    Swal.fire({
-                        title: 'Return Requested!',
-                        text: data.message || 'Return request has been submitted successfully.',
-                        icon: 'success',
-                        confirmButtonColor: '#9b59b6'
-                    }).then(() => {
-                        window.location.reload();
+                    const options = {
+                        key: data.razorpayKeyId,
+                        amount: data.amount, // Use the recalculated amount from backend
+                        currency: "INR",
+                        name: "Your Shop Name",
+                        description: "Retry Order Payment",
+                        order_id: data.razorpayOrderId,
+                        handler: async function (response) {
+                            try {
+                                const verifyResponse = await fetch('/verifyPayment', {
+                                    method: 'POST',
+                                    headers: {
+                                        'Content-Type': 'application/json'
+                                    },
+                                    body: JSON.stringify({
+                                        razorpayOrderId: data.razorpayOrderId,
+                                        razorpayPaymentId: response.razorpay_payment_id,
+                                        razorpaySignature: response.razorpay_signature,
+                                        orderId: data.orderId
+                                    })
+                                });
+
+                                const verifyData = await verifyResponse.json();
+                                if (verifyData.success) {
+                                    Swal.fire({
+                                        title: "Payment Successful!",
+                                        text: "Your payment has been processed successfully.",
+                                        icon: "success",
+                                        confirmButtonColor: "#f39c12"
+                                    }).then(() => {
+                                        window.location.reload();
+                                    });
+                                } else {
+                                    Swal.fire({
+                                        title: "Payment Verification Failed",
+                                        text: verifyData.message,
+                                        icon: "error"
+                                    });
+                                }
+                            } catch (error) {
+                                Swal.fire({
+                                    title: "Error",
+                                    text: "Payment verification failed.",
+                                    icon: "error"
+                                });
+                            }
+                        },
+                        prefill: {
+                            name: "<%= user.name %>",
+                            email: "<%= user.email %>",
+                            contact: "<%= user.phone %>"
+                        },
+                        theme: {
+                            color: "#f39c12"
+                        }
+                    };
+
+                    const razorpayInstance = new Razorpay(options);
+                    razorpayInstance.open();
+
+                    razorpayInstance.on('payment.failed', function (response) {
+                        Swal.fire({
+                            title: "Payment Failed",
+                            text: response.error.description,
+                            icon: "error"
+                        });
                     });
                 } else {
-                    // Error message
                     Swal.fire({
-                        title: 'Error!',
-                        text: data.message || 'Failed to submit return request',
-                        icon: 'error',
-                        confirmButtonColor: '#9b59b6'
+                        title: "Error",
+                        text: data.message,
+                        icon: "error"
                     });
                 }
             })
             .catch(error => {
-                closeReturnModal();
-                
-                // Network or other error
-                console.error('Error:', error);
+                console.error('Retry Payment Error:', error);
                 Swal.fire({
-                    title: 'Error!',
-                    text: 'An error occurred while submitting return request',
-                    icon: 'error',
-                    confirmButtonColor: '#9b59b6'
+                    title: "Error",
+                    text: "Failed to initiate payment retry: " + error.message,
+                    icon: "error"
                 });
             });
         }
     });
-});
+}
 </script>
-
-<%- include("../layouts/user/footer.ejs") %>
+<!-- In footer.ejs -->
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</body>

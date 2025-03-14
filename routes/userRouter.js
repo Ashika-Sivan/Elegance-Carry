@@ -77,14 +77,18 @@ router.get("/check-out",userAuth,cartController.loadCheckOutPage)
 //order management
 // router.get("/orderList",userAuth,orderController.placeOrder)
 router.post("/placeOrder", userAuth, orderController.placeOrder);
-router.post('/verifyRazorpayPayment', userAuth, orderController.verifyPayment);
+router.post('/verifyPayment', userAuth, orderController.verifyPayment);
 router.get("/orderList",userAuth,orderController.loadOrderListPage)
-router.post('/cancel-order/:orderId', userAuth,orderController.cancelOrder);
-router.post("/return-order/:orderId", orderController.returnOrder);
+router.post('/cancel-order/:orderId/:itemId', userAuth, orderController.cancelOrder);
+router.post('/return-order/:orderId/:itemId', userAuth, orderController.returnOrder);
 router.get('/order/:id', userAuth, orderController.loadViewDetailsPage);
-
 router.post("/applyCoupon",userAuth,orderController.applyCoupon)
 router.post("/removeCoupon",userAuth,orderController.removeCoupon)
+router.get("/download-invoice/:id",userAuth,orderController.downloadInvoice)
+router.post('/retryPayment',userAuth,orderController.retryPayment)
+router.post('/updateOrderStatusOnFailure',userAuth,orderController.updateOrderStatusOnFailure);
+router.post("/RequestRefund",userAuth,orderController.walletReturnRefund)
+
 //wishlist managemnet
 router.get("/wishlist",userAuth,wishlistController.loadWishlist)
 router.post("/wishlist",userAuth,wishlistController.updateWishlist)
@@ -97,10 +101,12 @@ router.post("/addFund",userAuth,walletController.addFund)
 router.post("/walletPayment",userAuth,walletController.verifyRazorpayPayment)
 router.get("/walletRefund",userAuth,walletController.walletRefund)
 router.post("/deductWallet",userAuth,walletController.deductWalletBalance)
-
 router.post("/verify-referral",userAuth,userController.verifyReferral)
 
 
+
+
+router.get("/failure",userAuth,orderController.paymentFailure)
 
 
 

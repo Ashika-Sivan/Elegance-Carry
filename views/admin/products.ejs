@@ -8,7 +8,7 @@
     </div>
 </div>
 <header class="card-header text-center mb-20" style="margin-left: 300px;">
-    <form action="post" method="get" class="d-inline">
+    <form action="/product" method="get" class="d-inline">
         <div class="input-group input-group-sm border border-1 border-grey rounded-pill" style="width: 500px; margin-left: 230px;">
             <input type="text" class="form-control border-0 rounded-pill" placeholder="Search products or brands" name="search">
             <button class="btn  border-0" type="submit">Search</button>
@@ -242,7 +242,17 @@ async function confirmBlock(productId, action) {
 }
 
 
-
+document.querySelector('form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const searchQuery = document.querySelector('input[name="search"]').value;
+    const response = await fetch(`/product?search=${encodeURIComponent(searchQuery)}`);
+    if (response.ok) {
+        const data = await response.text();
+        document.querySelector('.right').innerHTML = data; // Update table dynamically
+    } else {
+        console.error('Search failed:', await response.text());
+    }
+});
 
 </script>
 <%- include("../../views/layouts/admin/footer") %>

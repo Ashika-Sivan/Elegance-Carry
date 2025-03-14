@@ -1,85 +1,260 @@
-<%- include("../../views/layouts/admin/header") %>
 
-<main class="main-wrap">
-    <header class="main-header">
-        <div class="header-title">Admin Dashboard</div>
-        <div><a class="dropdown-item" href="/admin/logout" style="color: #333;">
-            <i class="fas fa-sign-out-alt"></i> Logout
-        </a></div>
-    </header>
+<%- include("../../views/layouts/admin/header",{currentPage:'users'}) %>
+<head>
+    <link rel="stylesheet" href="/css/dashboard.css"> <!-- Add your CSS file if available -->
+    <!-- Include Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+
+</head>
     
-    <div class="dashboard-content">
-        <h1>Welcome to the Admin Dashboard</h1>
-        <p>Select an option from the sidebar to manage the e-commerce website.</p>
+<body>
+    <div class="dashboard-container" style="margin-left: 250px;">
+        <!-- Filter Section -->
+        <div class="filter-section">
+            <h2>Admin Dashboard - Analytics</h2>
+            <form method="GET" action="/admin/dashboard">
+                <label for="filterValue">Filter By:</label>
+                <select name="filterValue" id="filterValue" onchange="this.form.submit()">
+                    <option value="all" <%= selectedFilter === 'all' ? 'selected' : '' %>>All Time</option>
+                    <option value="daily" <%= selectedFilter === 'daily' ? 'selected' : '' %>>Daily</option>
+                    <option value="weekly" <%= selectedFilter === 'weekly' ? 'selected' : '' %>>Weekly</option>
+                    <option value="monthly" <%= selectedFilter === 'monthly' ? 'selected' : '' %>>Monthly</option>
+                    <option value="yearly" <%= selectedFilter === 'yearly' ? 'selected' : '' %>>Yearly</option>
+                    <option value="custom" <%= selectedFilter === 'custom' ? 'selected' : '' %>>Custom</option>
+                </select>
+
+                <!-- Custom Date Range -->
+                <div class="date-range" style="display: <%= selectedFilter === 'custom' ? 'block' : 'none' %>;">
+                    <label for="startDate">Start Date:</label>
+                    <input type="date" name="startDate" id="startDate" value="<%= startDate %>" onchange="this.form.submit()">
+                    <label for="endDate">End Date:</label>
+                    <input type="date" name="endDate" id="endDate" value="<%= endDate %>" onchange="this.form.submit()">
+                </div>
+            </form>
+        </div>
+
+        <!-- Chart Section -->
+        <div class="chart-section">
+            <h3>Revenue Trend</h3>
+            <canvas id="revenueChart" width="400" height="200"></canvas>
+        </div>
+
+        <!-- Overview Section -->
+        <div class="overview-section">
+            <h3>Overview</h3>
+            <div class="overview-stats">
+                <div class="stat-box">
+                    <h4>Total Revenue</h4>
+                    <p>₹<%= parseInt(totalRevenue) %></p>
+                </div>
+                <div class="stat-box">
+                    <h4>Total Orders</h4>
+                    <p><%= totalOrders %></p>
+                </div>
+                <div class="stat-box">
+                    <h4>New Customers</h4>
+                    <p><%= totalCustomers %></p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Best Selling Products Section -->
+        <div class="best-selling-products">
+            <h3>Best Selling Products (Top 10)</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Product Name</th>
+                        <th>Image</th>
+                        <th>Total Quantity</th>
+                        <th>Total Revenue</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% if (topProducts.length > 0) { %>
+                        <% topProducts.forEach(product => { %>
+                            <tr>
+                                <td><%= product.productName %></td>
+                                <td>
+                                    <% if (product.productImage && product.productImage.length > 0) { %>
+                                        <img src="/img/<%= product.productImage[0] %>" alt="<%= product.productName %>" width="50" height="50">
+                                    <% } else { %>
+                                        <span>No Image</span>
+                                    <% } %>
+                                </td>
+                                <td><%= product.totalQuantity %></td>
+                                <td>₹<%= parseInt(product.totalRevenue) %></td>
+                            </tr>
+                        <% }); %>
+                    <% } else { %>
+                        <tr>
+                            <td colspan="4">No data available</td>
+                        </tr>
+                    <% } %>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Best Selling Categories Section -->
+        <div class="best-selling-categories">
+            <h3>Best Selling Categories (Top 10)</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Category Name</th>
+                        <th>Total Orders</th>
+                        <th>Total Quantity Sold</th>
+                        <th>Total Revenue</th>
+                        <th>Average Order Value</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% if (topCategories.length > 0) { %>
+                        <% topCategories.forEach(category => { %>
+                            <tr>
+                                <td><%= category.categoryName %></td>
+                                <td><%= category.totalOrders %></td>
+                                <td><%= category.totalQuantitySold %></td>
+                                <td>₹<%= category.totalRevenue %></td>
+                                <td>₹<%= category.averageOrderValue %></td>
+                            </tr>
+                        <% }); %>
+                    <% } else { %>
+                        <tr>
+                            <td colspan="5">No data available</td>
+                        </tr>
+                    <% } %>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Best Selling Brands Section -->
+        <div class="best-selling-brands">
+            <h3>Best Selling Brands (Top 10)</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Brand Name</th>
+                        <th>Total Sales</th>
+                        <th>Total Quantity</th>
+                        <th>Average Order Value</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% if (topBrand.length > 0) { %>
+                        <% topBrand.forEach(brand => { %>
+                            <tr>
+                                <td><%= brand.brandName %></td>
+                                <td>₹<%= parseInt(brand.totalSales) %></td>
+                                <td><%= brand.totalQuantity %></td>
+                                <td>₹<%= parseInt(brand.averageOrderValue) %></td>
+                            </tr>
+                        <% }); %>
+                    <% } else { %>
+                        <tr>
+                            <td colspan="4">No data available</td>
+                        </tr>
+                    <% } %>
+                </tbody>
+            </table>
+        </div>
     </div>
-</main>
 
-<%- include("../../views/layouts/admin/footer.ejs") %>
+    <script>
+        // Show/hide date range inputs based on filter selection
+        document.getElementById('filterValue').addEventListener('change', function() {
+            const dateRange = document.querySelector('.date-range');
+            if (this.value === 'custom') {
+                dateRange.style.display = 'block';
+            } else {
+                dateRange.style.display = 'none';
+            }
+        });
 
-<style>
-.main-wrap {
-    min-height: 100vh;
-    background-color: #f5f6fa;
+        // Fetch chart data dynamically (you can pass this from the server)
+        const chartData = {
+            labels: <%- JSON.stringify(chartLabels) %>,
+            data: <%- JSON.stringify(chartData) %>
+        };
+
+        // Render Chart.js Line Chart for Revenue Trend
+        const ctx = document.getElementById('revenueChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'line', // Can change to 'bar', 'pie', etc.
+            data: {
+                labels: chartData.labels, // e.g., ["Jan", "Feb", ...] or ["Day 1", "Day 2", ...]
+                datasets: [{
+                    label: 'Revenue ($)',
+                    data: chartData.data, // e.g., [1000, 2000, ...]
+                    borderColor: 'rgba(75, 192, 192, 1)',
+                    backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                    fill: true,
+                    tension: 0.4
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Revenue ($)'
+                        }
+                    },
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Time Period'
+                        }
+                    }
+                }
+            }
+        });
+    </script>
+    <style>
+        .dashboard-container {
+    padding: 20px;
+    font-family: Arial, sans-serif;
 }
 
-.main-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 1rem 2rem;
-    background-color: #fff;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+.filter-section, .chart-section, .overview-section, .best-selling-products, .best-selling-categories, .best-selling-brands {
+    margin-bottom: 30px;
 }
 
-.header-title {
-    font-size: 1.25rem;
-    font-weight: 600;
-    color: #333;
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
 }
 
-.nav {
-    margin: 0;
-    padding: 0;
+th, td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: left;
 }
 
-.avatar-img {
-    width: 35px;
-    height: 35px;
-    border-radius: 50%;
-    object-fit: cover;
-    border: 2px solid #eee;
+th {
+    background-color: #f2f2f2;
 }
 
-.dropdown-menu {
-    display: none;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+.stat-box {
+    display: inline-block;
+    margin: 10px;
+    padding: 10px;
+    border: 1px solid #ccc;
+    text-align: center;
 }
 
-.dropdown-menu.show {
-    display: block;
+.date-range {
+    margin-top: 10px;
 }
 
-.dropdown-item {
-    padding: 0.75rem 1rem;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
+.chart-section {
+    max-width: 800px;
+    margin: 0 auto;
 }
-
-.dropdown-item i {
-    color: #666;
-}
-
-.dashboard-content {
-    padding: 2rem;
-}
-
-.dashboard-content h1 {
-    margin-bottom: 1rem;
-    color: #333;
-}
-
-.dashboard-content p {
-    color: #666;
-}
-</style>
+    </style>
+</body>
+</html>

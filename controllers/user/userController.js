@@ -114,7 +114,7 @@ const loadHomePage = async (req, res) => {
 };
 
 function generateOtp() {
-  return Math.floor(100000 + Math.random() * 900000).toString();//otp is 6 digit
+  return Math.floor(100000 + Math.random() * 900000).toString();//to find out the otp
 }
 
 

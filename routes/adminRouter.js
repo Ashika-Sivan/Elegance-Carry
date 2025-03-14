@@ -64,7 +64,8 @@ router.post("/deleteImage",adminAuth,productController.deleteSingleImage);
 //order Management
 router.get("/adminOrderList",adminAuth,orderController.loadOrderListPage)
 router.get('/order/:id', adminAuth, orderController.loadViewDetails);
-router.post("/order/update-status",adminAuth,orderController.updateOrderStatus)
+router.post("/order/update-item-status",adminAuth,orderController.updateOrderItemStatus)
+router.post("/order/approve-return", adminAuth, orderController.approveReturn);
 //coupen Management
 router.get("/coupon",adminAuth,couponController.getCouponPage)
 router.post("/createCoupon",adminAuth,couponController.createCoupon)
@@ -74,8 +75,9 @@ router.post("/deleteCoupon/:couponId", adminAuth, couponController.deleteCoupon)
 
 
 router.get("/salesReport",adminAuth,adminController.getSalesReport)
-router.post('/admin/order/approve-return',adminAuth, adminController.approveReturnRequest);
+// router.post('/admin/order/approve-return',adminAuth, adminController.approveReturnRequest);
 // router.get("/admin/salesReport/filter",adminAuth,adminController. getFilteredSalesReport);
+// router.get("/AdminDashboard",adminAuth,adminController.getAdminDashboard)
 
 router.all("*", (req, res) => {
     const errorMessage = "The page you are looking for doesn't exist.";

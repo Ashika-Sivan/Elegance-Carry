@@ -511,55 +511,116 @@
         sortOptions.style.display = 'none';
     }
   });
-  function addToCart(productId) {
-  fetch('/cart', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({ productId })
-  })
-  .then(response => {
-    if (!response.ok) {
-      throw new Error('Network response was not ok');
-    }
-    return response.json();
-  })
-  .then(data => {
-    if (data.success) {
-      Swal.fire({
-        icon: 'success',
-        title: 'Added to Cart',
-        text: 'Product added to your cart',
-        showConfirmButton: false,
-        timer: 1500
-      });
+//   function addToCart(productId) {
+//   fetch('/cart', {
+//     method: 'POST',
+//     headers: {
+//       'Content-Type': 'application/json'
+//     },
+//     body: JSON.stringify({ productId })
+//   })
+//   .then(response => {
+//     if (!response.ok) {
+//       throw new Error('Network response was not ok');
+//     }
+//     return response.json();
+//   })
+//   .then(data => {
+//     if (data.success) {
+//       Swal.fire({
+//         icon: 'success',
+//         title: 'Added to Cart',
+//         text: 'Product added to your cart',
+//         showConfirmButton: false,
+//         timer: 1500
+//       });
       
-      // Optional: Update cart count in the header if you have one
-      // updateCartCount(data.cartCount);
-    } else {
-      if (data.redirectToLogin) {
-        window.location.href = '/login';
-      } else {
-        Swal.fire({
-          icon: 'error',
-          title: 'Oops...',
-          text: data.message || 'Something went wrong'
-        });
-      }
-    }
-  })
-  .catch(error => {
-    console.error('Error:', error);
-    Swal.fire({
-      icon: 'error',
-      title: 'Error!',
-      text: 'An error occurred while adding the product to your cart.'
-    });
-  });
-}
+//       // Optional: Update cart count in the header if you have one
+//       // updateCartCount(data.cartCount);
+//     } else {
+//       if (data.redirectToLogin) {
+//         window.location.href = '/login';
+//       } else {
+//         Swal.fire({
+//           icon: 'error',
+//           title: 'Oops...',
+//           text: data.message || 'Something went wrong'
+//         });
+//       }
+//     }
+//   })
+//   .catch(error => {
+//     console.error('Error:', error);
+//     Swal.fire({
+//       icon: 'error',
+//       title: 'Error!',
+//       text: 'An error occurred while adding the product to your cart.'
+//     });
+//   });
+// }
 
 // Optional: Function to update cart count in navbar if you have one
+
+function addToCart(productId) {
+    fetch('/cart', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ productId })
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (data.success) {
+            Swal.fire({
+                icon: 'success',
+                title: 'Added to Cart',
+                text: 'Product added to your cart',
+                showConfirmButton: false,
+                timer: 1500
+            });
+        } else {
+            if (data.redirectToLogin) {
+                window.location.href = '/login';
+            } else {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Oops...',
+                    text: data.message || 'Something went wrong'
+                });
+            }
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        Swal.fire({
+            icon: 'error',
+            title: 'Error!',
+            text: 'An error occurred while adding the product to your cart.'
+        });
+    });
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 function updateCartCount(count) {
   const cartCountElement = document.querySelector('.cart-count');
   if (cartCountElement) {
