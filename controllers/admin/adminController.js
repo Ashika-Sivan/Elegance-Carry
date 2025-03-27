@@ -91,7 +91,7 @@ const getSalesReport = async (req, res) => {
 
         const { dateRange, download } = req.query;
 
-        // Define the date filter
+    
         let matchStage = {};
         const now = new Date();
 
@@ -115,7 +115,7 @@ const getSalesReport = async (req, res) => {
 
         console.log("Match Stage:", matchStage);
 
-        // Total Revenue
+   
         let totalRevenue = 0;
         try {
             const totalRevenueResult = await Order.aggregate([
@@ -126,20 +126,19 @@ const getSalesReport = async (req, res) => {
             console.log("Total Revenue:", totalRevenue);
         } catch (aggError) {
             console.error("Error calculating total revenue:", aggError);
-            totalRevenue = 0; // Fallback to 0 if aggregation fails
+            totalRevenue = 0; 
         }
 
-        // Total Orders
         let totalOrders = 0;
         try {
             totalOrders = await Order.countDocuments(matchStage);
             console.log("Total Orders:", totalOrders);
         } catch (countError) {
             console.error("Error counting orders:", countError);
-            totalOrders = 0; // Fallback to 0 if count fails
+            totalOrders = 0; 
         }
 
-        // Total Discount
+      
         let totalDiscount = 0;
         try {
             const totalDiscountResult = await Order.aggregate([
@@ -422,60 +421,14 @@ const getSalesReport = async (req, res) => {
                     doc.end();
                     return;
                 }
-            // else if (download === "excel") {
-            //     const workbook = new ExcelJS.Workbook();//create new work book
-            //     const worksheet = workbook.addWorksheet('Sales Report');
-            //     //summary sec
-            //     worksheet.addRow(['Sales Report']).font = { size: 16, bold: true };
-            //     worksheet.addRow([]); // Empty row
-            //     worksheet.addRow(['Summary']).font = { size: 14, bold: true };
-            //     worksheet.addRow(['Total Revenue', `₹${totalRevenue.toFixed(2)}`]);
-            //     worksheet.addRow(['Total Orders', totalOrders]);
-            //     worksheet.addRow(['Total Discount', `₹${totalDiscount.toFixed(2)}`]);
-            //     worksheet.addRow([]); //this is also an empty row
+            
 
-            //     //order table
-            //     if (orders.length > 0) {
-            //         worksheet.addRow(['Order Details']).font = { size: 14, bold: true };
-
-            //         //table rows
-            //         orders.forEach(order => {
-            //             worksheet.addRow([
-            //                 order.orderId || 'N/A',
-            //                 `${order.user.name} (${order.user._id})`,
-            //                 order.createdAt ? new Date(order.createdAt).toLocaleDateString() : 'N/A',
-            //                 order.status || 'N/A',
-            //                 `₹${order.discount ? order.discount.toFixed(2) : '0.00'}`,
-            //                 `₹${order.finalAmount ? order.finalAmount.toFixed(2) : '0.00'}`
-            //             ]);
-            //         });
-            //         //auto -fit column
-            //         worksheet.columns.forEach(column => {
-            //             let maxLength = 0;
-            //             column.eachCell({ includeEmpty: true }, cell => {
-            //                 const columnLength = cell.value ? cell.value.toString().length : 10;
-            //                 if (columnLength > maxLength) {
-            //                     maxLength = columnLength;
-            //                 }
-            //             });
-            //             column.width = maxLength < 10 ? 10 : maxLength + 2;
-            //         });
-            //     } else {
-            //         worksheet.addRow(['No orders found for the selected date range.']);
-            //     }
-            //     res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-            //     res.setHeader('Content-Disposition', 'attachment; filename="sales-report.xlsx"');
-            //     await workbook.xlsx.write(res);
-            //     res.end();
-            //     return;
-
-
-            // }
+         
             else if (download === "excel") {
                 const workbook = new ExcelJS.Workbook(); // Create new workbook
                 const worksheet = workbook.addWorksheet('Sales Report');
             
-                // Summary section
+            
                 worksheet.addRow(['Sales Report']).font = { size: 16, bold: true };
                 worksheet.addRow([]); // Empty row
                 worksheet.addRow(['Summary']).font = { size: 14, bold: true };
@@ -558,69 +511,6 @@ const getSalesReport = async (req, res) => {
     }
 };
 
-// const approveReturnRequest=async(req,res)=>{
-//     try {
-//         const {orderId}=req.body
-//         if(!mongoose.Types.ObjectId.isValid(orderId)){
-//             return res.status(400).json({
-//                 success:false,
-//                 message:'Invalid Order ID'
-//             })
-//         }
-
-//         const order=await Order.findById(orderId).populate('orderedItems.product')
-//         if(!order){
-//             return res.status(404).json({
-//                 success:false,
-//                 message:'Order not Found'
-//             })
-//         }
-//         if(order.status!=='Return Request'){
-//             return res.status(400).json({
-//                 success:false,
-//                 message:'Order is not in return Request Status',
-
-//             });
-//         }
-//         for(const item of order.orderedItems){
-//             await Product.updateOne(
-//                 {_id:item.product._id},
-//                 {$inc:{quantity:item.quantity}} //it is toi increment the quantity
-//             )
-//         }
-
-//         //refund
-//         const user=await User.findById(order.user);
-//         if(!user){
-//             return res.status(404).json({
-//                 success:false,
-//                 messsage:"user not found"
-//             })
-//         }
-//         user.walletBalance+=order.finalAmount
-//         await user.save();
-//         const updatedOrder=await Order.findByIdAndUpdate(
-//             orderId,
-//             {
-//                 status:'Returned',
-//                 returnApprovalDate:new Date()
-//             },
-//             {new:true}
-//         )
-//         res.jsonn({
-//             success:true,
-//             message:'Return request approved ,stock updated,and amount refunded successfully',
-//             order:updatedOrder
-//         })
-//     } catch (error) {
-//         console.error('Error approving return request:', error);
-//         res.status(500).json({
-//             success: false,
-//             message: 'Failed to approve return request',
-//         });
-        
-//     }
-// }
 
 const loadDashboard = async (req, res) => {
     try {
@@ -628,7 +518,38 @@ const loadDashboard = async (req, res) => {
         const today = new Date();
         let dayStart, dayEnd;
 
-        // Setting up date range
+
+        const validateCustomDates = (start, end) => {
+            const startD = new Date(start);
+            const endD = new Date(end);
+            const now = new Date();
+
+            if (isNaN(startD.getTime()) || isNaN(endD.getTime())) {
+                return { isValid: false, message: "Invalid date format" };
+            }
+
+            if (startD > now) {
+                return { isValid: false, message: "Start date cannot be in the future" };
+            }
+
+            if (endD > now) {
+                return { isValid: false, message: "End date cannot be in the future" };
+            }
+
+            if (startD > endD) {
+                return { isValid: false, message: "Start date must be before end date" };
+            }
+
+            const diffTime = endD - startD;
+            const diffDays = diffTime / (1000 * 60 * 60 * 24);
+            if (diffDays > 365) {
+                return { isValid: false, message: "Date range cannot exceed 1 year" };
+            }
+
+            return { isValid: true };
+        };
+
+        
         switch (filterValue) {
             case 'daily':
                 dayStart = new Date(today.setHours(0, 0, 0, 0));
@@ -665,7 +586,7 @@ const loadDashboard = async (req, res) => {
                 dayEnd = new Date();
         }
 
-        // Find top 10 products
+        //top 10 prod
         const topProducts = await Product.aggregate([
             {
                 $match: { isBlocked: false }
@@ -840,7 +761,7 @@ const loadDashboard = async (req, res) => {
             { $limit: 10 }
         ]);
 
-        // Additional calculations for dashboard overview
+       
         const totalRevenue = await Order.aggregate([
             {
                 $match: {
@@ -866,13 +787,13 @@ const loadDashboard = async (req, res) => {
             createdAt: { $gte: dayStart, $lte: dayEnd }
         });
 
-        // Chart Data: Revenue Trend over Time
+       
         let groupByStage;
         let labelFormat;
 
         switch (filterValue) {
             case 'daily':
-                // Group by hour for daily filter
+                
                 groupByStage = {
                     $group: {
                         _id: { $hour: "$createdAt" },
@@ -882,7 +803,7 @@ const loadDashboard = async (req, res) => {
                 labelFormat = (hour) => `Hour ${hour}`;
                 break;
             case 'weekly':
-                // Group by day for weekly filter
+            
                 groupByStage = {
                     $group: {
                         _id: { $dayOfWeek: "$createdAt" },
@@ -895,7 +816,7 @@ const loadDashboard = async (req, res) => {
                 };
                 break;
             case 'monthly':
-                // Group by day for monthly filter
+                
                 groupByStage = {
                     $group: {
                         _id: { $dayOfMonth: "$createdAt" },
@@ -905,7 +826,7 @@ const loadDashboard = async (req, res) => {
                 labelFormat = (day) => `Day ${day}`;
                 break;
             case 'yearly':
-                // Group by month for yearly filter
+                
                 groupByStage = {
                     $group: {
                         _id: { $month: "$createdAt" },
@@ -918,7 +839,7 @@ const loadDashboard = async (req, res) => {
                 };
                 break;
             case 'custom':
-                // Group by day for custom range (or adjust based on range length)
+              
                 groupByStage = {
                     $group: {
                         _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
@@ -928,7 +849,7 @@ const loadDashboard = async (req, res) => {
                 labelFormat = (date) => date;
                 break;
             default:
-                // Group by month for all time
+              
                 groupByStage = {
                     $group: {
                         _id: { $dateToString: { format: "%Y-%m", date: "$createdAt" } },
@@ -949,7 +870,6 @@ const loadDashboard = async (req, res) => {
             { $sort: { "_id": 1 } }
         ]);
 
-        // Prepare chart data
         const chartLabels = revenueTrend.map(item => labelFormat(item._id));
         const chartData = revenueTrend.map(item => item.totalRevenue);
 
@@ -981,6 +901,5 @@ module.exports = {
     pageerror,
     logout,
     getSalesReport,
-    // approveReturnRequest,
    
 }

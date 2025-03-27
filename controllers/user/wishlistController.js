@@ -22,15 +22,15 @@ const loadWishlist = async (req, res) => {
       return res.redirect('/login');
     }
     
-    // Find the user's wishlist
+  
     const wishlist = await Wishlist.findOne({ userId: userId });
     
     let wishlistProducts = [];
     if (wishlist && wishlist.products.length > 0) {
-      // Get the product IDs from the wishlist
+
       const productIds = wishlist.products.map(item => item.productId);
       
-      // Fetch the actual product details
+      
       wishlistProducts = await Product.find({ _id: { $in: productIds } }).populate('category');
     }
     
@@ -49,6 +49,13 @@ const updateWishlist = async (req, res) => {
     const userId = req.session.user;
     const { productId } = req.body;
 
+    if(!mongoose.Types.ObjectId.isValid(productId)){
+      return res.json({
+        success:false,
+        message:'invalid product id'
+      })
+    }
+
     if (!userId) {
       return res.json({ 
         success: false, 
@@ -66,22 +73,28 @@ const updateWishlist = async (req, res) => {
       });
     }
 
-    // First, check if this user already has a wishlist
+
+
+
+    const product=await Product.findById(productId);
+    if(!product&&product.isBlocked){
+      return res.json({
+        success:false,
+        message:"product not found or unavailable"
+      })
+    }
     let wishlist = await Wishlist.findOne({ userId: userId });
     let action;
 
     if (wishlist) {
-      // Check if the product is already in the wishlist
       const productIndex = wishlist.products.findIndex(
         item => item.productId.toString() === productId
       );
 
       if (productIndex > -1) {
-        // Product exists in wishlist, remove it
         wishlist.products.splice(productIndex, 1);
         action = 'removed';
       } else {
-        // Product doesn't exist in wishlist, add it
         wishlist.products.push({
           productId: productId,
           addedOn: new Date()
@@ -91,7 +104,6 @@ const updateWishlist = async (req, res) => {
 
       await wishlist.save();
     } else {
-      // Create a new wishlist for the user
       wishlist = new Wishlist({
         userId: userId,
         products: [{

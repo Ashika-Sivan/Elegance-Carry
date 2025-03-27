@@ -97,30 +97,3 @@ module.exports = {
 
 
 
-
-
-
-
-
-// const adminAuth = async (req, res, next) => {
-//     try {
-//         if (!req.session.admin) {
-//             console.log("No admin session found.");
-//             return res.redirect("/admin/login");
-//         }
-
-//         const admin = await User.findById(req.session.admin);
-//         if (!admin || !admin.isAdmin) {
-//             console.log("Admin not found or unauthorized.");
-//             req.session.destroy((err) => {
-//                 if (err) console.error("Error destroying session:", err);
-//                 return res.redirect("/admin/login");
-//             });
-//         } else {
-//             next();
-//         }
-//     } catch (error) {
-//         console.error("Error in adminAuth middleware:", error);
-//         res.status(500).send("Internal Server Error");
-//     }
-// };

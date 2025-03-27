@@ -6,7 +6,7 @@ const { Schema } = mongoose;
 const cartItemSchema = new Schema(
   {
     productId: {
-      type: Schema.Types.ObjectId,
+      type: Schema.Types.ObjectId,//store prduct unique id
       ref: "Product",
       required: true,
     },
@@ -36,15 +36,15 @@ const cartItemSchema = new Schema(
   { timestamps: true } 
 );
 
-// Define schema for the entire cart
+//shw shpping crt of user
 const cartSchema = new Schema(
   {
     userId: {
-      type: Schema.Types.ObjectId,
+      type: Schema.Types.ObjectId,//who own cart
       ref: "User",
       required: true,
     },
-    items: [cartItemSchema], // Array of cart items
+    items: [cartItemSchema], // Array of object cart items
   },
   { timestamps: true }  
 );
@@ -55,46 +55,3 @@ module.exports = Cart;
 
 
 
-// const mongoose =require("mongoose")
-// const {Schema}=mongoose;
-
-
-// const cartSchema=new Schema({
-//     userId:{
-//         type:Schema.Types.ObjectId,
-//         ref:"User",
-//         required:true
-//     },
-//     items:[{
-//         productId:{
-//             type:Schema.Types.ObjectId,
-//             ref:'Product',
-//             required:true
-//         },
-//         quantity:{
-//             type:Number,
-//             default:1
-//         },
-//         price:{
-//             type:Number,
-//             required:true
-
-//         },
-//         totalPrice:{
-//             type:Number,
-//             required:true
-//         },
-//         status:{
-//             type:String,
-//             default:"placed",
-//         },
-//         cancellationReason:{
-//             type:String,
-//             default:"none"
-//         }
-        
-
-//     }]
-// })
-// const Cart=mongoose.model("Cart",cartSchema);
-// module.exports=Cart;

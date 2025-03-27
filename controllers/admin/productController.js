@@ -31,20 +31,14 @@ const getProductAddPage = async (req, res) => {
 
 }
 
-
-
-
 const addProducts = async (req, res) => {
     try {
         const products = req.body;
-
-        // Check if the product already exists
         const productExists = await Product.findOne({ productName: products.productName });
         if (productExists) {
             return res.status(400).send("Product already exists, please try another name");
         }
 
-        // Validate the brand
         if (!mongoose.Types.ObjectId.isValid(products.brand)) {
             return res.status(400).send("Invalid brand ID");
         }
@@ -53,11 +47,9 @@ const addProducts = async (req, res) => {
         if (req.files && req.files.length > 0) {
             for (const file of req.files) {
                 try {
-                    // Create a new filename for the resized image
                     const resizedFilename = `resized-${file.filename}`;
                     const resizedImagePath = path.join('public', 'img', resizedFilename);
 
-                    // Resize the image
                     await sharp(file.path)
                         .resize(440, 440, {
                             fit: 'contain',
@@ -68,25 +60,18 @@ const addProducts = async (req, res) => {
 
                     // Add the resized filename to the images array
                     images.push(resizedFilename);
-
-                    // Delete the original file
                     await fs.promises.unlink(file.path).catch(err => {
                         console.warn(`Warning: Could not delete original file ${file.path}:`, err);
                     });
                 } catch (error) {
                     console.error(`Error processing image ${file.filename}:`, error);
-                    // Continue with other images even if one fails
                 }
             }
         }
-
-        // Validate the category
         const categoryId = await Category.findOne({ name: products.category });
         if (!categoryId) {
             return res.status(400).send("Invalid category name");
         }
-
-        // Create the new product
         const newProduct = new Product({
             productName: products.productName,
             description: products.description,
@@ -111,11 +96,59 @@ const addProducts = async (req, res) => {
     }
 };
 
+// const getAllProducts = async (req, res) => {
+//     try {
+//         const search = req.query.search || "";
+//         const page = parseInt(req.query.page) || 1;
+//         const limit = 5;
 
+//         // Step 1: Find all brands matching the search term
+//         const matchingBrands = await Brand.find({
+//             name: { $regex: new RegExp(".*" + search + ".*", "i") },
+//             isBlocked: false,
+//         }).select("_id"); 
 
+    
+//         const productData = await Product.find({
+//             $or: [
+//                 { productName: { $regex: new RegExp(".*" + search + ".*", "i") } },
+//                 { brand: { $in: matchingBrands.map((brand) => brand._id) } },
+//             ],
+//         })
+//             .limit(limit)
+//             .skip((page - 1) * limit)
+//             .populate("category")
+//             .populate("brand") // Populate brand details
+//             .exec();
 
+       
+//         const count = await Product.find({
+//             $or: [
+//                 { productName: { $regex: new RegExp(".*" + search + ".*", "i") } },
+//                 { brand: { $in: matchingBrands.map((brand) => brand._id) } },
+//             ],
+//         }).countDocuments();
 
+//         // Step 4: Fetch categories and brands
+//         const category = await Category.find({ isListed: true });
+//         const brand = await Brand.find({ isBlocked: false });
 
+//         if (category && brand) {
+//             res.render("products", {
+//                 data: productData,
+//                 currentPage: page,
+//                 totalPages: Math.ceil(count / limit),
+//                 cat: category,
+//                 brand: brand,
+//             });
+//         } else {
+//             res.render("page-404");
+//         }
+//     } catch (error) {
+//         console.error("Error loading products page:", error);
+//         res.redirect("/pageerror");
+//     }
+// };
 
 const getAllProducts = async (req, res) => {
     try {
@@ -123,34 +156,31 @@ const getAllProducts = async (req, res) => {
         const page = parseInt(req.query.page) || 1;
         const limit = 5;
 
-        // Step 1: Find all brands matching the search term
+        console.log("Search term:", search); 
         const matchingBrands = await Brand.find({
-            name: { $regex: new RegExp(".*" + search + ".*", "i") },
+            name: { $regex: new RegExp(search, "i") },
             isBlocked: false,
-        }).select("_id"); 
+        }).select("_id");
 
-    
-        const productData = await Product.find({
-            $or: [
-                { productName: { $regex: new RegExp(".*" + search + ".*", "i") } },
-                { brand: { $in: matchingBrands.map((brand) => brand._id) } },
-            ],
-        })
+
+        const query = search
+    ? {
+          $or: [
+              { productName: { $regex: new RegExp(search, "i") } },
+              { brand: { $in: matchingBrands.map((brand) => brand._id) } },
+          ],
+      }
+    : {};
+
+        const productData = await Product.find(query)
             .limit(limit)
             .skip((page - 1) * limit)
             .populate("category")
-            .populate("brand") // Populate brand details
+            .populate("brand")
             .exec();
 
-       
-        const count = await Product.find({
-            $or: [
-                { productName: { $regex: new RegExp(".*" + search + ".*", "i") } },
-                { brand: { $in: matchingBrands.map((brand) => brand._id) } },
-            ],
-        }).countDocuments();
+        const count = await Product.countDocuments(query);
 
-        // Step 4: Fetch categories and brands
         const category = await Category.find({ isListed: true });
         const brand = await Brand.find({ isBlocked: false });
 
@@ -161,6 +191,7 @@ const getAllProducts = async (req, res) => {
                 totalPages: Math.ceil(count / limit),
                 cat: category,
                 brand: brand,
+                search: search, 
             });
         } else {
             res.render("page-404");
@@ -170,7 +201,6 @@ const getAllProducts = async (req, res) => {
         res.redirect("/pageerror");
     }
 };
-
 
 const blockProduct = async (req, res) => {
     try {
@@ -226,7 +256,7 @@ const getEditProduct = async (req, res) => {
 const editProduct = async (req, res) => {
     try {
         const id = req.params.id;
-        console.log('Product ID:', id); // Debug log
+        console.log('Product ID:', id); 
 
         // current product
         const product = await Product.findById(id);
@@ -259,8 +289,8 @@ const editProduct = async (req, res) => {
         const updateFields = {
             productName: data.productName,
             description: data.description,
-            brand: data.brand || product.brand, // Keep existing brand if not provided
-            category: product.category, // Keep existing category
+            brand: data.brand || product.brand,
+            category: product.category, 
             regularPrice: data.regularPrice,
             salePrice: data.salePrice || null,
             quantity: data.quantity,

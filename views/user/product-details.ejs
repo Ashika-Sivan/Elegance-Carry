@@ -253,11 +253,56 @@ function buyNow() {
         alert("Redirecting to checkout...");
       }
 
-function addToFavorites(){
-        alert("Product added to Favorites")
-      }
 
+function addToFavorites() {
+    const productId = '<%= product._id %>'; // Get the product ID from the EJS variable
 
+    fetch('/wishlist', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ productId })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            Swal.fire({
+                title: data.action === 'added' ? 'Added!' : 'Removed!',
+                text: data.message,
+                icon: 'success',
+                confirmButtonColor: '#ff3f6c'
+            });
+        } else {
+            if (data.redirectToLogin) {
+                Swal.fire({
+                    title: 'Error!',
+                    text: data.message,
+                    icon: 'error',
+                    confirmButtonColor: '#ff3f6c'
+                }).then(() => {
+                    window.location.href = '/login';
+                });
+            } else {
+                Swal.fire({
+                    title: 'Error!',
+                    text: data.message,
+                    icon: 'error',
+                    confirmButtonColor: '#ff3f6c'
+                });
+            }
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        Swal.fire({
+            title: 'Error!',
+            text: 'An error occurred while updating your wishlist.',
+            icon: 'error',
+            confirmButtonColor: '#ff3f6c'
+        });
+    });
+}
 
     </script>
 <script>
@@ -559,3 +604,4 @@ document.addEventListener('DOMContentLoaded', function() {
 
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>

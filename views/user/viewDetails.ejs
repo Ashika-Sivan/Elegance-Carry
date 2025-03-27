@@ -253,7 +253,6 @@
             <p>Order ID: <%= order.orderId %></p>
             <p>Ordered on: <%= new Date(order.createdAt).toLocaleDateString() %></p>
         </div>
-        <div class="order-status <%= order.status.toLowerCase() %>"><%= order.status %></div>
     </div>
 
     <div class="section-title">Items Ordered</div>
@@ -284,6 +283,7 @@
 
     <div class="section-title">Price Details</div>
     <div class="price-breakdown">
+        
         <div class="price-row">
             <span>Subtotal</span>
             <span>₹<%= order.subTotal %></span>

@@ -2,7 +2,8 @@ const Product = require("../../models/productSchema");
 const User = require("../../models/userSchema");
 const mongoose = require('mongoose');
 const Category=require("../../models/categorySchema")
-const Brand=require("../../models/brandSchema")
+const Brand=require("../../models/brandSchema");
+const WishList = require("../../models/wishlistSchema");
 
 const productDetails = async (req, res) => {
     try {
@@ -16,17 +17,21 @@ const productDetails = async (req, res) => {
         if (!product) {
             return res.status(404).json({ message: 'Product not found' });
         }
+
         const relatedProducts = await Product.find({
             category: product.category._id,
             _id: { $ne: product._id },
             isBlocked: false,
         }).limit(4);
-        // console.log('found relatec products:',relatedProducts);
-        
 
         let userData=null;
+        let inWishlist = false;
         if(req.session.user){
             userData=await User.findById(req.session.user)
+            const wishlist=await WishList.findOne({userId:req.session.user})
+            if(wishlist){
+                inWishlist=wishlist.products.some(item=>item.productId.toString()===productId)
+            }
         }
 
         console.log("--------------",product.brand.name);
@@ -38,98 +43,14 @@ const productDetails = async (req, res) => {
             relatedProducts,
             quantity: product.quantity,
             user:userData,
-            
-            
-
+            inWishlist
         });
     } catch (error) {
-        // console.error('Error fetching product details:', error.message);
         next(error)
     }
 };
 
 
-// const loadShopPage = async (req, res) => {
-//     try {
-//         const page = parseInt(req.query.page) || 1;
-//         const limit = 12;
-//         const skip = (page - 1) * limit;
-
-//         const sortType = req.query.sort || 'featured';
-//         let sortOption = {};
-//         switch (sortType) {
-//             case 'priceLowHigh':
-//                 sortOption = { salePrice: 1 };
-//                 break;
-//             case 'priceHighLow':
-//                 sortOption = { salePrice: -1 };
-//                 break;
-//             case 'aToZ':
-//                 sortOption = { productName: 1 };
-//                 break;
-//             case 'zToA':
-//                 sortOption = { productName: -1 };
-//                 break;
-//             case 'balance':
-//                 sortOption = { quantity: -1 };
-//                 break;
-//             case 'featured':
-//             default:
-//                 sortOption = {};
-//         }
-
-//         const filterQuery = {};
-//         if (req.query.category) {
-//             filterQuery.category = req.query.category;
-//         }
-//         if (req.query.brand) {
-//             filterQuery.brand = req.query.brand;
-//         }
-//         if (req.query.minPrice) {
-//             filterQuery.salePrice = { $gte: parseInt(req.query.minPrice) };
-//         }
-//         if (req.query.maxPrice) {
-//             filterQuery.salePrice = { ...filterQuery.salePrice, $lte: parseInt(req.query.maxPrice) };
-//         }
-//         if (req.query.search) {
-//             filterQuery.productName = { $regex: req.query.search, $options: 'i' };
-//         }
-
-//         const products = await Product.find(filterQuery)
-//             .sort(sortOption)
-//             .skip(skip)
-//             .limit(limit);
-
-//         const totalProducts = await Product.countDocuments(filterQuery);
-//         const totalPages = Math.ceil(totalProducts / limit);
-
-//         const category = await Category.find();
-//         const brand = await Brand.find();
-
-//         const sortLabels = {
-//             'featured': 'Featured',
-//             'priceLowHigh': 'Price: Low to High',
-//             'priceHighLow': 'Price: High to Low',
-//             'aToZ': 'Name: Ascending',
-//             'zToA': 'Name: Descending',
-//             'balance': 'Stock Balance'
-//         };
-
-//         res.render('shop', {
-//             products,
-//             category,
-//             brand,
-//             currentPage: page,
-//             totalPages,
-//             currentSort: sortType,
-//             sortLabels,
-//             appliedFilters: req.query
-//         });
-//     } catch (error) {
-//         console.error('Error in shop route:', error);
-//         res.status(500).send('Internal Server Error');
-//     }
-// };
 
 
 const loadShopPage = async (req, res) => {
@@ -138,25 +59,21 @@ const loadShopPage = async (req, res) => {
         const limit = 12;
         const skip = (page - 1) * limit;
 
-        // Get the search term
         const searchTerm = req.query.search || '';
-
-        // Get sort type from query
         const sortType = req.query.sort || 'featured';
         let sortOption = {};
 
-        // Handle all sort cases from the EJS template
         switch (sortType) {
             case 'priceLowHigh':
                 sortOption = { salePrice: 1 };
                 break;
-            case 'priceHigh':  // Changed from priceHighLow to match EJS
+            case 'priceHigh':  
                 sortOption = { salePrice: -1 };
                 break;
-            case 'nameAsc':    // Changed from aToZ to match EJS
+            case 'nameAsc':    
                 sortOption = { productName: 1 };
                 break;
-            case 'nameDesc':   // Changed from zToA to match EJS
+            case 'nameDesc':   
                 sortOption = { productName: -1 };
                 break;
             case 'balance':
@@ -164,14 +81,13 @@ const loadShopPage = async (req, res) => {
                 break;
             case 'featured':
             default:
-                // For featured, sort by createdAt to show newest first
+                
                 sortOption = { createdAt: -1 };
         }
 
-        // Build filter query
+      
         const filterQuery = {};
 
-        // Search functionality
         if (searchTerm) {
             filterQuery.$or = [
                 { productName: { $regex: searchTerm, $options: 'i' } },
@@ -179,7 +95,6 @@ const loadShopPage = async (req, res) => {
             ];
         }
 
-        // Category and brand filters
         if (req.query.category) {
             filterQuery.category = req.query.category;
         }
@@ -187,7 +102,7 @@ const loadShopPage = async (req, res) => {
             filterQuery.brand = req.query.brand;
         }
 
-        // Price range filters
+        
         if (req.query.minPrice) {
             filterQuery.salePrice = { $gte: parseInt(req.query.minPrice) };
         }
@@ -198,10 +113,8 @@ const loadShopPage = async (req, res) => {
             };
         }
 
-        // Add isBlocked filter to only show unblocked products
         filterQuery.isBlocked = false;
 
-        // Fetch products with pagination and sorting
         const products = await Product.find(filterQuery)
             .sort(sortOption)
             .skip(skip)
@@ -212,11 +125,10 @@ const loadShopPage = async (req, res) => {
         const totalProducts = await Product.countDocuments(filterQuery);
         const totalPages = Math.ceil(totalProducts / limit);
 
-        // Fetch categories and brands
+
         const category = await Category.find();
         const brand = await Brand.find();
 
-        // Updated sort labels to match EJS options
         const sortLabels = {
             'featured': 'Featured',
             'priceLowHigh': 'Price: Low to High',
@@ -246,9 +158,12 @@ const loadShopPage = async (req, res) => {
     }
 };
 
+
+
 module.exports = {
     productDetails,
     loadShopPage,
+
 };
 
 

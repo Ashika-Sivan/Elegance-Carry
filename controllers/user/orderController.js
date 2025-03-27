@@ -27,12 +27,12 @@ const razorpay = new Razorpay({
   });
 
 
-  const placeOrder = async (req, res) => {
+  const placeOrder = async (req, res) => {          
     try {
         const userId = req.session.user;
         const { selectedAddress, paymentMethod, couponId } = req.body;
 
-        // Log request body and session
+        
         console.log("Request Body:", req.body);
         console.log("Session Applied Coupon:", req.session.appliedCoupon);
 
@@ -54,10 +54,8 @@ const razorpay = new Razorpay({
                 message: "Selected address not found",
             });
         }
-
-        // Calculate total amount (after sale price discounts)
         const totalAmount = cart.items.reduce((total, item) => {
-            if (!item.productId) return total;
+            if (!item.productId) return total;//0
             const price = item.productId.salePrice || item.productId.regularPrice;
             return total + price * item.quantity;
         }, 0);
@@ -73,7 +71,7 @@ const razorpay = new Razorpay({
         let couponDiscount = 0;
         let appliedCouponCode = null;
 
-        // Apply coupon
+       
         let couponSource = couponId || (req.session.appliedCoupon ? req.session.appliedCoupon.couponId : null);
         console.log("Coupon Source:", couponSource);
 
@@ -103,7 +101,7 @@ const razorpay = new Razorpay({
                         appliedCouponCode,
                     });
 
-                    // Clear session coupon after applying to prevent reuse
+                   
                     req.session.appliedCoupon = null;
                 } else {
                     console.log("Coupon not applied: Total amount below minimum price", {
@@ -125,12 +123,6 @@ const razorpay = new Razorpay({
         const deliveryCharge = 100;
         const finalAmount = Math.max(totalAmount + deliveryCharge - couponDiscount, 0);
 
-        // Log all amounts for verification
-        console.log("Total Amount (before discounts):", totalAmount);
-        console.log("Sale Discount:", discount);
-        console.log("Coupon Discount:", couponDiscount);
-        console.log("Delivery Charge:", deliveryCharge);
-        console.log("Final Amount (sent to Razorpay):", finalAmount);
 
         if (paymentMethod === "COD" && finalAmount > 1000) {
             return res.status(400).json({
@@ -263,8 +255,6 @@ const razorpay = new Razorpay({
     }
 };
 
-
-
 const verifyPayment = async (req, res) => {
     try {
         const { razorpayOrderId, razorpayPaymentId, razorpaySignature, orderId } = req.body;
@@ -274,7 +264,7 @@ const verifyPayment = async (req, res) => {
             return res.status(500).json({ success: false, message: "Server configuration error: Razorpay secret key missing" });
         }
 
-        const generatedSignature = crypto//doing the razorpay process by using sha26
+        const generatedSignature = crypto
             .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET)
             .update(razorpayOrderId + "|" + razorpayPaymentId)
             .digest('hex');
@@ -285,6 +275,7 @@ const verifyPayment = async (req, res) => {
                 return res.status(404).json({ success: false, message: "Order not found" });
             }
 
+            // Update order status
             order.paymentStatus = 'Paid';
             order.razorpayOrderId = razorpayOrderId;
             order.paymentId = razorpayPaymentId;
@@ -292,15 +283,28 @@ const verifyPayment = async (req, res) => {
             order.status = 'Processing';
             
             await order.save();
+
+           
+            for (const item of order.orderedItems) {
+                await Product.updateOne(
+                    { _id: item.product },
+                    { $inc: { quantity: -item.quantity } }
+                );
+                console.log(`Updated inventory for product ${item.product}: -${item.quantity} units`);
+            }
+
             await Cart.findOneAndDelete({ userId });
+            
             res.json({ success: true, message: "Payment verified successfully" });
         } else {
             res.status(400).json({ success: false, message: "Invalid payment signature" });
         }
     } catch (error) {
-        res.status(500).json({ success: false, message: "Payment verification failed" });
+        console.error("Payment verification error:", error);
+        res.status(500).json({ success: false, message: "Payment verification failed: " + error.message });
     }
 };
+
 const loadOrderListPage=async(req,res)=>{
     try {
         const userId=req.session.user
@@ -399,7 +403,7 @@ const cancelOrder = async (req, res) => {
             order.finalAmount = originalFinalAmount - cancelledItemAmount;
             console.log(`Partial cancellation - New order total: ${order.finalAmount}`);
         } else {
-            refundAmount = originalFinalAmount; // Refund full amount for full cancellation
+            refundAmount = originalFinalAmount; 
             order.status = "Cancelled";
             console.log(`Full cancellation - Refund amount: ${refundAmount}`);
         }
@@ -479,7 +483,7 @@ const returnOrder = async (req, res) => {
             });
         }
         
-        // Find the specific item in orderedItems
+        
         const itemIndex = order.orderedItems.findIndex(
             (item) => item._id.toString() === itemId
         );
@@ -493,15 +497,14 @@ const returnOrder = async (req, res) => {
         
         const item = order.orderedItems[itemIndex];
         
-        // Check if the item can be returned
+       
         if (item.status !== "Delivered") {
             return res.status(400).json({
                 success: false,
                 message: "Only delivered items can be returned",
             });
         }
-        
-        // Update item status to "Return Requested"
+    
         item.status = "Return Request";
         item.returnReason = reason;
         item.returnComments = comments;
@@ -509,7 +512,7 @@ const returnOrder = async (req, res) => {
         
         order.orderedItems[itemIndex] = item;
         
-        // Save the updated order
+        
         await order.save();
         
         return res.status(200).json({
@@ -576,22 +579,22 @@ const applyCoupon = async (req, res) => {
             return res.status(404).json({ success: false, message: "Coupon not found" });
         }
 
-        // Check if coupon is expired
+    
         if (coupon.expiryOn < new Date()) {
             return res.status(400).json({ success: false, message: "Coupon has expired" });
         }
 
-        // Check if coupon usage limit has been reached
+       
         if (coupon.usedCount >= coupon.maxUsage) {
             return res.status(400).json({ success: false, message: "Coupon usage limit reached" });
         }
 
-        // Check if the user has already used this coupon
+       
         if (coupon.userId && coupon.userId.includes(userId)) {
             return res.status(400).json({ success: false, message: "You have already used this coupon" });
         }
 
-        // Calculate the cart total
+   
         const cartData = await Cart.findOne({ userId })
             .populate({
                 path: 'items.productId',
@@ -607,7 +610,6 @@ const applyCoupon = async (req, res) => {
             }, 0);
         }
 
-        // Check if the cart total meets the minimum price requirement
         if (totalAmount < coupon.minimumPrice) {
             return res.status(400).json({ 
                 success: false, 
@@ -615,18 +617,12 @@ const applyCoupon = async (req, res) => {
             });
         }
 
-        // Apply the coupon by storing it in the session
         req.session.appliedCoupon = {
             couponId: coupon._id,
             discountAmount: coupon.discountAmount
         };
-        console.log("Session set:", req.session.appliedCoupon); // Debug log
-
-        // Optionally update coupon usage (if you want to enforce it at apply time)
-        // await Coupon.updateOne(
-        //     { _id: coupon._id },
-        //     { $inc: { usedCount: 1 }, $push: { userId: userId } }
-        // );
+        console.log("Session set:", req.session.appliedCoupon); 
+       
 
         return res.status(200).json({ 
             success: true, 
@@ -664,7 +660,7 @@ const removeCoupon = async (req, res) => {
         }, 0);
 
         const deliveryCharge = 100;
-        req.session.appliedCoupon = null; // Clear the applied coupon from session
+        req.session.appliedCoupon = null; 
         const finalAmount = totalAmount + deliveryCharge;
 
         res.json({
@@ -682,11 +678,22 @@ const removeCoupon = async (req, res) => {
 };
 
 const generateInvoicePDF = (order, res) => {
-    const doc = new PDFDocument({ margin: 50 });
+    const doc = new PDFDocument({ margin: 50, size: 'A4' });
     res.setHeader('Content-disposition', `attachment; filename=invoice-${order.orderId}.pdf`);
     res.setHeader('Content-type', 'application/pdf');
     doc.pipe(res);
 
+   
+    const leftMargin = 50;
+    const rightEdge = 550;
+    
+    // Column positions - recalculated for better spacing
+    const itemCol = leftMargin;
+    const qtyCol = leftMargin + 250;  // More space for item names
+    const priceCol = qtyCol + 70;     // Space for quantity
+    const statusCol = priceCol + 70;  // Space for price
+    const totalCol = statusCol + 90;  // Space for status
+    
     // Header
     doc.fontSize(20).text('Elegane Carry', { align: 'center' });
     doc.fontSize(14).text('Tax Invoice/Bill of Supply', { align: 'center' });
@@ -705,43 +712,145 @@ const generateInvoicePDF = (order, res) => {
        .text(`POST - ${order.address.landMark}`)
        .text(`${order.address.state} - ${order.address.pincode}`)
        .text(`PHONE: ${order.address.phone}`);
-    doc.moveDown();
+    doc.moveDown(1.5);
 
     // Order Items Table
     doc.fontSize(14).text('Order Items:', { underline: true });
     doc.moveDown(0.5);
 
-    // Table Headers
-    doc.fontSize(12)
-       .text('Item', 50, doc.y, { width: 200, align: 'left' })
-       .text('Qty', 250, doc.y - 15, { width: 50, align: 'center' })
-       .text('Price', 300, doc.y - 15, { width: 100, align: 'right' })
-       .text('Total', 400, doc.y - 15, { width: 100, align: 'right' });
-    doc.moveTo(50, doc.y).lineTo(500, doc.y).stroke();
-    doc.moveDown(0.5);
+    // Table Headers - Aligned and with proper width
+    doc.fontSize(12);
+    doc.text('Item', itemCol, doc.y);
+    doc.text('Qty', qtyCol, doc.y - 12, { width: 70, align: 'center' });
+    doc.text('Price', priceCol, doc.y - 12, { width: 70, align: 'right' });
+    doc.text('Status', statusCol, doc.y - 12, { width: 90, align: 'center' });
+    doc.text('Total', totalCol, doc.y - 12, { width: 70, align: 'right' });
+    
+    doc.moveTo(leftMargin, doc.y + 5).lineTo(rightEdge, doc.y + 5).stroke();
+    doc.moveDown(1);
 
-    // Table Rows (Order Items)
+    // Track amounts
+    let activeSubtotal = 0;
+    let cancelledAmount = 0;
+    let returnedAmount = 0;
+
+    // Table Rows (Order Items) - Fixed width for each column
     order.orderedItems.forEach(item => {
-        const total = item.price * item.quantity;
-        doc.text(item.product.productName, 50, doc.y, { width: 200, align: 'left' })
-           .text(item.quantity.toString(), 250, doc.y, { width: 50, align: 'center' })
-           .text(`₹${item.price}`, 300, doc.y, { width: 100, align: 'right' })
-           .text(`₹${total}`, 400, doc.y, { width: 100, align: 'right' });
-        doc.moveDown(0.5);
+        const itemTotal = item.price * item.quantity;
+        const startY = doc.y;
+        
+        // Status handling
+        let itemStatus = item.status || 'Processing';
+        let textColor = itemStatus === 'Cancelled' || itemStatus === 'Returned' ? 'red' : 'black';
+        
+        if (itemStatus === 'Returned') {
+            returnedAmount += itemTotal;
+        } else if (itemStatus === 'Cancelled') {
+            cancelledAmount += itemTotal;
+            doc.fillColor('red');
+        } else {
+            activeSubtotal += itemTotal;
+        }
+
+        // Item name - with wrapping
+        doc.fillColor(textColor)
+           .text(item.product.productName, itemCol, startY, { 
+               width: qtyCol - itemCol - 10,
+               align: 'left'
+           });
+           
+        // Get the new Y position after possible text wrapping
+        const newY = Math.max(doc.y, startY);
+        
+        // Quantity - centered
+        doc.text(item.quantity.toString(), qtyCol, startY, { 
+            width: 70,
+            align: 'center' 
+        });
+        
+        // Price with ₹ symbol - right aligned
+        doc.text(`₹${item.price}`, priceCol, startY, { 
+            width: 70,
+            align: 'right' 
+        });
+        
+        // Status - centered
+        doc.text(itemStatus, statusCol, startY, { 
+            width: 90,
+            align: 'center' 
+        });
+        
+        // Total - right aligned
+        doc.text(`₹${itemTotal}`, totalCol, startY, { 
+            width: 70,
+            align: 'right' 
+        });
+        
+        doc.fillColor('black'); // Reset color
+        doc.y = newY; // Move to position after the wrapped text
+        doc.moveDown(1); // Add space between items
     });
 
     // Table Footer Line
-    doc.moveTo(50, doc.y).lineTo(500, doc.y).stroke();
-    doc.moveDown();
+    doc.moveTo(leftMargin, doc.y).lineTo(rightEdge, doc.y).stroke();
+    doc.moveDown(1);
 
-    // Price Breakdown
-    doc.text(`Subtotal: ₹${order.subTotal}`, 400, doc.y, { width: 100, align: 'right' });
-    doc.text(`Shipping: ₹${order.deliveryCharge || 100}`, 400, doc.y, { width: 100, align: 'right' }); // Assuming delivery charge is 100 as per the image
-    doc.fontSize(14).text(`TOTAL AMOUNT: ₹${order.finalAmount}`, 400, doc.y, { width: 100, align: 'right' });
+    // Price Breakdown - Right aligned with consistent positioning
+    const summaryX = 350;
+    const summaryValueX = 500;
+    
+    // Subtotal
+    doc.text('Subtotal:', summaryX, doc.y, { align: 'left' });
+    doc.text(`₹${activeSubtotal}`, summaryValueX, doc.y - 12, { align: 'right' });
+    doc.moveDown(0.5);
+    
+    // Cancelled Amount
+    if (cancelledAmount > 0) {
+        doc.fillColor('red');
+        doc.text('Cancelled Amount:', summaryX, doc.y, { align: 'left' });
+        doc.text(`-₹${cancelledAmount}`, summaryValueX, doc.y - 12, { align: 'right' });
+        doc.fillColor('black');
+        doc.moveDown(0.5);
+    }
+    
+    // Returned Amount
+    if (returnedAmount > 0) {
+        doc.fillColor('red');
+        doc.text('Returned Amount:', summaryX, doc.y, { align: 'left' });
+        doc.text(`-₹${returnedAmount}`, summaryValueX, doc.y - 12, { align: 'right' });
+        doc.fillColor('black');
+        doc.moveDown(0.5);
+    }
+    
+    // Shipping
+    doc.text('Shipping:', summaryX, doc.y, { align: 'left' });
+    doc.text(`₹${order.deliveryCharge || 100}`, summaryValueX, doc.y - 12, { align: 'right' });
+    doc.moveDown(0.5);
+    
+    // Final amount
+    const finalAmount = activeSubtotal + (order.deliveryCharge || 100);
+    
+    // Draw a line before the final total
+    doc.moveTo(summaryX, doc.y).lineTo(rightEdge, doc.y).stroke();
+    doc.moveDown(0.5);
+    
+    // Total amount
+    doc.fontSize(14);
+    doc.text('TOTAL AMOUNT:', summaryX, doc.y, { align: 'left' });
+    doc.text(`₹${finalAmount}`, summaryValueX, doc.y - 12, { align: 'right' });
+    
+    // Footer
+    const footerY = doc.page.height - 100;
+    doc.fontSize(10).text('Thank you for shopping with Elegane Carry!', 50, footerY, { align: 'center' });
+    
+    if (returnedAmount > 0 || cancelledAmount > 0) {
+        doc.fontSize(9).fillColor('red')
+           .text('Note: This invoice reflects cancelled/returned items. Refunds are processed separately.', 
+                 50, footerY + 20, { align: 'center' });
+    }
 
     doc.end();
 };
-
 const downloadInvoice=async(req,res)=>{
     try {
         const orderId=req.params.id;
@@ -774,7 +883,7 @@ const downloadInvoice=async(req,res)=>{
 const retryPayment = async (req, res) => {
     try {
         console.log("Received retryPayment request:", req.body);
-        const { orderId, razorpayOrderId } = req.body; // Ignore amount from frontend
+        const { orderId, razorpayOrderId } = req.body; 
         const userId = req.session.user;
 
         console.log("User ID from session:", userId);
@@ -810,7 +919,7 @@ const retryPayment = async (req, res) => {
             });
         }
 
-        // Recalculate total amount from ordered items
+       
         let totalAmount = order.orderedItems.reduce((sum, item) => {
             const price = item.product.salePrice || item.product.regularPrice || item.price;
             return sum + (price * item.quantity);
@@ -819,25 +928,25 @@ const retryPayment = async (req, res) => {
         let couponDiscount = order.couponDiscount || 0;
         let appliedCouponCode = order.couponCode || null;
 
-        // Revalidate coupon if it exists
+      
         if (order.couponId) {
             const coupon = await Coupon.findById(order.couponId);
             if (coupon && coupon.expiryOn >= new Date() && coupon.usedCount < coupon.maxUsage) {
                 if (!coupon.userId || !coupon.userId.includes(userId)) {
                     couponDiscount = coupon.discountAmount;
                     appliedCouponCode = coupon.name;
-                    // Note: We won't increment usedCount here since it was already incremented during placeOrder
+
                 } else {
                     console.log("User has already used this coupon during retry:", userId);
-                    couponDiscount = 0; // Reset if already used
+                    couponDiscount = 0; 
                 }
             } else {
                 console.log("Coupon invalid or expired during retry:", order.couponId);
-                couponDiscount = 0; // Reset if invalid
+                couponDiscount = 0; 
             }
         }
 
-        const deliveryCharge = 100; // Assuming fixed delivery charge
+        const deliveryCharge = 100; 
         const finalAmount = Math.max(totalAmount + deliveryCharge - couponDiscount, 0);
 
         console.log("Recalculated Amounts:", {
@@ -861,8 +970,8 @@ const retryPayment = async (req, res) => {
         console.log("Razorpay order created:", razorpayOrder);
 
         order.razorpayOrderId = razorpayOrder.id;
-        order.couponDiscount = couponDiscount; // Update with recalculated discount
-        order.finalAmount = finalAmount; // Update with recalculated amount
+        order.couponDiscount = couponDiscount; 
+        order.finalAmount = finalAmount; 
         await order.save();
 
         console.log("Order after save:", order);
@@ -892,7 +1001,7 @@ const updateOrderStatusOnFailure = async (req, res) => {
         }
 
         order.paymentStatus = "Failed";
-        order.status = "Pending"; // Keep the order status as Pending so it can be retried
+        order.status = "Pending"; 
         await order.save();
 
         
@@ -955,15 +1064,6 @@ const paymentFailure = async (req, res) => {
         console.error("order failed failure",error);
     }
 };
-
-
-
-
-
-
-
-
-
 
 
 module.exports = { 

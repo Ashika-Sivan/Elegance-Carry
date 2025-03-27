@@ -15,50 +15,7 @@ const razorpay = new Razorpay({
   });
 
 
-// const getWalletPage = async (req, res) => {
-//     try {
-//         // console.log("Session data:", req.session);
-//         // console.log("Session user:", req.session.user);
-        
-       
-//         if (!req.session.user) {
-//             console.log('User not found in session');
-//             return res.redirect('/login');
-//         }
-        
-//         // Correctly handle the ObjectId
-//         const userId = req.session.user; // If it's already an ObjectId, use it directly
-        
-//         let wallet = await Wallet.findOne({ userId });
 
-//         if (!wallet) {
-//             wallet = new Wallet({
-//                 userId,
-//                 balance: 0,
-//                 walletHistory: [
-//                     {
-//                         transactionType: "credit",
-//                         amount: 0,
-//                         description: "Initial balance"
-//                     },
-//                 ],
-//             });
-//             await wallet.save();
-//         }
-        
-//         res.render("wallet", {
-//              wallet,
-//              user: userId,
-//              balance:wallet.balance,
-//              walletHistory:wallet.walletHistory
-
-//      });
-        
-//     } catch (error) {
-//         console.error("Error loading wallet page:", error);
-//         res.status(500).send("Error loading wallet page. Please try again later.");
-//     }
-// };
 
 const getWalletPage = async (req, res) => {
     try {
@@ -84,7 +41,7 @@ const getWalletPage = async (req, res) => {
         }
 
         const page = parseInt(req.query.page) || 1;
-        const limit = parseInt(req.query.limit) || 10; // Number of transactions per page
+        const limit = parseInt(req.query.limit) || 10; 
         const startIndex = (page - 1) * limit;
         const endIndex = page * limit;
 
@@ -147,7 +104,7 @@ const verifyRazorpayPayment = async (req, res) => {
         const userId = req.session.user;
 
 
-        // Validate Razorpay Signature
+        
         const expectedSignature = crypto
             .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET)
             .update(`${razorpayOrderId}|${razorpayPaymentId}`)
@@ -157,13 +114,12 @@ const verifyRazorpayPayment = async (req, res) => {
             return res.status(400).json({ success: false, message: 'Invalid signature' });
         }
 
-        // Fetch user data
         let user = await User.findById(userId);
         if (!user) {
             return res.status(404).json({ success: false, message: 'User not found' });
         }
 
-        // Ensure wallet exists for user
+     
         let wallet = await Wallet.findOne({ userId });
         if (!wallet) {
             wallet = new Wallet({
@@ -173,16 +129,14 @@ const verifyRazorpayPayment = async (req, res) => {
             });
         }
 
-        // Convert amount from paise to rupees
         const amountInRupees = parseInt(amount, 10) / 100;
         if (isNaN(amountInRupees) || amountInRupees <= 0) {
             return res.status(400).json({ success: false, message: 'Invalid amount' });
         }
 
-        // Update wallet balance
+   
         wallet.balance += amountInRupees;
 
-        // walletHistory exists and push new transaction
         wallet.walletHistory = wallet.walletHistory || [];
         wallet.walletHistory.push({
             date: new Date(),
@@ -191,7 +145,7 @@ const verifyRazorpayPayment = async (req, res) => {
             description: 'Wallet Recharge'
         });
 
-        // Save updated wallet data
+      
         await wallet.save();
 
         return res.status(200).json({ success: true, message: 'Payment verified' });
@@ -202,12 +156,8 @@ const verifyRazorpayPayment = async (req, res) => {
     }
 };
 
-
-
 const walletRefund = async (userId, amount, orderId) => {
     try {
-        console.log(`Starting wallet refund process - User: ${userId}, Amount: ${amount}, Order: ${orderId}`);
-        
         let wallet = await Wallet.findOne({ userId });
         if (!wallet) {
             console.log(`Wallet not found for user ${userId}, creating new wallet`);
@@ -215,18 +165,15 @@ const walletRefund = async (userId, amount, orderId) => {
         }
         
         const oldBalance = wallet.balance;
-        // console.log("///////////////////",oldBalance)
         wallet.balance += amount;
-        
-        console.log(`Wallet update - Old balance: ${oldBalance}, Amount to add: ${amount}, New balance: ${wallet.balance}`);
-        
+       
         const transactionId = uuidv4();
         wallet.walletHistory.push({
             transactionId: transactionId,
             transactionType: 'credit',
             amount: amount,
             date: new Date(),
-            description: "Refund",// More descriptive message
+            description: "Refund",
             orderId: orderId
         });
         

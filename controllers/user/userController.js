@@ -42,7 +42,7 @@ const loadHomePage = async (req, res) => {
           if (err) {
             console.error("Error destroying session:", err);
           }
-          return res.redirect("/login");
+          return res.redirect("/login");  
         });
         return; 
       }
@@ -69,11 +69,14 @@ const loadHomePage = async (req, res) => {
       .limit(8);
 
 
+
+
+
     const processProducts = async (products) => {
       return await Promise.all(products.map(async (product) => {
-        const productData = product.toObject(); // Convert to plain JS object
+        const productData = product.toObject(); 
 
-        // Check if the product is in the user's wishlist
+
         if (userId) {
           const wishlist = await Wishlist.findOne({ userId });
           productData.inWishlist = wishlist ? wishlist.products.includes(product._id) : false;
@@ -81,14 +84,13 @@ const loadHomePage = async (req, res) => {
           productData.inWishlist = false;
         }
 
-        // Determine the active offer (productOffer or categoryOffer)
+        
         const categoryOffer = product.category?.categoryOffer || 0;
         const productOfferPercentage = product.productOffer || 0;
 
         const offerPercentage = Math.max(productOfferPercentage, categoryOffer);
         const offerType = productOfferPercentage > categoryOffer ? "product" : "category";
 
-        // Only add activeOffer if there's an actual offer
         if (offerPercentage > 0) {
           productData.activeOffer = {
             type: offerType,
@@ -114,17 +116,17 @@ const loadHomePage = async (req, res) => {
 };
 
 function generateOtp() {
-  return Math.floor(100000 + Math.random() * 900000).toString();//to find out the otp
+  return Math.floor(100000 + Math.random() * 900000).toString();
 }
 
 
 async function sendVerificationEmail(email, otp) {
   try {
     const transporter = nodemailer.createTransport({
-      service: 'gmail',//specify the gmail service will be used
-      port: 587,//gmail default port
-      secure: false,//configure security setting for connection
-      requireTLS: true,//configure security setting for connection
+      service: 'gmail',
+      port: 587,
+      secure: false,
+      requireTLS: true,
       auth: {
         user: process.env.NODEMAILER_EMAIL,
         pass: process.env.NODEMAILER_PASSWORD
@@ -158,6 +160,9 @@ const securePassword = async (password) => {
 }
 
 
+
+
+
 const createReferralCode = () => {
   return Math.random().toString(36).substring(2, 8).toUpperCase();
 };
@@ -169,21 +174,19 @@ const signup = async (req, res) => {
   try {
     const { name, phone, email, password, cPassword, referalCode } = req.body;
 
-    // Validate passwords match
+    
     if (password !== cPassword) {
       return res.render("signup", { message: "Passwords do not match" });
     }
 
-    // Check if user already exists
     const findUser = await User.findOne({ email });
     if (findUser) {
       return res.render("signup", { message: "User with this email already exists" });
     }
 
-    // Generate a new referral code for the user
     const userReferralCode = createReferralCode();
 
-    // Validate referral code, if provided
+   
     let referredByUser = null;
     if (referalCode) {
       referredByUser = await User.findOne({ referalCode });
@@ -194,16 +197,16 @@ const signup = async (req, res) => {
       }
     }
 
-    // Generate OTP and send email
+  
     const otp = generateOtp();
     const emailSent = await sendVerificationEmail(email, otp);
     if (!emailSent) {
       return res.render("signup", { message: "Error sending email" });
     }
 
-    // Store data in session
+   
     req.session.userOtp = otp;
-    req.session.otpCreatedAt = Date.now(); // Add timestamp for OTP creation
+    req.session.otpCreatedAt = Date.now(); 
     req.session.userData = {
       name,
       phone,
@@ -213,7 +216,7 @@ const signup = async (req, res) => {
       userReferralCode,
       referredBy: referredByUser ? referredByUser._id : null,
     };
-    req.session.otpExpiry = Date.now() + 5 * 60 * 1000; // 5 minutes expiry
+    req.session.otpExpiry = Date.now() + 5 * 60 * 1000; 
 
     console.log("OTP Sent", otp);
     res.render("verify-otp");
@@ -227,7 +230,7 @@ const verifyOtp = async (req, res) => {
   try {
     const { otp } = req.body;
 
-    // Check if session data exists
+    
     if (!req.session.userOtp || !req.session.userData || !req.session.otpExpiry) {
       return res.status(400).json({
         success: false,
@@ -235,7 +238,7 @@ const verifyOtp = async (req, res) => {
       });
     }
 
-    // Check if OTP is expired
+    
     const now = Date.now();
     if (now > req.session.otpExpiry) {
       delete req.session.userOtp;
@@ -249,7 +252,7 @@ const verifyOtp = async (req, res) => {
       });
     }
 
-    // Validate OTP
+   
     if (otp.toString() !== req.session.userOtp.toString()) {
       return res.status(400).json({
         success: false,
@@ -260,7 +263,7 @@ const verifyOtp = async (req, res) => {
     const user = req.session.userData;
     const passwordHash = await securePassword(user.password);
 
-    // Create and save the new user
+  
     const saveUserData = new User({
       name: user.name,
       email: user.email,
@@ -272,6 +275,7 @@ const verifyOtp = async (req, res) => {
     });
 
     await saveUserData.save();
+    console.log("New user created:", saveUserData._id);
 
 
     if (user.referredBy) {
@@ -288,7 +292,7 @@ const verifyOtp = async (req, res) => {
         });
         await referrerWallet.save();
       } else {
-        // Create new wallet for referrer
+        
         const newReferrerWallet = new Wallet({
           userId: user.referredBy,
           balance: referralBonus,
@@ -304,7 +308,6 @@ const verifyOtp = async (req, res) => {
         await newReferrerWallet.save();
       }
 
-      // Update referrer's user document
       await User.findByIdAndUpdate(
         user.referredBy,
         { $push: { redeemedUsers: saveUserData._id } }
@@ -313,7 +316,7 @@ const verifyOtp = async (req, res) => {
       console.log("Referral bonus credited to referrer:", user.referredBy);
     }
 
-    // Initialize wallet for the new user with signup bonus
+   
     const newUserWallet = new Wallet({
       userId: saveUserData._id,
       balance: signupBonus,
@@ -328,13 +331,13 @@ const verifyOtp = async (req, res) => {
     });
     await newUserWallet.save();
 
-    // Clear session data
+
     delete req.session.userOtp;
     delete req.session.userData;
     delete req.session.otpExpiry;
     delete req.session.otpCreatedAt;
 
-    // Set user session
+
     req.session.user = saveUserData._id;
 
     return res.json({
@@ -379,7 +382,7 @@ const verifyReferral = async (req, res) => {
 
 const creditWallet = async (userId, amount, description) => {
   try {
-    // Find user's wallet or create a new one if it doesn't exist
+  
     let wallet = await Wallet.findOne({ userId });
 
     if (!wallet) {
@@ -390,10 +393,9 @@ const creditWallet = async (userId, amount, description) => {
       });
     }
 
-    // Update wallet balance
+  
     wallet.balance += amount;
 
-    // Add transaction to wallet history
     wallet.walletHistory.push({
       transactionType: 'credit',
       amount,
@@ -438,7 +440,7 @@ const resendOtp = async (req, res) => {
 
 const resendForgotOtp = async (req, res) => {
   try {
-    // Check if user email exists in session
+   
     if (!req.session.forgotPassEmail) {
       return res.status(400).json({
         success: false,
@@ -449,7 +451,6 @@ const resendForgotOtp = async (req, res) => {
     const email = req.session.forgotPassEmail;
     const otp = generateOtp();
 
-    // Send new OTP
     const emailSent = await sendVerificationEmail(email, otp);
 
     if (!emailSent) {
@@ -459,7 +460,7 @@ const resendForgotOtp = async (req, res) => {
       });
     }
 
-    // Update session with new OTP and expiry
+   
     req.session.forgotPassOtp = otp;
     req.session.otpExpiry = Date.now() + 60 * 1000;
 
@@ -479,7 +480,7 @@ const resendForgotOtp = async (req, res) => {
 
 const loadLogin = async (req, res) => {
   try {
-    if (!req.session.user) { //if the user doenot available in the session
+    if (!req.session.user) { 
       return res.render("login")
     } else {
       res.redirect("/")
@@ -509,6 +510,7 @@ const login = async (req, res) => {
 
     }
     req.session.user = findUser._id;
+    req.session.isAuthenticated=true
     console.log("Session saved user:", req.session.user);
     res.redirect("/")
 
@@ -546,7 +548,7 @@ const loadShoppingPage = async (req, res) => {
     const userData = await User.findById(user);
     const categories = await Category.find({ isListed: true });
     const categoryIds = categories.map(category => category._id.toString());
-
+    const search = req.query.search || '';
     const page = parseInt(req.query.page) || 1;
     const limit = 9;
     const skip = (page - 1) * limit;
@@ -562,24 +564,23 @@ const loadShoppingPage = async (req, res) => {
 
     const currentSort = req.query.sort || "featured";
 
-    // Build the query with filters
     const query = {
       isBlocked: false
     };
 
-    // Apply category filter
+   
     if (req.query.category) {
       query.category = req.query.category;
     } else {
       query.category = { $in: categoryIds };
     }
 
-    // Apply brand filter
+    
     if (req.query.brand) {
       query.brand = req.query.brand;
     }
 
-    // Add search functionality
+
     if (req.query.search) {
       query.productName = { $regex: new RegExp(req.query.search, 'i') };
     }
@@ -610,7 +611,7 @@ const loadShoppingPage = async (req, res) => {
       productData.activeOffer = {
         type: product.productOffer > categoryOffer ? "product" : "category",
         percentage: Math.max(product.productOffer, categoryOffer),
-        savings: product.regularPrice - product.salePrice // Calculate savings
+        savings: product.regularPrice - product.salePrice 
       };
 
       return productData;
@@ -631,7 +632,7 @@ const loadShoppingPage = async (req, res) => {
       nameDesc: "Z to A"
     };
 
-    // Add active filter information
+  
     const activeFilters = {
       category: req.query.category || null,
       brand: req.query.brand || null
@@ -673,89 +674,3 @@ module.exports = {
   verifyReferral
 }
 
-
-
-// const loadShoppingPage = async (req, res) => {
-//     try {
-//         const user = req.session.user;
-//         const userData = await User.findById(user);
-//         const categories = await Category.find({ isListed: true });
-//         const categoryIds = categories.map(category => category._id.toString());
-
-//         const page = parseInt(req.query.page) || 1;
-//         const limit = 9;
-//         const skip = (page - 1) * limit;
-
-//         // const sortOptions = {
-//         //     featured: { createdAt: -1 },
-//         //     priceLow: { price: 1 },
-//         //     priceHigh: { price: -1 },
-//         //     newest: { createdAt: -1 }
-//         // };
-//         const sortOptions = {
-//             featured: { createdAt: -1 },
-//             priceLowHigh: { salePrice: 1 },  // Changed to salePrice since that's what you display
-//             priceHigh: { salePrice: -1 },
-//             balance: { quantity: -1 },
-//             nameAsc: { productName: 1 },
-//             nameDesc: { productName: -1 }
-//         };
-
-//         const currentSort = req.query.sort || "featured";
-
-//         const query = {
-//             isBlocked: false,
-//             category: { $in: categoryIds }
-//         };
-
-//         // Add search functionality
-//         if (req.query.search) {
-//             query.productName = { $regex: new RegExp(req.query.search, 'i') };
-//         }
-
-//         // Remove the quantity filter to show all products
-//         const products = await Product.find({
-//             isBlocked: false,
-//             category: { $in: categoryIds }
-//         })
-//         .populate("brand", "name")
-//         .populate("category", "name")
-//         .sort(sortOptions[currentSort] || sortOptions["featured"])
-//         .skip(skip)
-//         .limit(limit);
-
-//         const totalProducts = await Product.countDocuments({
-//             isBlocked: false,
-//             category: { $in: categoryIds }
-//         });
-
-//         const totalPages = Math.ceil(totalProducts / limit);
-//         const brands = await Brand.find({ isBlocked: false });
-
-//         const categoriesWithIds = categories.map(category => ({
-//             _id: category._id,
-//             name: category.name
-//         }));
-
-//         const sortLabels = {
-//             featured: "Featured",
-//             priceLow: "Price: Low to High",
-//             priceHigh: "Price: High to Low",
-//             newest: "Newest"
-//         };
-
-//         res.render("shop", {
-//             user: userData,
-//             products: products,
-//             category: categoriesWithIds,
-//             brand: brands,
-//             currentPage: page,
-//             totalPages: totalPages,
-//             sortLabels: sortLabels,
-//             currentSort: currentSort
-//         });
-//     } catch (error) {
-//         console.log("loadShoppingPage", error);
-//         res.redirect("/pageNotFound");
-//     }
-// };

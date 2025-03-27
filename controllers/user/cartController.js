@@ -39,10 +39,9 @@ const loadCartPage = async (req, res) => {
             });
         }
 
-        // Check stock availability for each item
         const products = await Product.find();
         const productsWithStock = products.map(product => ({
-            ...product.toObject(),//convert the db obj to plain js object
+            ...product.toObject(),
             isOutOfStock: product.quantity <= 0, 
         }));
 
@@ -55,7 +54,7 @@ const loadCartPage = async (req, res) => {
         });
     } catch (error) {
         console.error("Error loading cart:", error);
-        // res.status(500).render("errorPage", { message: "Failed to load cart" });
+        
     }
 };
 
@@ -233,7 +232,7 @@ const updateCartQuantity = async (req, res) => {
                 });
             }
     
-            // Remove item from cart
+            
             cart.items = cart.items.filter(
                 (item) => item.productId.toString() !== productId.toString()
             );
@@ -242,7 +241,7 @@ const updateCartQuantity = async (req, res) => {
            
 
     
-            // Calculate new total amount
+     
             const newTotal = cart.items.reduce((total, item) => total + item.totalPrice, 0);
     
             res.json({
@@ -260,156 +259,152 @@ const updateCartQuantity = async (req, res) => {
     };
 
 
-    const loadCheckOutPage = async (req, res) => {
-        try {
-            const userId = req.session.user;
-            if (!userId) {
-                return res.redirect("/login");
-            }
-    
-            const userData = await User.findById(userId);
-            if (!userData) {
-                console.log("User not found");
-                return res.redirect("/login");
-            }
-    
-            const addressData = await Address.findOne({ userId });
-            const addresses = addressData ? addressData.address : [];
-            const defaultAddress = addresses.find(addr => 
-                addr._id.equals(userData.defaultAddressId)
-            ) || addresses[0];
-    
-            // Fetch cart data
-            const cartData = await Cart.findOne({ userId })
-                .populate({
-                    path: 'items.productId',
-                    select: "productName productImage regularPrice salePrice quantity discount isBlocked"
-                });
-    
-            if (!cartData || !cartData.items || cartData.items.length === 0) {
-                return res.render("check-out", {
-                    user: userData,
-                    addresses: addresses,
-                    defaultAddress,
-                    cart: null,
-                    totalAmount: 0,
-                    order: null,
-                    totalDiscount: 0,
-                    finalAmount: 0,
-                    discount: 0,
-                    deliveryCharge: 0,
-                    coupons: [],
-                    couponDiscount: 0,
-                    message: "Your cart is empty"
-                });
-            }
-    
-            // Calculate totalAmount before querying coupons
-            let totalAmount = 0;
-            if (cartData && cartData.items) {
-                totalAmount = cartData.items.reduce((sum, item) => {
-                    if (!item.productId || item.productId.isBlocked) return sum;
-                    const salePrice = item.productId.salePrice || item.productId.regularPrice;
-                    return sum + (salePrice * item.quantity);
-                }, 0);
-            }
-    
-            // Calculate total discount (difference between regularPrice and salePrice)
-            const discount = cartData.items.reduce((total, item) => {
-                if (!item.productId || item.productId.isBlocked) return total;
-                const regularPrice = item.productId.regularPrice || 0;
-                const salePrice = item.productId.salePrice || regularPrice;
-                return total + (regularPrice - salePrice) * item.quantity;
-            }, 0);
-    
-            console.log("Total Amount:", totalAmount);
-            console.log("Discount:", discount);
-    
-            // Fetch coupons after calculating totalAmount
-            const coupons = await Coupon.find({
-                expiryOn: { $gte: new Date() },
-                isList: true,
-                $expr: { $lte: ["$usedCount", "$maxUsage"] },
-                userId: { $ne: userId },
-                minimumPrice: { $lte: totalAmount } // Now uses the correct totalAmount
+
+
+const loadCheckOutPage = async (req, res) => {
+    try {
+        const userId = req.session.user;
+        if (!userId) {
+            return res.redirect("/login");
+        }
+
+        const userData = await User.findById(userId);
+        if (!userData) {
+            console.log("User not found");
+            return res.redirect("/login");
+        }
+
+        const addressData = await Address.findOne({ userId });
+        const addresses = addressData ? addressData.address : [];
+        const defaultAddress = addresses.find(addr => 
+            addr._id.equals(userData.defaultAddressId)
+        ) || addresses[0];
+
+        
+        const cartData = await Cart.findOne({ userId })
+            .populate({
+                path: 'items.productId',
+                select: "productName productImage regularPrice salePrice quantity discount isBlocked"
             });
-    
-            // console.log("Coupons:", coupons);
-    
-            // Calculate cartTotal and totalDiscount
-            let cartTotal = 0;
-            let totalDiscount = 0;
-    
-            cartData.items.forEach((item) => {
-                if (!item.productId || item.productId.isBlocked) return;
-    
-                const regularPrice = item.productId.regularPrice || 0;
-                const salePrice = item.productId.salePrice || regularPrice;
-                const itemDiscount = regularPrice - salePrice;
-    
-                cartTotal += salePrice * item.quantity;
-                totalDiscount += itemDiscount * item.quantity;
-            });
-    
-            const deliveryCharge = 100;
-            let couponDiscount = 0;
-    
-            // Check if a coupon is applied in the session
-            if (req.session.appliedCoupon) {
-                const appliedCoupon = await Coupon.findById(req.session.appliedCoupon.couponId);
-                if (appliedCoupon && totalAmount >= appliedCoupon.minimumPrice && appliedCoupon.usedCount < appliedCoupon.maxUsage && appliedCoupon.expiryOn >= new Date()) {
-                    couponDiscount = appliedCoupon.discountAmount;
-                    req.session.appliedCoupon.code = appliedCoupon.name; // Store coupon code
-                } else {
-                    req.session.appliedCoupon = null;
-                }
-            }
-    
-            const finalAmount = Math.max(totalAmount + deliveryCharge - couponDiscount, 0);
-    
-            const orderData = await Order.findOne({ userId });
-            // const wallet =await Wallet.findOne({userId})
-            let wallet = await Wallet.findOne({userId});
-if(!wallet){
-    wallet = new Wallet({
-        userId,
-        balance: 0,
-        walletHistory: [{
-            transactionType: "credit",
-            amount: 0,
-            description: "Initial balance"
-        }],
-    });
-    await wallet.save();
-    console.log("New wallet created for user:", userId);
-}
-    
-            res.render("check-out", { 
+
+        if (!cartData || !cartData.items || cartData.items.length === 0) {
+            return res.render("check-out", {
                 user: userData,
                 addresses: addresses,
                 defaultAddress,
-                cart: cartData,
-                totalAmount,
-                order: orderData,
-                totalDiscount,
-                finalAmount,
-                discount,
-                deliveryCharge,
-                coupons,
-                couponDiscount,
-                walletBalance:wallet.balance,
-                req
-            });
-        } catch (error) {
-            console.error("Error loading checkout page:", error);
-            res.status(500).render("errorPage", { 
-                message: "Failed to load checkout page" 
+                cart: null,
+                totalAmount: 0,
+                order: null,
+                totalDiscount: 0,
+                finalAmount: 0,
+                discount: 0,
+                deliveryCharge: 0,
+                coupons: [],
+                couponDiscount: 0,
+                message: "Your cart is empty"
             });
         }
-    };
 
+      
+        let totalAmount = 0;
+        if (cartData && cartData.items) {
+            totalAmount = cartData.items.reduce((sum, item) => {
+                if (!item.productId || item.productId.isBlocked) return sum;
+                const salePrice = item.productId.salePrice || item.productId.regularPrice;
+                return sum + (salePrice * item.quantity);
+            }, 0);
+        }
+        const discount = cartData.items.reduce((total, item) => {
+            if (!item.productId || item.productId.isBlocked) return total;
+            const regularPrice = item.productId.regularPrice || 0;
+            const salePrice = item.productId.salePrice || regularPrice;
+            return total + (regularPrice - salePrice) * item.quantity;
+        }, 0);
 
+        console.log("Total Amount:", totalAmount);
+        console.log("Discount:", discount);
 
+      
+        const coupons = await Coupon.find({
+            expiryOn: { $gte: new Date() },
+            isList: true,
+            $expr: { $lte: ["$usedCount", "$maxUsage"] },
+            userId: { $ne: userId },
+            minimumPrice: { $lte: totalAmount }
+        })
+        .sort({ discountAmount: -1 })
+        .limit(5); 
+       
+        let cartTotal = 0;
+        let totalDiscount = 0;
+
+        cartData.items.forEach((item) => {
+            if (!item.productId || item.productId.isBlocked) return;
+
+            const regularPrice = item.productId.regularPrice || 0;
+            const salePrice = item.productId.salePrice || regularPrice;
+            const itemDiscount = regularPrice - salePrice;
+
+            cartTotal += salePrice * item.quantity;
+            totalDiscount += itemDiscount * item.quantity;
+        });
+
+        const deliveryCharge = 100;
+        let couponDiscount = 0;
+
+        
+        if (req.session.appliedCoupon) {
+            const appliedCoupon = await Coupon.findById(req.session.appliedCoupon.couponId);
+            if (appliedCoupon && totalAmount >= appliedCoupon.minimumPrice && appliedCoupon.usedCount < appliedCoupon.maxUsage && appliedCoupon.expiryOn >= new Date()) {
+                couponDiscount = appliedCoupon.discountAmount;
+                req.session.appliedCoupon.code = appliedCoupon.name; 
+            } else {
+                req.session.appliedCoupon = null;
+            }
+        }
+
+        const finalAmount = Math.max(totalAmount + deliveryCharge - couponDiscount, 0);
+
+        const orderData = await Order.findOne({ userId });
+        
+        let wallet = await Wallet.findOne({userId});
+        if(!wallet){
+            wallet = new Wallet({
+                userId,
+                balance: 0,
+                walletHistory: [{
+                    transactionType: "credit",
+                    amount: 0,
+                    description: "Initial balance"
+                }],
+            });
+            await wallet.save();
+            console.log("New wallet created for user:", userId);
+        }
+
+        res.render("check-out", { 
+            user: userData,
+            addresses: addresses,
+            defaultAddress,
+            cart: cartData,
+            totalAmount,
+            order: orderData,
+            totalDiscount,
+            finalAmount,
+            discount,
+            deliveryCharge,
+            coupons,
+            couponDiscount,
+            walletBalance: wallet.balance,
+            req
+        });
+    } catch (error) {
+        console.error("Error loading checkout page:", error);
+        res.status(500).render("errorPage", { 
+            message: "Failed to load checkout page" 
+        });
+    }
+};
 
 
 

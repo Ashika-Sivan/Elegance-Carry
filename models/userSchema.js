@@ -13,12 +13,12 @@ const userSchema=new mongoose.Schema({
     phone:{
         type:String,
         required:false,
-        sparse:true,//to constraints unique constrains
+        sparse:true,
         default:null
     },
     googleId: {
         type: String,
-        sparse: true, // Allows multiple null values while maintaining uniqueness for non-null values
+        sparse: true, 
     },
     addresses: [{
         type: Schema.Types.ObjectId,

@@ -511,55 +511,6 @@
         sortOptions.style.display = 'none';
     }
   });
-//   function addToCart(productId) {
-//   fetch('/cart', {
-//     method: 'POST',
-//     headers: {
-//       'Content-Type': 'application/json'
-//     },
-//     body: JSON.stringify({ productId })
-//   })
-//   .then(response => {
-//     if (!response.ok) {
-//       throw new Error('Network response was not ok');
-//     }
-//     return response.json();
-//   })
-//   .then(data => {
-//     if (data.success) {
-//       Swal.fire({
-//         icon: 'success',
-//         title: 'Added to Cart',
-//         text: 'Product added to your cart',
-//         showConfirmButton: false,
-//         timer: 1500
-//       });
-      
-//       // Optional: Update cart count in the header if you have one
-//       // updateCartCount(data.cartCount);
-//     } else {
-//       if (data.redirectToLogin) {
-//         window.location.href = '/login';
-//       } else {
-//         Swal.fire({
-//           icon: 'error',
-//           title: 'Oops...',
-//           text: data.message || 'Something went wrong'
-//         });
-//       }
-//     }
-//   })
-//   .catch(error => {
-//     console.error('Error:', error);
-//     Swal.fire({
-//       icon: 'error',
-//       title: 'Error!',
-//       text: 'An error occurred while adding the product to your cart.'
-//     });
-//   });
-// }
-
-// Optional: Function to update cart count in navbar if you have one
 
 function addToCart(productId) {
     fetch('/cart', {
@@ -605,18 +556,6 @@ function addToCart(productId) {
         });
     });
 }
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -702,15 +641,20 @@ function updateCartCount(count) {
   });
 
   function performSearch() {
-    const searchQuery = document.querySelector(".search-input").value.trim(); 
-    if (searchQuery) { 
-      const url = new URL(window.location.href);
-      const params = new URLSearchParams(url.search);
-      params.set('search', searchQuery); 
-      params.set('page', '1'); // Reset to first page on new search
-      window.location.href = `${url.pathname}?${params.toString()}`;
-    }
+  const searchQuery = document.querySelector(".search-input").value.trim(); 
+  if (searchQuery) { 
+    const url = new URL(window.location.href);
+    const params = new URLSearchParams(url.search);
+    const sort = params.get('sort');
+    const page = params.get('page');
+    params.delete('category');
+    params.delete('brand');
+    params.set('search', searchQuery);
+    if (sort) params.set('sort', sort);
+    params.set('page', '1');
+    window.location.href = `${url.pathname}?${params.toString()}`;
   }
+}
 
   function filterByCategory(categoryId) {
     const url = new URL(window.location.href);

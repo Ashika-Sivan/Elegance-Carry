@@ -125,18 +125,18 @@
                     <h3>Total Orders</h3>
                     <p><%= totalOrders %></p>
                 </div>
-                <div class="stat-card">
+                <!-- <div class="stat-card">
                     <h3>Total Revenue</h3>
                     <p>₹<%= totalRevenue.toLocaleString() %></p>
-                </div>
+                </div> -->
                 <div class="stat-card">
                     <h3>Pending Orders</h3>
                     <p><%= orderCounts['Processing'] || 0 %></p>
                 </div>
-                <div class="stat-card">
+                <!-- <div class="stat-card">
                     <h3>Delivered Orders</h3>
                     <p><%= orderCounts['Delivered'] || 0 %></p>
-                </div>
+                </div> -->
             </div>
         </div>
 
@@ -239,7 +239,12 @@
 <script>
     async function checkResponse(response) {
         if (response.status === 401) {
-            alert('Session expired. Redirecting to login page...');
+            await Swal.fire({
+                title: 'Session Expired!',
+                text: 'Session expired. Redirecting to login page...',
+                icon: 'warning',
+                confirmButtonColor: '#ff3f6c'
+            });
             window.location.href = '/admin/login';
             throw new Error('Session expired');
         }
@@ -296,9 +301,20 @@
         });
     });
 
-    // Approve Return
+    // Approve Return with Swal messages
     async function approveReturn(orderId) {
-        if (confirm('Are you sure you want to approve this return request? This will update stock and refund the user.')) {
+        const result = await Swal.fire({
+            title: 'Are you sure?',
+            text: 'This will approve the return request, update stock, and refund the user.',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#ff3f6c',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Yes, approve it!',
+            cancelButtonText: 'Cancel'
+        });
+
+        if (result.isConfirmed) {
             try {
                 const response = await fetch('/admin/order/approve-return', {
                     method: 'POST',
@@ -311,17 +327,28 @@
                 const data = await checkResponse(response);
 
                 if (data.success) {
-                    alert('Return approved successfully!');
+                    await Swal.fire({
+                        title: 'Success!',
+                        text: 'Return approved successfully!',
+                        icon: 'success',
+                        confirmButtonColor: '#ff3f6c'
+                    });
                     window.location.reload();
                 } else {
                     throw new Error(data.message || 'Failed to approve return');
                 }
             } catch (error) {
                 console.error('Error:', error);
-                alert(error.message || 'Failed to approve return');
+                await Swal.fire({
+                    title: 'Error!',
+                    text: error.message || 'Failed to approve return',
+                    icon: 'error',
+                    confirmButtonColor: '#ff3f6c'
+                });
             }
         }
     }
 </script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <%- include('../layouts/admin/footer') %>
