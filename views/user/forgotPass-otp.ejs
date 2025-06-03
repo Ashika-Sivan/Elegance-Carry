@@ -1,53 +1,81 @@
-<%- include("../layouts/user/header.ejs") %>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OTP Verification</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/limonte-sweetalert2/11.7.3/sweetalert2.all.min.js"></script>
     <style>
         body {
-            background-color: #f8f9fa;
-            font-family: 'Arial', sans-serif;
+            font-family: Arial, sans-serif;
+            background: #f5f5f5;
+            margin: 0;
+            padding: 20px;
         }
         .auth-container {
             max-width: 400px;
-            margin: 5% auto;
-            background: #fff;
+            margin: 100px auto;
+            background: white;
             padding: 30px;
             border-radius: 10px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
             text-align: center;
         }
-        .auth-container h1 {
-            font-weight: 600;
-            font-size: 24px;
+        h1 {
             color: #333;
             margin-bottom: 10px;
         }
+        p {
+            color: #666;
+            margin-bottom: 30px;
+        }
         .form-control {
-            border-radius: 20px;
-            text-align: center;
-        }
-        .btn-primary {
-            background-color: #ff3f6c;
-            border: none;
-            border-radius: 20px;
-            padding: 10px;
             width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+            box-sizing: border-box;
         }
-        .btn-primary:hover {
-            background-color: #e6375a;
+        .mb-3 {
+            margin-bottom: 15px;
         }
         .timer-container {
-            margin: 10px 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        #otpTimer {
+            color: #666;
             font-size: 14px;
-            color: #565959;
         }
         .resend-button {
             background: none;
             border: none;
             color: #ff3f6c;
-            font-size: 14px;
             cursor: pointer;
             text-decoration: underline;
+            font-size: 14px;
         }
-        .resend-button:hover {
-            color: #c45500;
+        .resend-button:disabled {
+            color: #ccc;
+            cursor: not-allowed;
+            text-decoration: none;
+        }
+        .btn-primary {
+            width: 100%;
+            padding: 12px;
+            background: #ff3f6c;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        .btn-primary:hover {
+            background: #ff3f6c;
         }
     </style>
 </head>
@@ -64,30 +92,55 @@
             <button type="submit" class="btn-primary">Continue</button>
         </form>
     </div>
+
     <script>
-
-
         let otpTimerInterval;
         let timer = 60;
+        let isOtpExpired = false;
+
         function startOtpTimer() {
             const timerElement = document.getElementById('otpTimer');
             otpTimerInterval = setInterval(function() {
                 const minutes = Math.floor(timer / 60);
                 const seconds = timer % 60;
                 timerElement.textContent = `Time remaining: ${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+                
                 if (--timer < 0) {
                     clearInterval(otpTimerInterval);
                     timerElement.textContent = 'Code expired';
+                    isOtpExpired = true;
+                    
+                    // Show SweetAlert popup when OTP expires
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'OTP Expired',
+                        text: 'Your verification code has expired. Please request a new code.',
+                        confirmButtonText: 'OK'
+                    });
                 }
             }, 1000);
         }
+
         function initializeOtpTimer() {
             clearInterval(otpTimerInterval);
             timer = 60;
+            isOtpExpired = false;
             startOtpTimer();
         }
+
         function validateOtpForm() {
             const otpInput = document.getElementById('otp').value;
+            
+            // Check if OTP is expired before making the request
+            if (isOtpExpired) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'OTP Expired',
+                    text: 'Your verification code has expired. Please request a new code.'
+                });
+                return false;
+            }
+
             $.ajax({
                 type: 'POST',
                 url: '/verify-passForgot-otp',
@@ -96,70 +149,61 @@
                     if (response.success) {
                         window.location.href = '/reset-password';
                     } else {
-                        Swal.fire({ icon: 'error', title: 'Error', text: response.message });
+                        // Show error popup for invalid OTP
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Invalid OTP',
+                            text: response.message || 'The OTP you entered is invalid. Please try again.'
+                        });
                     }
                 },
                 error: function() {
-                    Swal.fire({ icon: 'error', title: 'Error', text: 'Please try again' });
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'Something went wrong. Please try again.'
+                    });
                 }
             });
             return false;
         }
-        function resendOtp() {
+function resendOtp() {
     const resendButton = document.querySelector('.resend-button');
     resendButton.disabled = true;
-    
-    console.log("Resend OTP button clicked");
+
     $.ajax({
         type: 'POST',
         url: '/resend-forgot-otp',
-        contentType: "application/json",
-        data: JSON.stringify({}),
         success: function(response) {
-            console.log("Response received:", response);
             if (response.success) {
                 initializeOtpTimer();
-                Swal.fire({ icon: 'success', title: 'Code sent', text: 'New OTP sent to email' });
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Code Sent',
+                    text: 'New OTP has been sent to your email.'
+                });
             } else {
-                Swal.fire({ icon: 'error', title: 'Error', text: response.message || 'Please try again' });
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: response.message || 'Failed to send OTP. Please try again.'
+                });
             }
         },
         error: function(xhr) {
-            console.error("Error response:", xhr);
-            Swal.fire({ icon: 'error', title: 'Error', text: 'Please try again' });
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'Failed to send OTP. Please try again.'
+            });
         },
         complete: function() {
             resendButton.disabled = false;
         }
     });
 }
-        // function resendOtp() {
 
-        //     console.log("Resend OTP button clicked");
-        //     $.ajax({
-        //         type: 'POST',
-        //         url: '/resend-forgot-otp',
-        //         contentType: "application/json",
-        //         dataType: "json",
-        //         success: function(response) {
-        //             console.log("Response received:", response);
-        //             if (response.success) {
-        //                 initializeOtpTimer();
-        //                 Swal.fire({ icon: 'success', title: 'Code sent', text: 'New OTP sent to email' });
-        //             } else {
-        //                 Swal.fire({ icon: 'error', title: 'Error', text: 'Please try again' });
-        //             }
-        //         },
-        //         error: function() {
-        //             Swal.fire({ icon: 'error', title: 'Error', text: 'Please try again' });
-        //         }
-        //     });
-        // }
-        
-        
         initializeOtpTimer();
     </script>
 </body>
-
 </html>
-<%- include("../layouts/user/footer.ejs") %>

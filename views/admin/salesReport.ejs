@@ -1,244 +1,522 @@
 <%- include("../../views/layouts/admin/header.ejs") %>
-<body>
-    <!-- <title>Sales Report</title> -->
-  <div class="sales-report-container " style="margin-left: 270px;">
-    <!-- Header -->
-    <header class="header">
-        <h1>Sales Report</h1>
-        <div class="filters">
-            <label for="date-range">Date Range:</label>
-            <select id="date-range" name="date-range">
-                <option value="all" <%= selectedDateRange === 'all' ? 'selected' : '' %>>All Time</option>
-                <option value="daily" <%= selectedDateRange === 'daily' ? 'selected' : '' %>>Daily</option>
-                <option value="weekly" <%= selectedDateRange === 'weekly' ? 'selected' : '' %>>Last 7 Days</option>
-                <option value="monthly" <%= selectedDateRange === 'monthly' ? 'selected' : '' %>>Last 30 Days</option>
-                <option value="yearly" <%= selectedDateRange === 'yearly' ? 'selected' : '' %>>This Year</option>
-            </select>
-            <button onclick="downloadReport('pdf')" class="btn btn-primary ms-2">Download PDF</button>
-            <button onclick="downloadReport('excel')" class="btn btn-success ms-2">Download Excel</button>
-        </div>
-    </header>
 
-    <!-- Summary Cards -->
-    <section class="summary-cards">
-        <div class="card">
-            <h2>Total Revenue</h2>
-            <p class="value" id="total-revenue">₹<%= totalRevenue.toFixed(2) %></p>
-        </div>
-        <div class="card">
-            <h2>Total Orders</h2>
-            <p class="value" id="total-orders"><%= totalOrders %></p>
-        </div>
-        <div class="card">
-            <h2>Total Discount</h2>
-            <p class="value" id="total-discount">₹<%= totalDiscount.toFixed(2) %></p>
-        </div>
-    </section>
-
-    <section class="orders-table" style="margin-top: 40px;">
-        <h2>Order Details</h2>
-        <% if (orders && Array.isArray(orders) && orders.length > 0) { %>
-            <table class="table table-bordered table-striped">
-                <thead>
-                    <tr>
-                        <!-- <th>Order ID</th> -->
-                        <th>Customer (User ID)</th>
-                        <th>Date</th>
-                        <th>Status</th>
-                        <th>Discount</th>
-                        <th>Final Amount</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <% orders.forEach(order => { %>
-                        <tr>
-                            <td>
-                                <%= order.user.name %> (<%= order.user._id %>)<br>
-                                <small><%= order.user.email %></small>
-                            </td>
-                            <td><%= new Date(order.createdAt).toLocaleDateString() %></td>
-                            <td><%= order.status %></td>
-                            <td>₹<%= order.discount ? order.discount.toFixed(2) : '0.00' %></td>
-                            <td>₹<%= order.finalAmount ? order.finalAmount.toFixed(2) : '0.00' %></td>
-                        </tr>
-                    <% }); %>
-                </tbody>
-            </table>
-        <% } else { %>
-            <p>No orders found for the selected date range.</p>
-        <% } %>
-    </section>
-  </div>
-
-  <script src="script.js"></script>
-</body>
-</html>
-<style>
-    /* Reset and Base Styles */
-    * {
-        margin: 0;
-        padding: 0;
-        box-sizing: border-box;
-        font-family: 'Arial', sans-serif;
-    }
-
-    body {
-        background-color: #f4f7fa;
-        color: #333;
-        padding: 20px;
-    }
-
-    /* Container */
-    .sales-report-container {
-        max-width: 1200px;
-        margin: 0 auto;
-    }
-
-    /* Header */
-    .header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 30px;
-    }
-
-    .header h1 {
-        font-size: 28px;
-        color: #2c3e50;
-    }
-
-    .filters {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-    }
-
-    .filters label {
-        font-size: 14px;
-        color: #7f8c8d;
-    }
-
-    .filters select {
-        padding: 8px;
-        border: 1px solid #ddd;
-        border-radius: 4px;
-        font-size: 14px;
-        background-color: #fff;
-        cursor: pointer;
-    }
-
-    /* Summary Cards */
-    .summary-cards {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-        gap: 20px;
-    }
-
-    .card {
-        background-color: #fff;
-        border-radius: 8px;
-        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-        padding: 20px;
-        text-align: center;
-        transition: transform 0.2s ease;
-    }
-
-    .card:hover {
-        transform: translateY(-5px);
-    }
-
-    .card h2 {
-        font-size: 18px;
-        color: #7f8c8d;
-        margin-bottom: 15px;
-    }
-
-    .card .value {
-        font-size: 32px;
-        font-weight: bold;
-        color: #2c3e50;
-    }
-
-    /* Orders Table */
-    .orders-table h2 {
-        font-size: 24px;
-        color: #2c3e50;
-        margin-bottom: 20px;
-    }
-
-    .table {
-        width: 100%;
-        border-collapse: collapse;
-    }
-
-    .table th,
-    .table td {
-        padding: 12px;
-        text-align: left;
-        border: 1px solid #ddd;
-    }
-
-    .table th {
-        background-color: #343a40;
-        color: #fff;
-    }
-
-    .table td {
-        background-color: #fff;
-    }
-
-    .table-striped tbody tr:nth-of-type(odd) {
-        background-color: #f8f9fa;
-    }
-
-    /* Responsive Design */
-    @media (max-width: 600px) {
-        .header {
-            flex-direction: column;
-            gap: 15px;
-            text-align: center;
+   <style>
+        /* Reset and Base Styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Arial', sans-serif;
         }
 
+        body {
+            background-color: #f4f7fa;
+            color: #333;
+            padding: 20px;
+        }
+
+        /* Container */
+        .sales-report-container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        /* Header */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            color: #2c3e50;
+        }
+
+        .filters {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .filters label {
+            font-size: 14px;
+            color: #7f8c8d;
+        }
+
+        .filters select,
+        .filters input[type="date"] {
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+            background-color: #fff;
+            cursor: pointer;
+        }
+
+        /* Summary Cards */
         .summary-cards {
-            grid-template-columns: 1fr;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+
+        .card {
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            text-align: center;
+            transition: transform 0.2s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+        }
+
+        .card h2 {
+            font-size: 18px;
+            color: #7f8c8d;
+            margin-bottom: 15px;
         }
 
         .card .value {
-            font-size: 28px;
+            font-size: 32px;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+
+        /* Orders Table */
+        .table-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .table-header h2 {
+            font-size: 24px;
+            color: #2c3e50;
+            margin: 0;
+        }
+
+        .pagination-info {
+            font-size: 14px;
+            color: #7f8c8d;
+        }
+
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
         }
 
         .table th,
         .table td {
+            padding: 12px;
+            text-align: left;
+            border: 1px solid #ddd;
+        }
+
+        .table th {
+            background-color: #343a40;
+            color: #fff;
+        }
+
+        .table td {
+            background-color: #fff;
+        }
+
+        .table-striped tbody tr:nth-of-type(odd) {
+            background-color: #f8f9fa;
+        }
+
+        /* Pagination Styles */
+        .pagination-nav {
+            display: flex;
+            justify-content: center;
+            margin-top: 30px;
+        }
+
+        .pagination {
+            display: flex;
+            list-style: none;
+            border-radius: 6px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .page-item {
+            margin: 0;
+        }
+
+        .page-item:first-child .page-link {
+            border-top-left-radius: 6px;
+            border-bottom-left-radius: 6px;
+        }
+
+        .page-item:last-child .page-link {
+            border-top-right-radius: 6px;
+            border-bottom-right-radius: 6px;
+        }
+
+        .page-link {
+            display: block;
+            padding: 12px 16px;
+            margin-left: -1px;
+            text-decoration: none;
+            color: #007bff;
+            background-color: #fff;
+            border: 1px solid #dee2e6;
+            transition: all 0.3s ease;
             font-size: 14px;
-            padding: 8px;
+            font-weight: 500;
         }
-    }
-</style>
-<script>
-    
-    document.getElementById("date-range").addEventListener("change", function () {
-        const dateRange = this.value;
-        console.log("Selected Date Range:", dateRange); // Debug: Log the selected value
-        window.location.href = `/admin/salesReport?dateRange=${dateRange}`; // Redirect to apply the filter
-    });
 
-    document.addEventListener("DOMContentLoaded", function () {
-        const dateRangeSelect = document.getElementById("date-range");
-        if (dateRangeSelect) {
-            dateRangeSelect.addEventListener("change", function () {
-                const dateRange = this.value;
-                console.log("Selected Date Range:", dateRange);
-                window.location.href = `/admin/salesReport?dateRange=${dateRange}`;
-            });
-        } else {
-            console.error("Date range select element not found");
+        .page-link:hover {
+            color: #0056b3;
+            background-color: #e9ecef;
+            border-color: #dee2e6;
+            transform: translateY(-1px);
         }
-    });
 
-    function downloadReport(format) {
-        const dateRange = document.getElementById("date-range").value;
-        window.location.href = `/admin/salesReport?dateRange=${dateRange}&download=${format}`;
-    }
+        .page-item.active .page-link {
+            color: #fff;
+            background-color: #007bff;
+            border-color: #007bff;
+            box-shadow: 0 2px 4px rgba(0, 123, 255, 0.3);
+        }
 
-</script>
+        .page-item.disabled .page-link {
+            color: #6c757d;
+            background-color: #fff;
+            border-color: #dee2e6;
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        .page-item.disabled .page-link:hover {
+            transform: none;
+            background-color: #fff;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .header {
+                flex-direction: column;
+                gap: 15px;
+                text-align: center;
+            }
+
+            .table-header {
+                flex-direction: column;
+                gap: 10px;
+                align-items: flex-start;
+            }
+
+            .summary-cards {
+                grid-template-columns: 1fr;
+            }
+
+            .card .value {
+                font-size: 28px;
+            }
+
+            .table th,
+            .table td {
+                font-size: 14px;
+                padding: 8px;
+            }
+
+            .pagination {
+                flex-wrap: wrap;
+                justify-content: center;
+                gap: 5px;
+            }
+
+            .page-link {
+                padding: 8px 12px;
+                font-size: 12px;
+            }
+
+           
+            .pagination .page-item:not(.active):not(:first-child):not(:last-child):not(.disabled) {
+                display: none;
+            }
+
+            .pagination .page-item:nth-child(2),
+            .pagination .page-item:nth-last-child(2) {
+                display: block;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .sales-report-container {
+                margin-left: 0;
+                padding: 10px;
+            }
+
+            .table-responsive {
+                overflow-x: auto;
+            }
+        }
+    </style>
+
+<body>
+    <div class="sales-report-container" style="margin-left: 270px;">
+        <!-- Header -->
+        <header class="header">
+            <h1>Sales Report</h1>
+            <div class="filters">
+                <label for="date-range">Date Range:</label>
+                <select id="date-range" name="date-range">
+                    <option value="all" <%= selectedDateRange === 'all' ? 'selected' : '' %>>All Time</option>
+                    <option value="daily" <%= selectedDateRange === 'daily' ? 'selected' : '' %>>Daily</option>
+                    <option value="weekly" <%= selectedDateRange === 'weekly' ? 'selected' : '' %>>Last 7 Days</option>
+                    <option value="monthly" <%= selectedDateRange === 'monthly' ? 'selected' : '' %>>Last 30 Days</option>
+                    <option value="yearly" <%= selectedDateRange === 'yearly' ? 'selected' : '' %>>This Year</option>
+                    <option value="custom" <%= selectedDateRange === 'custom' ? 'selected' : '' %>>Custom</option>
+                </select>
+                <div id="custom-date-range" style="display: <%= selectedDateRange === 'custom' ? 'flex' : 'none' %>; gap: 10px; align-items: center;">
+                    <input type="date" id="start-date" value="<%= startDate %>" max="<%= new Date().toISOString().split('T')[0] %>">
+                    <input type="date" id="end-date" value="<%= endDate %>" max="<%= new Date().toISOString().split('T')[0] %>">
+                    <button onclick="applyCustomDateRange()" class="btn btn-secondary">Filter</button>
+                </div>
+                <button onclick="downloadReport('pdf')" class="btn btn-primary ms-2">Download PDF</button>
+                <button onclick="downloadReport('excel')" class="btn btn-success ms-2">Download Excel</button>
+            </div>
+        </header>
+
+      
+        <section class="summary-cards">
+            <div class="card">
+                <h2>Total Revenue</h2>
+                <p class="value" id="total-revenue">₹<%= totalRevenue.toFixed(2) %></p>
+            </div>
+            <div class="card">
+                <h2>Total Orders</h2>
+                <p class="value" id="total-orders"><%= totalOrders %></p>
+            </div>
+            <div class="card">
+                <h2>Total Discount</h2>
+                <p class="value" id="total-discount">₹<%= totalDiscount.toFixed(2) %></p>
+            </div>
+        </section>
+
+        <section class="orders-table" style="margin-top: 40px;">
+            <div class="table-header">
+                <h2>Order Details</h2>
+                <% if (totalPages > 1) { %>
+                    <div class="pagination-info">
+                        <span>Showing <%= ((currentPage - 1) * limit) + 1 %> to <%= Math.min(currentPage * limit, totalOrders) %> of <%= totalOrders %> orders</span>
+                    </div>
+                <% } %>
+            </div>
+
+            <% if (orders && Array.isArray(orders) && orders.length > 0) { %>
+                <table class="table table-bordered table-striped">
+                    <thead>
+                        <tr>
+                            <th>Customer (User ID)</th>
+                            <th>Date</th>
+                            <th>Status</th>
+                            <th>Discount</th>
+                            <th>Final Amount</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% orders.forEach(order => { %>
+                            <tr>
+                                <td>
+                                    <%= order.user.name %> (<%= order.user._id %>)<br>
+                                    <small><%= order.user.email %></small>
+                                </td>
+                                <td><%= new Date(order.createdAt).toLocaleDateString() %></td>
+                                <td><%= order.status %></td>
+                                <td>₹<%= order.discount ? order.discount.toFixed(2) : '0.00' %></td>
+                                <td>₹<%= order.finalAmount ? order.finalAmount.toFixed(2) : '0.00' %></td>
+                            </tr>
+                        <% }); %>
+                    </tbody>
+                </table>
+
+                
+                <% if (totalPages > 1) { %>
+                    <nav class="pagination-nav" aria-label="Sales report pagination">
+                        <ul class="pagination">
+                            <li class="page-item <%= currentPage === 1 ? 'disabled' : '' %>">
+                                <a class="page-link" href="<%= currentPage > 1 ? buildPaginationUrl(currentPage - 1) : '#' %>" 
+                                   onclick="<%= currentPage > 1 ? `navigateToPage(${currentPage - 1})` : 'return false;' %>">
+                                    &laquo; Previous
+                                </a>
+                            </li>
+
+                            <% 
+                                let startPage = Math.max(1, currentPage - 2);
+                                let endPage = Math.min(totalPages, currentPage + 2);
+                                
+                              
+                                if (endPage - startPage < 4) {
+                                    if (startPage === 1) {
+                                        endPage = Math.min(totalPages, startPage + 4);
+                                    } else if (endPage === totalPages) {
+                                        startPage = Math.max(1, endPage - 4);
+                                    }
+                                }
+                            %>
+
+                          
+                            <% if (startPage > 1) { %>
+                                <li class="page-item">
+                                    <a class="page-link" href="<%= buildPaginationUrl(1) %>" onclick="navigateToPage(1)">1</a>
+                                </li>
+                                <% if (startPage > 2) { %>
+                                    <li class="page-item disabled">
+                                        <span class="page-link">...</span>
+                                    </li>
+                                <% } %>
+                            <% } %>
+
+                           
+                            <% for (let i = startPage; i <= endPage; i++) { %>
+                                <li class="page-item <%= i === currentPage ? 'active' : '' %>">
+                                    <a class="page-link" href="<%= buildPaginationUrl(i) %>" onclick="navigateToPage(<%= i %>)">
+                                        <%= i %>
+                                    </a>
+                                </li>
+                            <% } %>
+
+               
+                            <% if (endPage < totalPages) { %>
+                                <% if (endPage < totalPages - 1) { %>
+                                    <li class="page-item disabled">
+                                        <span class="page-link">...</span>
+                                    </li>
+                                <% } %>
+                                <li class="page-item">
+                                    <a class="page-link" href="<%= buildPaginationUrl(totalPages) %>" onclick="navigateToPage(<%= totalPages %>)">
+                                        <%= totalPages %>
+                                    </a>
+                                </li>
+                            <% } %>
+
+                         
+                            <li class="page-item <%= currentPage === totalPages ? 'disabled' : '' %>">
+                                <a class="page-link" href="<%= currentPage < totalPages ? buildPaginationUrl(currentPage + 1) : '#' %>" 
+                                   onclick="<%= currentPage < totalPages ? `navigateToPage(${currentPage + 1})` : 'return false;' %>">
+                                    Next &raquo;
+                                </a>
+                            </li>
+                        </ul>
+                    </nav>
+                <% } %>
+            <% } else { %>
+                <p>No orders found for the selected date range.</p>
+            <% } %>
+        </section>
+    </div>
+
+ 
+    <script>
+       
+        function buildPaginationUrl(page) {
+            const urlParams = new URLSearchParams(window.location.search);
+            urlParams.set('page', page);
+            return `${window.location.pathname}?${urlParams.toString()}`;
+        }
+
+        
+        function navigateToPage(page) {
+            window.location.href = buildPaginationUrl(page);
+            return false;
+        }
+
+        document.getElementById("date-range").addEventListener("change", function () {
+            const dateRange = this.value;
+            const customDateRangeDiv = document.getElementById("custom-date-range");
+
+            if (dateRange === "custom") {
+                customDateRangeDiv.style.display = "flex";
+            } else {
+                customDateRangeDiv.style.display = "none";
+                window.location.href = `/admin/salesReport?dateRange=${dateRange}&page=1`;
+            }
+        });
+
+ 
+        function applyCustomDateRange() {
+            const startDate = document.getElementById("start-date").value;
+            const endDate = document.getElementById("end-date").value;
+
+            if (!startDate || !endDate) {
+                alert("Please select both start and end dates.");
+                return;
+            }
+
+            const start = new Date(startDate);
+            const end = new Date(endDate);
+            const now = new Date();
+
+            if (start > end) {
+                alert("Start date cannot be after end date.");
+                return;
+            }
+
+            if (start > now || end > now) {
+                alert("Dates cannot be in the future.");
+                return;
+            }
+
+            window.location.href = `/admin/salesReport?dateRange=custom&startDate=${startDate}&endDate=${endDate}&page=1`;
+        }
+
+        function downloadReport(format) {
+            const dateRange = document.getElementById("date-range").value;
+            let url = `/admin/salesReport?dateRange=${dateRange}&download=${format}`;
+            
+            if (dateRange === "custom") {
+                const startDate = document.getElementById("start-date").value;
+                const endDate = document.getElementById("end-date").value;
+                if (!startDate || !endDate) {
+                    alert("Please select both start and end dates before downloading.");
+                    return;
+                }
+                url += `&startDate=${startDate}&endDate=${endDate}`;
+            }
+
+            window.location.href = url;
+        }
+
+       
+        document.addEventListener('keydown', function(e) {
+            if (e.ctrlKey || e.metaKey) return; 
+            
+            const currentPage = <%= currentPage %>;
+            const totalPages = <%= totalPages %>;
+            
+            if (e.key === 'ArrowLeft' && currentPage > 1) {
+                navigateToPage(currentPage - 1);
+            } else if (e.key === 'ArrowRight' && currentPage < totalPages) {
+                navigateToPage(currentPage + 1);
+            }
+        });
+    </script>
+
+    <%
+      
+        function buildPaginationUrl(page) {
+            const params = new URLSearchParams();
+            if (selectedDateRange && selectedDateRange !== 'all') {
+                params.set('dateRange', selectedDateRange);
+            }
+            if (selectedDateRange === 'custom') {
+                if (startDate) params.set('startDate', startDate);
+                if (endDate) params.set('endDate', endDate);
+            }
+            params.set('page', page);
+            return `/admin/salesReport?${params.toString()}`;
+        }
+    %>
+</body>
 <%- include("../../views/layouts/admin/footer") %>

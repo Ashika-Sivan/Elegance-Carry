@@ -7,6 +7,9 @@ const path = require("path");
 const sharp = require("sharp");//to resize images
 const { log } = require("console");
 const mongoose=require('mongoose')
+const HttpStatus = require('../../enum/httpStatus');
+const OrderStatus = require('../../enum/orderStatus');
+const Messages = require("../../enum/messages");
 
 
 
@@ -34,6 +37,8 @@ const getProductAddPage = async (req, res) => {
 const addProducts = async (req, res) => {
     try {
         const products = req.body;
+
+      
         const productExists = await Product.findOne({ productName: products.productName });
         if (productExists) {
             return res.status(400).send("Product already exists, please try another name");
@@ -47,9 +52,10 @@ const addProducts = async (req, res) => {
         if (req.files && req.files.length > 0) {
             for (const file of req.files) {
                 try {
-                    const resizedFilename = `resized-${file.filename}`;
+                    const resizedFilename = `resized-${Date.now()}-${file.filename}`;
                     const resizedImagePath = path.join('public', 'img', resizedFilename);
 
+                   
                     await sharp(file.path)
                         .resize(440, 440, {
                             fit: 'contain',
@@ -58,27 +64,32 @@ const addProducts = async (req, res) => {
                         .jpeg({ quality: 90 })
                         .toFile(resizedImagePath);
 
-                    // Add the resized filename to the images array
                     images.push(resizedFilename);
-                    await fs.promises.unlink(file.path).catch(err => {
+
+                    await fs.unlink(file.path).catch(err => {
                         console.warn(`Warning: Could not delete original file ${file.path}:`, err);
                     });
                 } catch (error) {
                     console.error(`Error processing image ${file.filename}:`, error);
+                   
                 }
             }
         }
+
+        // Validate category
         const categoryId = await Category.findOne({ name: products.category });
         if (!categoryId) {
             return res.status(400).send("Invalid category name");
         }
+
+        // Create new product
         const newProduct = new Product({
             productName: products.productName,
             description: products.description,
             brand: products.brand,
             category: categoryId._id,
             regularPrice: products.regularPrice,
-            salePrice: products.salePrice,
+            salePrice: products.salePrice || 0,
             createdOn: new Date(),
             quantity: products.quantity,
             color: products.color,
@@ -86,69 +97,14 @@ const addProducts = async (req, res) => {
             status: 'Available',
         });
 
-        // Save the new product
         await newProduct.save();
         return res.redirect("/admin/products");
-
     } catch (error) {
         console.error("Error saving product:", error);
         return res.redirect("/admin/pageerror");
     }
 };
 
-// const getAllProducts = async (req, res) => {
-//     try {
-//         const search = req.query.search || "";
-//         const page = parseInt(req.query.page) || 1;
-//         const limit = 5;
-
-//         // Step 1: Find all brands matching the search term
-//         const matchingBrands = await Brand.find({
-//             name: { $regex: new RegExp(".*" + search + ".*", "i") },
-//             isBlocked: false,
-//         }).select("_id"); 
-
-    
-//         const productData = await Product.find({
-//             $or: [
-//                 { productName: { $regex: new RegExp(".*" + search + ".*", "i") } },
-//                 { brand: { $in: matchingBrands.map((brand) => brand._id) } },
-//             ],
-//         })
-//             .limit(limit)
-//             .skip((page - 1) * limit)
-//             .populate("category")
-//             .populate("brand") // Populate brand details
-//             .exec();
-
-       
-//         const count = await Product.find({
-//             $or: [
-//                 { productName: { $regex: new RegExp(".*" + search + ".*", "i") } },
-//                 { brand: { $in: matchingBrands.map((brand) => brand._id) } },
-//             ],
-//         }).countDocuments();
-
-//         // Step 4: Fetch categories and brands
-//         const category = await Category.find({ isListed: true });
-//         const brand = await Brand.find({ isBlocked: false });
-
-//         if (category && brand) {
-//             res.render("products", {
-//                 data: productData,
-//                 currentPage: page,
-//                 totalPages: Math.ceil(count / limit),
-//                 cat: category,
-//                 brand: brand,
-//             });
-//         } else {
-//             res.render("page-404");
-//         }
-//     } catch (error) {
-//         console.error("Error loading products page:", error);
-//         res.redirect("/pageerror");
-//     }
-// };
 
 const getAllProducts = async (req, res) => {
     try {
@@ -205,10 +161,11 @@ const getAllProducts = async (req, res) => {
 const blockProduct = async (req, res) => {
     try {
         let id = req.body.id; // Changed from req.query to req.body
+
         await Product.updateOne({ _id: id }, { $set: { isBlocked: true } });
-        res.status(200).json({ success: true });
+        res.status(HttpStatus.OK).json({ success: true });
     } catch (error) {
-        res.status(500).json({ error: 'Server error' });
+        res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({ error: Messages.INTERNAL_SERVER_ERROR });
     }
 };
 
@@ -216,9 +173,9 @@ const unblockProduct = async (req, res) => {
     try {
         let id = req.body.id; // Changed from req.query to req.body
         await Product.updateOne({ _id: id }, { $set: { isBlocked: false } });
-        res.status(200).json({ success: true });
+        res.status(HttpStatus.OK).json({ success: true });
     } catch (error) {
-        res.status(500).json({ error: 'Server error' });
+        res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({ error: Messages.INTERNAL_SERVER_ERROR });
     }
 };
 
@@ -261,7 +218,7 @@ const editProduct = async (req, res) => {
         // current product
         const product = await Product.findById(id);
         if (!product) {
-            throw new Error('Product not found');
+            throw new Error(Messages.PRODUCT_NOT_FOUND);
         }
 
         const data = req.body;
@@ -274,7 +231,7 @@ const editProduct = async (req, res) => {
         });
 
         if (existingProduct) {
-            return res.status(400).json({ 
+            return res.status(HttpStatus.BAD_REQUEST).json({ 
                 error: "Product with name already exists. Please try with another name" 
             });
         }
@@ -328,36 +285,36 @@ const deleteSingleImage = async (req, res) => {
     try {
         const { imageNameToServer, productIdToServer } = req.body;
         
-        // Input validation
+     
         if (!imageNameToServer || !productIdToServer) {
-            return res.status(400).json({
+            return res.status(HttpStatus.BAD_REQUEST).json({
                 status: false,
                 message: "Missing required parameters"
             });
         }
 
-        // Validate product ID format
+       
         if (!mongoose.Types.ObjectId.isValid(productIdToServer)) {
-            return res.status(400).json({
+            return res.status(HttpStatus.BAD_REQUEST).json({
                 status: false,
-                message: "Invalid product ID format"
+                message: `${Messages.INVALID_PRODUCT_ID} format`
             });
         }
 
-        // Find the product and update in one operation
+  
         const result = await Product.updateOne(
             { _id: productIdToServer },
             { $pull: { productImage: imageNameToServer } }
         );
 
         if (result.modifiedCount === 0) {
-            return res.status(404).json({
+            return res.status(HttpStatus.NOT_FOUND).json({
                 status: false,
                 message: "Product not found or image already removed"
             });
         }
 
-        // Delete the physical file
+       
         const imagePath = path.join(process.cwd(), "public", "img", imageNameToServer);
         try {
             if (fs.existsSync(imagePath)) {
@@ -365,7 +322,7 @@ const deleteSingleImage = async (req, res) => {
             }
         } catch (fsError) {
             console.error("File system error:", fsError);
-            // Continue execution even if file deletion fails
+     
         }
 
         return res.json({
@@ -375,9 +332,9 @@ const deleteSingleImage = async (req, res) => {
 
     } catch (error) {
         console.error("Delete image error:", error);
-        return res.status(500).json({
+        return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
             status: false,
-            message: "Internal server error",
+            message: Messages.INTERNAL_SERVER_ERROR,
             error: error.message
         });
     }
@@ -393,7 +350,7 @@ const addProductOffer = async(req, res) => {
         
         const findProduct = await Product.findOne({_id: productId});
         if (!findProduct) {
-            return res.json({status: false, message: "Product not found"});
+            return res.json({status: false, message: Messages.PRODUCT_NOT_FOUND});
         }
         
         const findCategory = await Category.findOne({_id: findProduct.category});
@@ -401,12 +358,12 @@ const addProductOffer = async(req, res) => {
             return res.json({status: false, message: "This product's category already has a higher category offer"});
         }
         
-        // Save the regular price if not already stored
+   
         if (!findProduct.regularPrice) {
             findProduct.regularPrice = findProduct.salePrice;
         }
         
-        // Calculate new sale price with discount
+       
         findProduct.salePrice = findProduct.regularPrice - Math.floor(findProduct.regularPrice * (percentage / 100));
         findProduct.productOffer = parseInt(percentage);
         
@@ -418,7 +375,7 @@ const addProductOffer = async(req, res) => {
         return res.json({status: true});
     } catch (error) {
         console.error("Error in addProductOffer:", error);
-        return res.status(500).json({status: false, message: 'Internal Server Error'});
+        return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({status: false, message: Messages.INTERNAL_SERVER_ERROR});
     }
 }
 
@@ -432,10 +389,10 @@ const removeProductOffer = async(req, res) => {
         
         const findProduct = await Product.findOne({_id: productId});
         if (!findProduct) {
-            return res.json({status: false, message: "Product not found"});
+            return res.json({status: false, message: Messages.PRODUCT_NOT_FOUND});
         }
         
-        // Reset to regular price
+        
         findProduct.salePrice = findProduct.regularPrice;
         findProduct.productOffer = 0;
         
@@ -443,7 +400,7 @@ const removeProductOffer = async(req, res) => {
         return res.json({status: true});
     } catch (error) {
         console.error("Error in removeProductOffer:", error);
-        return res.status(500).json({status: false, message: 'Internal Server Error'});
+        return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({status: false, message: Messages.INTERNAL_SERVER_ERROR});
     }
 }
 

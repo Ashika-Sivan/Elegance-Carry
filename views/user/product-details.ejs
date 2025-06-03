@@ -258,7 +258,7 @@ function addToFavorites() {
     const productId = '<%= product._id %>'; // Get the product ID from the EJS variable
 
     fetch('/wishlist', {
-        method: 'POST',
+        method: 'PATCH',
         headers: {
             'Content-Type': 'application/json'
         },

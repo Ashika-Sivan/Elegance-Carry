@@ -240,41 +240,40 @@ startTimer()
             }
 
             $.ajax({
-                type: "POST",
-                url: "/verify-otp",
-                data: { otp: otpInput },
-                success: function(response) {
-                    if (response.success) {
-                        clearInterval(timerInterval);
-                        Swal.fire({
-                            icon: "success",
-                            title: "OTP Verified Successfully",
-                            text: response.message || "You will be redirected shortly.",
-                            showConfirmButton: false,
-                            timer: 1500,
-                        }).then(() => {
-                            window.location.href = response.redirectUrl;
-                        });
-                    } else {
-                        Swal.fire({
-                            title: "Error",
-                            text: response.message || "OTP verification failed.",
-                            icon: "error",
-                            confirmButtonText: "OK",
-                        });
-                    }
-                },
-                error: function(xhr, status, error) {
-                    Swal.fire({
-                        icon: "error",
-                        title: "Invalid OTP",
-                        text: "Please try again. Error: " + error,
-                    });
-                },
-            });
-            return false;
+  type: "POST",
+  url: "/verify-otp",
+  data: { otp: otpInput }
+})
+.done(function(response) {
+  if (response.success) {
+    clearInterval(timerInterval);
+    Swal.fire({
+      icon: "success",
+      title: "OTP Verified Successfully",
+      text: response.message || "You will be redirected shortly.",
+      showConfirmButton: false,
+      timer: 1500,
+    }).then(() => {
+      window.location.href = response.redirectUrl;
+    });
+  } else {
+    Swal.fire({
+      title: "Error",
+      text: response.message || "OTP verification failed.",
+      icon: "error",
+      confirmButtonText: "OK",
+    });
+  }
+})
+.fail(function(xhr) {
+  const response = xhr.responseJSON;
+  Swal.fire({
+    icon: "error",
+    title: "Error",
+    text: response?.message || "An unexpected error occurred. Please try again.",
+  });
+});
         }
-
       
 function resendOTP() {
     clearInterval(timerInterval);

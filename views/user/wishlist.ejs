@@ -220,7 +220,7 @@ body {
     display: inline-block;
     background-color: #ff3f6c;
     color: white;
-    font-size: 14px;
+    font-size: 10px;
     padding: 10px 15px;
     border-radius: 5px;
     text-transform: uppercase;
@@ -360,7 +360,7 @@ body {
                                     <!-- Product info -->
                                     <div class="product-info p-3">
                                         <h3 class="product-brand">
-                                            <%= product.brand || 'Brand' %>
+                                            <!-- <%= product.brand || 'Brand' %> -->
                                         </h3>
                                         <h4 class="product-name">
                                             <a href="/product/<%= product._id %>">
@@ -422,7 +422,7 @@ body {
 <script>
 function removeFromWishlist(productId) {
     fetch('/wishlist', {
-        method: 'POST',
+        method: 'PATCH',
         headers: {
             'Content-Type': 'application/json'
         },

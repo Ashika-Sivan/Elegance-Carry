@@ -4,18 +4,21 @@ const mongoose = require('mongoose');
 const Category=require("../../models/categorySchema")
 const Brand=require("../../models/brandSchema");
 const WishList = require("../../models/wishlistSchema");
+const HttpStatus = require('../../enum/httpStatus');
+const OrderStatus = require('../../enum/orderStatus');
+const Messages = require('../../enum/messages');
 
 const productDetails = async (req, res) => {
     try {
         const productId = req.query.id;
         if (!mongoose.Types.ObjectId.isValid(productId)) {
-            return res.status(400).json({ message: 'Invalid product ID' });
+            return res.status(HttpStatus.BAD_REQUEST).json({ message: Messages.INVALID_PRODUCT_ID });
         }
 
         const product = await Product.findById(productId).populate('category brand');
 
         if (!product) {
-            return res.status(404).json({ message: 'Product not found' });
+            return res.status(HttpStatus.NOT_FOUND).json({ message:Messages.PRODUCT_NOT_FOUND });
         }
 
         const relatedProducts = await Product.find({
@@ -23,6 +26,7 @@ const productDetails = async (req, res) => {
             _id: { $ne: product._id },
             isBlocked: false,
         }).limit(4);
+
 
         let userData=null;
         let inWishlist = false;
@@ -33,7 +37,6 @@ const productDetails = async (req, res) => {
                 inWishlist=wishlist.products.some(item=>item.productId.toString()===productId)
             }
         }
-
         console.log("--------------",product.brand.name);
         
         const category=await Category.find()
@@ -52,7 +55,7 @@ const productDetails = async (req, res) => {
 
 
 
-
+//this controller is for guest users
 const loadShopPage = async (req, res) => {
     try {
         const page = parseInt(req.query.page) || 1;
@@ -88,10 +91,10 @@ const loadShopPage = async (req, res) => {
       
         const filterQuery = {};
 
-        if (searchTerm) {
+        if (searchTerm) {//can search the product name or description
             filterQuery.$or = [
                 { productName: { $regex: searchTerm, $options: 'i' } },
-                { description: { $regex: searchTerm, $options: 'i' } }
+                // { description: { $regex: searchTerm, $options: 'i' } }
             ];
         }
 
@@ -113,9 +116,9 @@ const loadShopPage = async (req, res) => {
             };
         }
 
-        filterQuery.isBlocked = false;
+        filterQuery.isBlocked = false;//product with is blocked false
 
-        const products = await Product.find(filterQuery)
+        const products = await Product.find(filterQuery)//fetching the producuct
             .sort(sortOption)
             .skip(skip)
             .limit(limit)
@@ -152,8 +155,8 @@ const loadShopPage = async (req, res) => {
 
     } catch (error) {
         console.error('Error in shop route:', error);
-        res.status(500).render('errorPage', { 
-            message: 'An error occurred while loading the shop page.' 
+        res.status(HttpStatus.INTERNAL_SERVER_ERROR).render('errorPage', { 
+            message:Messages.INTERNAL_SERVER_ERROR
         });
     }
 };

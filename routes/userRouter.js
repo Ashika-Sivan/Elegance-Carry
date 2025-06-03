@@ -23,7 +23,7 @@ router.get("/signup",userController.loadSignup)
 router.post("/signup",userController.signup)
 router.post("/verify-otp",userController.verifyOtp);
 router.post("/resend-otp",userController.resendOtp);
-router.post("/creditWallet",userAuth,userController.creditWallet)
+router.patch("/creditWallet",userAuth,userController.creditWallet)
 
 
 router.get('/auth/google',passport.authenticate('google',{scope:['profile','email']}))
@@ -53,59 +53,49 @@ router.get("/userProfile",userAuth,profileController.getUserProfile)
 // router.post('/update-password', profileController.updatePassword);
 // router.get("/userProfile",profileController.getUserProfile)
 router.get("/edit-profile",userAuth,profileController.getEditProfilePage)
-router.post("/edit-profile",userAuth,profileController.updateUserProfile)
+router.put("/edit-profile",userAuth,profileController.updateUserProfile)
 //reset password
 router.get("/password-reset",userAuth,profileController.getPasswordResetPage)
-router.post("/password-reset",userAuth,profileController.getupdatePassword)
+router.put("/password-reset",userAuth,profileController.getupdatePassword)
 //Address management
 router.get('/loadAddresses',userAuth,profileController.loadAddresses)
 router.get("/addAddress",userAuth,profileController.addAddress);
 router.post("/addAddress",userAuth,profileController.postAddAddress);
 router.get("/editAddress", userAuth, profileController.editAddress);
-router.post("/editAddress",userAuth,profileController.postEditAddress)
+router.post("/editAddress",userAuth,profileController.postEditAddress)///PENDING
 router.delete("/deleteAddress/:id", userAuth, profileController.deleteAddress);
 //cart management
 router.get("/cart",userAuth,cartController.loadCartPage)
 router.post("/cart",userAuth,cartController.postAddToCart)
-router.post("/update-cart",userAuth,cartController.updateCartQuantity)
-router.post("/remove-from-cart",userAuth,cartController.removeFromCart)
+router.put("/update-cart",userAuth,cartController.updateCartQuantity)
+router.delete("/remove-from-cart",userAuth,cartController.removeFromCart)
 
 //checkout
 router.get("/check-out",userAuth,cartController.loadCheckOutPage)
-
-// router.post("/applyCoupon",userAuth,cartController.applyCoupon)
-//order management
-// router.get("/orderList",userAuth,orderController.placeOrder)
 router.post("/placeOrder", userAuth, orderController.placeOrder);
 router.post('/verifyPayment', userAuth, orderController.verifyPayment);
 router.get("/orderList",userAuth,orderController.loadOrderListPage)
-router.post('/cancel-order/:orderId/:itemId', userAuth, orderController.cancelOrder);
+router.patch('/cancel-order/:orderId/:itemId', userAuth, orderController.cancelOrder);
 router.post('/return-order/:orderId/:itemId', userAuth, orderController.returnOrder);
 router.get('/order/:id', userAuth, orderController.loadViewDetailsPage);
 router.post("/applyCoupon",userAuth,orderController.applyCoupon)
-router.post("/removeCoupon",userAuth,orderController.removeCoupon)
+router.delete("/removeCoupon",userAuth,orderController.removeCoupon)
 router.get("/download-invoice/:id",userAuth,orderController.downloadInvoice)
 router.post('/retryPayment',userAuth,orderController.retryPayment)
-router.post('/updateOrderStatusOnFailure',userAuth,orderController.updateOrderStatusOnFailure);
+router.patch('/updateOrderStatusOnFailure',userAuth,orderController.updateOrderStatusOnFailure);
 router.post("/RequestRefund",userAuth,orderController.walletReturnRefund)
 
 //wishlist managemnet
 router.get("/wishlist",userAuth,wishlistController.loadWishlist)
-router.post("/wishlist",userAuth,wishlistController.updateWishlist)
-
-
+router.patch("/wishlist",userAuth,wishlistController.updateWishlist)
 
 //wallet management
 router.get("/wallet",userAuth,walletController.getWalletPage)
 router.post("/addFund",userAuth,walletController.addFund)
 router.post("/walletPayment",userAuth,walletController.verifyRazorpayPayment)
-router.get("/walletRefund",userAuth,walletController.walletRefund)
+router.post("/walletRefund",userAuth,walletController.walletRefund)//post
 router.post("/deductWallet",userAuth,walletController.deductWalletBalance)
 router.post("/verify-referral",userAuth,userController.verifyReferral)
-
-
-
-
 router.get("/failure",userAuth,orderController.paymentFailure)
 
 

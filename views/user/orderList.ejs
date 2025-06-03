@@ -190,6 +190,9 @@
     font-size: 13px;
     margin-top: 4px;
 }
+.orders-container{
+    margin-right: 100px;
+}
     </style>
 <main>
     <div class="orders-container">
@@ -266,7 +269,7 @@
     </div>
   </main>
 
-<!-- Return Order Modal -->
+
 <div id="returnModal" class="modal">
     <div class="modal-content">
         <span class="close-btn" onclick="closeReturnModal()">×</span>
@@ -310,7 +313,7 @@ function cancelOrderItem(orderId, itemId) {
   }).then((result) => {
       if (result.isConfirmed) {
           fetch(`/cancel-order/${orderId}/${itemId}`, {
-              method: 'POST',
+              method: 'PATCH',
               headers: {
                   'Accept': 'application/json',
                   'Content-Type': 'application/json',
@@ -349,15 +352,15 @@ function cancelOrderItem(orderId, itemId) {
   });
 }
 
-// Return Order Functions
+
 const returnModal = document.getElementById('returnModal');
 const returnForm = document.getElementById('returnForm');
 const returnOrderIdInput = document.getElementById('returnOrderId');
 const returnItemIdInput = document.getElementById('returnItemId');
 
 function openReturnModal(orderId, itemId) {
-  returnOrderIdInput.value = orderId;
-  returnItemIdInput.value = itemId;
+  returnOrderIdInput.value = orderId;//settin modalfor orderid
+  returnItemIdInput.value = itemId;//for item itemid
   returnModal.style.display = 'block';
 }
 
@@ -391,7 +394,7 @@ returnForm.addEventListener('submit', function (e) {
       cancelButtonText: 'No, cancel',
   }).then((result) => {
       if (result.isConfirmed) {
-          fetch(`/return-order/${orderId}/${itemId}`, { // Use existing endpoint
+          fetch(`/return-order/${orderId}/${itemId}`, { 
               method: 'POST',
               headers: {
                   'Accept': 'application/json',
@@ -437,7 +440,7 @@ returnForm.addEventListener('submit', function (e) {
   });
 });
 function retryPayment(orderId, amount, razorpayOrderId) {
-    console.log("Retry Payment Data:", { orderId, razorpayOrderId }); // Removed amount from log
+    console.log("Retry Payment Data:", { orderId, razorpayOrderId }); 
     Swal.fire({
         title: 'Retry Payment',
         text: 'Would you like to retry the payment for this order?',
@@ -457,7 +460,7 @@ function retryPayment(orderId, amount, razorpayOrderId) {
                 body: JSON.stringify({
                     orderId: orderId,
                     razorpayOrderId: razorpayOrderId
-                }) // Removed amount from request
+                }) 
             })
             .then(response => {
                 if (!response.ok) {
@@ -472,7 +475,7 @@ function retryPayment(orderId, amount, razorpayOrderId) {
                 if (data.success) {
                     const options = {
                         key: data.razorpayKeyId,
-                        amount: data.amount, // Use the recalculated amount from backend
+                        amount: data.amount, 
                         currency: "INR",
                         name: "Your Shop Name",
                         description: "Retry Order Payment",
@@ -557,7 +560,6 @@ function retryPayment(orderId, amount, razorpayOrderId) {
     });
 }
 </script>
-<!-- In footer.ejs -->
 <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </body>

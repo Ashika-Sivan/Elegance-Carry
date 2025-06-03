@@ -137,12 +137,19 @@
       color: #dc3545; /* Red for debit */
     }
 
+    .active-page {
+  background-color: #333;
+  color: white;
+  pointer-events: none; /* disables click */
+}
+
+
     footer {
       background-color: #333;
       color: #fff;
       padding: 10px;
       text-align: center;
-      position: fixed;
+      /* position: fixed; */
       bottom: 0;
       width: 100%;
     }
@@ -196,6 +203,27 @@
           <% } %>
         </tbody>
       </table>
+
+
+
+      <% if (totalPages > 1) { %>
+  <div style="text-align: center; margin-top: 20px;">
+    <% if (currentPage > 1) { %>
+      <a href="?page=<%= currentPage - 1 %>&limit=<%= limit %>" class="button button-secondary">Previous</a>
+    <% } %>
+
+    <% for (let i = 1; i <= totalPages; i++) { %>
+      <a href="?page=<%= i %>&limit=<%= limit %>" class="button <%= currentPage === i ? '' : 'button-secondary' %>">
+        <%= i %>
+      </a>
+    <% } %>
+
+    <% if (currentPage < totalPages) { %>
+      <a href="?page=<%= currentPage + 1 %>&limit=<%= limit %>" class="button button-secondary">Next</a>
+    <% } %>
+  </div>
+<% } %>
+
     </div>
 
     <!-- Add Funds Section -->
@@ -223,10 +251,9 @@
       </form>
     </div>
   </div>
+  
 
-  <footer>
-    <p>© 2025 E-Commerce Website. All rights reserved.</p>
-  </footer>
+
 
   <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
   <script>

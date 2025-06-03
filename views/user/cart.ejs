@@ -116,7 +116,12 @@
         <% } %>
 
         <div class="cart-summary">Total: ₹<%= totalAmount %></div>
-        <a href="/check-out" class="btn btn-primary checkout-btn">Proceed to Checkout</a>
+        <a 
+  href="<%= totalAmount > 0 ? '/check-out' : '#' %>" 
+  class="btn btn-primary checkout-btn <%= totalAmount === 0? 'disabled' : '' %>">
+  Proceed to Checkout
+</a>
+
      
     </div>
 </body>
@@ -128,7 +133,7 @@
 
 function updateQuantity(productId, change) {
     fetch('/update-cart', {
-        method: 'POST',
+        method: 'PUT',
         headers: {
             'Content-Type': 'application/json'
         },
@@ -137,8 +142,7 @@ function updateQuantity(productId, change) {
     .then(res => res.json())
     .then(data => {
         if (data.success) {
-            // Update quantity
-            const qtyElement = document.getElementById('qty-' + productId);
+            const qtyElement = document.getElementById('qty-' + productId);//concat product id with qty
             if (qtyElement) {
                 qtyElement.innerText = data.newQuantity;
             }
@@ -179,7 +183,7 @@ function removeItem(productId) {
     }).then((result) => {
         if (result.isConfirmed) {
             fetch('/remove-from-cart', {
-                method: 'POST',
+                method: 'DELETE',
                 headers: {
                     'Content-Type': 'application/json'
                 },

@@ -7,6 +7,9 @@ const dotenv = require("dotenv").config();
 const crypto = require("crypto");
 const mongoose = require("mongoose");
 const { Transaction } = require("mongodb");
+const HttpStatus = require('../../enum/httpStatus');
+const OrderStatus = require('../../enum/orderStatus');
+const Messages = require('../../enum/messages');
 
 
 const razorpay = new Razorpay({
@@ -20,7 +23,7 @@ const razorpay = new Razorpay({
 const getWalletPage = async (req, res) => {
     try {
         if (!req.session.user) {
-            console.log('User not found in session');
+            // console.log('User not found in session');
             return res.redirect('/login');
         }
         
@@ -41,7 +44,7 @@ const getWalletPage = async (req, res) => {
         }
 
         const page = parseInt(req.query.page) || 1;
-        const limit = parseInt(req.query.limit) || 10; 
+        const limit = parseInt(req.query.limit) || 5; 
         const startIndex = (page - 1) * limit;
         const endIndex = page * limit;
 
@@ -64,7 +67,7 @@ const getWalletPage = async (req, res) => {
         
     } catch (error) {
         console.error("Error loading wallet page:", error);
-        res.status(500).send("Error loading wallet page. Please try again later.");
+        res.status(500).send(Messages.INTERNAL_SERVER_ERROR);
     }
 };
 
@@ -74,7 +77,7 @@ const addFund=async(req,res)=>{
         const userId=req.session.user
 
         if(!amount||amount<1){
-            return res.status(400).json({success:false,message:'Invalid amount'})
+            return res.status(HttpStatus.BAD_REQUEST).json({success:false,message:Messages.INVALID_AMOUNT})
         }
 
         if(paymentMethod==='Razorpay'){
@@ -83,7 +86,7 @@ const addFund=async(req,res)=>{
                 currency:'INR',
                 receipt:'wallet_${userId}_${Date.now()}',
             })
-            return res.status(200).json({
+            return res.status(HttpStatus.OK).json({
                 success:true,
                 razorpayOrderId:razorpayOrder.id,
                 amount:Math.round(amount*100),
@@ -93,7 +96,7 @@ const addFund=async(req,res)=>{
         
     } catch (error) {
         console.error('Error adding funds:', error);
-    res.status(500).json({ success: false, message: 'Failed to process payment' });
+    res.status(500).json({ success: false, message: Messages.INTERNAL_SERVER_ERROR });
         
     }
 }
@@ -104,19 +107,19 @@ const verifyRazorpayPayment = async (req, res) => {
         const userId = req.session.user;
 
 
-        
+
         const expectedSignature = crypto
             .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET)
             .update(`${razorpayOrderId}|${razorpayPaymentId}`)
             .digest('hex');
 
         if (expectedSignature !== razorpaySignature) {
-            return res.status(400).json({ success: false, message: 'Invalid signature' });
+            return res.status(400).json({ success: false, message: Messages.INVALID_RAZORPAY_SIGNATURE });
         }
 
         let user = await User.findById(userId);
         if (!user) {
-            return res.status(404).json({ success: false, message: 'User not found' });
+            return res.status(HttpStatus.NOT_FOUND).json({ success: false, message: Messages.INTERNAL_SERVER_ERROR });
         }
 
      
@@ -129,9 +132,9 @@ const verifyRazorpayPayment = async (req, res) => {
             });
         }
 
-        const amountInRupees = parseInt(amount, 10) / 100;
-        if (isNaN(amountInRupees) || amountInRupees <= 0) {
-            return res.status(400).json({ success: false, message: 'Invalid amount' });
+        const amountInRupees = parseInt(amount, 10) / 100;//converr paise into rupees   
+        if (isNaN(amountInRupees) || amountInRupees <= 0) {//amt is valid number 
+            return res.status(HttpStatus.BAD_REQUEST).json({ success: false, message: Messages.INVALID_AMOUNT });
         }
 
    
@@ -148,13 +151,13 @@ const verifyRazorpayPayment = async (req, res) => {
       
         await wallet.save();
 
-        return res.status(200).json({ success: true, message: 'Payment verified' });
+        return res.status(HttpStatus.OK).json({ success: true, message: Messages.PAYMENT_SUCCESS });
 
     } catch (error) {
         console.error('Error verifying payment:', error);
-        return res.status(500).json({ success: false, message: 'Failed to verify payment' });
+        return res.status(500).json({ success: false, message:Messages.INTERNAL_SERVER_ERROR });
     }
-};
+}; 
 
 const walletRefund = async (userId, amount, orderId) => {
     try {
@@ -164,7 +167,7 @@ const walletRefund = async (userId, amount, orderId) => {
             wallet = new Wallet({ userId, balance: 0, walletHistory: [] });
         }
         
-        const oldBalance = wallet.balance;
+        // const oldBalance = wallet.balance;
         wallet.balance += amount;
        
         const transactionId = uuidv4();
@@ -182,7 +185,7 @@ const walletRefund = async (userId, amount, orderId) => {
         
         return savedWallet;
     } catch (error) {
-        console.error('Error in walletRefund:', error);
+        // console.error('Error in walletRefund:', error);
         throw new Error(`Failed to process wallet refund: ${error.message}`);
     }
 }
@@ -203,7 +206,7 @@ const deductWalletBalance = async (userId, amount, orderId) => {
 
        
         wallet.walletHistory.push({
-            transactionId: uuidv4(),
+            transactionId: uuidv4(),//random unique id
             transactionType: 'debit',
             amount: amount,
             date: new Date(),
@@ -211,7 +214,7 @@ const deductWalletBalance = async (userId, amount, orderId) => {
             orderId: orderId
         });
 
-        // Save the updated wallet
+    
         await wallet.save();
 
         return wallet;

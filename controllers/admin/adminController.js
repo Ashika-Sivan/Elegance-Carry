@@ -8,6 +8,9 @@ const Brand=require("../../models/brandSchema")
 const { walletReturnRefund } = require('../user/orderController');
 const PDFDocument = require('pdfkit');
 const ExcelJS = require('exceljs');
+const HttpStatus = require('../../enum/httpStatus');
+const OrderStatus = require('../../enum/orderStatus');
+const Messages = require('../../enum/messages');
 
 const pageerror = async (req, res) => {
 
@@ -26,12 +29,12 @@ const loadLogin = async (req, res) => {
             console.log('Admin is already logged in');
             return res.redirect('/admin/dashboard');
         } else {
-            console.log('Rendering admin login page');
+            // console.log('Rendering admin login page');
             res.render('admin-login', { error: null });
         }
     } catch (error) {
         console.error('Error while loading admin login:', error);
-        res.status(500).render('admin-login', { error: 'Internal server error' });
+        res.status(HttpStatus.INTERNAL_SERVER_ERROR).render('admin-login', { error: Messages.INTERNAL_SERVER_ERROR});
     }
 };
 
@@ -46,10 +49,10 @@ const login = async (req, res) => {
                 req.session.admin = true;
                 return res.redirect('/admin/dashboard'); // Redirect to /admin
             } else {
-                return res.render('admin-login', { error: 'Invalid credentials' });
+                return res.render('admin-login', { error: Messages.INV });
             }
         } else {
-            return res.render('admin-login', { error: 'Invalid credentials' });
+            return res.render('admin-login', { error: Messages.INVALID_CREDENTIALS });
         }
     } catch (error) {
         console.log('login error', error);
@@ -79,19 +82,21 @@ const logout=async(req,res)=>{
     }
 
 }
-   
-
-
-
-
-
+// const PDFDocument = require('pdfkit');
+// const ExcelJS = require('exceljs');
 const getSalesReport = async (req, res) => {
     try {
         console.log("Request Query:", req.query);
 
-        const { dateRange, download } = req.query;
+        const { dateRange, startDate, endDate, download, page = 1 } = req.query;
+        const limit = 10; 
+        const currentPage = parseInt(page, 10) || 1;
+        const skip = (currentPage - 1) * limit;
 
-    
+        if (isNaN(currentPage) || currentPage < 1) {
+            throw new Error("Invalid page number");
+        }
+
         let matchStage = {};
         const now = new Date();
 
@@ -109,24 +114,36 @@ const getSalesReport = async (req, res) => {
         } else if (dateRange === "yearly") {
             const thisYear = now.getFullYear();
             matchStage = { createdAt: { $gte: new Date(`${thisYear}-01-01`) } };
+        } else if (dateRange === "custom" && startDate && endDate) {
+            const start = new Date(startDate);
+            const end = new Date(endDate);
+            end.setHours(23, 59, 59, 999);
+            if (isNaN(start.getTime()) || isNaN(end.getTime()) || start > end) {
+                throw new Error("Invalid date range");
+            }
+            matchStage = {
+                createdAt: {
+                    $gte: start,
+                    $lte: end
+                }
+            };
         } else {
             matchStage = {};
         }
 
-        console.log("Match Stage:", matchStage);
+        // console.log("Match Stage:", matchStage);
 
-   
         let totalRevenue = 0;
         try {
             const totalRevenueResult = await Order.aggregate([
                 { $match: matchStage },
-                { $group: { _id: null, totalRevenue: { $sum: "$finalAmount" } } },
+                { $group: { _id: null, totalRevenue: { $sum: { $ifNull: ["$finalAmount", 0] } } } },
             ]);
             totalRevenue = totalRevenueResult[0]?.totalRevenue || 0;
-            console.log("Total Revenue:", totalRevenue);
+            // console.log("Total Revenue:", totalRevenue);
         } catch (aggError) {
-            console.error("Error calculating total revenue:", aggError);
-            totalRevenue = 0; 
+            console.error("Error calculating total revenue:", aggError.message, aggError.stack);
+            totalRevenue = 0;
         }
 
         let totalOrders = 0;
@@ -134,16 +151,15 @@ const getSalesReport = async (req, res) => {
             totalOrders = await Order.countDocuments(matchStage);
             console.log("Total Orders:", totalOrders);
         } catch (countError) {
-            console.error("Error counting orders:", countError);
-            totalOrders = 0; 
+            console.error("Error counting orders:", countError.message, countError.stack);
+            totalOrders = 0;
         }
 
-      
         let totalDiscount = 0;
         try {
             const totalDiscountResult = await Order.aggregate([
                 { $match: matchStage },
-                { $unwind: "$orderedItems" },
+                { $unwind: { path: "$orderedItems", preserveNullAndEmptyArrays: true } },
                 {
                     $lookup: {
                         from: "products",
@@ -152,23 +168,35 @@ const getSalesReport = async (req, res) => {
                         as: "productDetails",
                     },
                 },
-                { $unwind: "$productDetails" },
+                { $unwind: { path: "$productDetails", preserveNullAndEmptyArrays: true } },
                 {
                     $addFields: {
                         effectiveDiscount: {
                             $cond: [
-                                { $ifNull: ["$productDetails.salePrice", false] },
+                                { $and: [
+                                    { $ifNull: ["$productDetails.salePrice", false] },
+                                    { $ifNull: ["$productDetails.regularPrice", false] }
+                                ] },
                                 {
                                     $subtract: [
-                                        "$productDetails.regularPrice",
-                                        "$productDetails.salePrice",
+                                        { $ifNull: ["$productDetails.regularPrice", 0] },
+                                        { $ifNull: ["$productDetails.salePrice", 0] },
                                     ],
                                 },
                                 {
-                                    $multiply: [
-                                        "$productDetails.regularPrice",
-                                        { $divide: ["$productDetails.productOffer", 100] },
-                                    ],
+                                    $cond: [
+                                        { $and: [
+                                            { $ifNull: ["$productDetails.productOffer", false] },
+                                            { $ifNull: ["$productDetails.regularPrice", false] }
+                                        ] },
+                                        {
+                                            $multiply: [
+                                                { $ifNull: ["$productDetails.regularPrice", 0] },
+                                                { $divide: [{ $ifNull: ["$productDetails.productOffer", 0] }, 100] },
+                                            ],
+                                        },
+                                        0
+                                    ]
                                 },
                             ],
                         },
@@ -179,289 +207,369 @@ const getSalesReport = async (req, res) => {
                         _id: null,
                         totalDiscount: {
                             $sum: {
-                                $multiply: ["$orderedItems.quantity", "$effectiveDiscount"],
+                                $multiply: [
+                                    { $ifNull: ["$orderedItems.quantity", 0] },
+                                    { $ifNull: ["$effectiveDiscount", 0] }
+                                ],
                             },
                         },
                     },
                 },
             ]);
             totalDiscount = totalDiscountResult[0]?.totalDiscount || 0;
-            console.log("Total Discount:", totalDiscount);
+            // console.log("Total Discount:", totalDiscount);
         } catch (discountError) {
-            console.error("Error calculating total discount:", discountError);
-            totalDiscount = 0; 
+            console.error("Error calculating total discount:", discountError.message, discountError.stack);
+            totalDiscount = 0;
         }
 
-     
         let orders = [];
         try {
-            orders = await Order.find(matchStage)
-                .populate({
-                    path: "user",
-                    select: "_id name email",
-                })
-                .select("orderId createdAt status discount finalAmount")
-                .sort({ createdAt: -1 });
+            matchStage.user = { $exists: true, $ne: null };
+            const ordersWithValidUsers = await Order.find(matchStage)
+                .select("user")
+                .lean();
+            const validUserIds = ordersWithValidUsers
+                .filter(order => order.user && mongoose.Types.ObjectId.isValid(order.user))
+                .map(order => order.user);
 
-            orders = orders.filter(order => order && order.user && order.user._id && order.user.name && order.user.email);
-            console.log("Valid Orders:", orders);
+            if (validUserIds.length === 0) {
+                console.log("No orders with valid user references found.");
+                orders = [];
+            } else {
+                matchStage.user = { $in: validUserIds };
+
+                if (download) {
+                    orders = await Order.find(matchStage)
+                        .populate({
+                            path: "user",
+                            select: "_id name email",
+                            match: { _id: { $exists: true }, name: { $exists: true }, email: { $exists: true } }
+                        })
+                        .select("orderId createdAt status discount finalAmount paymentMethod")
+                        .sort({ createdAt: -1 });
+                } else {
+                    orders = await Order.find(matchStage)
+                        .populate({
+                            path: "user",
+                            select: "_id name email",
+                            match: { _id: { $exists: true }, name: { $exists: true }, email: { $exists: true } }
+                        })
+                        .select("orderId createdAt status discount finalAmount paymentMethod")
+                        .sort({ createdAt: -1 })
+                        .skip(skip)
+                        .limit(limit);
+                }
+
+                orders = orders.filter(order => order && order.user && order.user._id && order.user.name && order.user.email);
+                // console.log("Valid Orders:", orders.map(order => ({
+                //     orderId: order.orderId,
+                //     userId: order.user._id,
+                //     userName: order.user.name,
+                //     userEmail: order.user.email,
+                //     createdAt: order.createdAt,
+                //     status: order.status,
+                //     discount: order.discount,
+                //     finalAmount: order.finalAmount,
+                //     paymentMethod: order.paymentMethod
+                // })));
+            }
         } catch (ordersError) {
-            console.error("Error fetching orders:", ordersError);
+            console.error("Error fetching orders:", ordersError.message, ordersError.stack);
             orders = [];
         }
 
-        //create pdf file
-        if(download){
-            // if(download==="pdf"){
-            //     const doc=new PDFDocument() ;
-            //     res.setHeader('content-type','application/pdf');
-            //     res.setHeader('content-disposition','attachment;filename==="sales-report.pdf"')
-            //     doc.pipe(res);
+        const totalPages = Math.ceil(totalOrders / limit);
+        // console.log("Pagination Info:", { currentPage, totalPages, limit, skip });
 
-            //     doc.fontSize(20).text('Sales Report',{align:'center'});
-            //     doc.moveDown();
+        if (download) {
+            if (download === "pdf") {
+                const doc = new PDFDocument({ margin: 30, size: 'A4' });
+                res.setHeader('Content-Type', 'application/pdf');
+                res.setHeader('Content-Disposition', 'attachment; filename="sales-report.pdf"');
+                doc.pipe(res);
 
-            //     //summary section
-            //     doc.fontSize(14).text('Summary', { underline: true });
-            //     doc.fontSize(12)
-            //         .text(`Total Revenue: ₹${totalRevenue.toFixed(2)}`)
-            //         .text(`Total Orders: ${totalOrders}`)
-            //         .text(`Total Discount: ₹${totalDiscount.toFixed(2)}`)
-            //         .moveDown();
+                doc.on('pageAdded', () => {
+                    doc.save()
+                        .font('Helvetica-Bold')
+                        .fontSize(16)
+                        .fillColor('#2c3e50')
+                        .text('Elagance Carry', 50, 20, { align: 'left' })
+                        .font('Helvetica')
+                        .fontSize(10)
+                        .fillColor('#333')
+                        .text('Phone: 9638527415', 50, 38, { align: 'left' })
+                        .text('Country: India', 50, 52, { align: 'left' })
+                        .fillColor('#666')
+                        .text(`Date Range: ${dateRange === 'custom' ? `${startDate} to ${endDate}` : (dateRange || 'All Time')}`, 400, 38, { align: 'right' })
+                        .lineWidth(0.5)
+                        .strokeColor('#dcdcdc')
+                        .moveTo(50, 65)
+                        .lineTo(540, 65)
+                        .stroke()
+                        .restore();
+                });
 
+                doc.moveDown(4);
+                doc.font('Helvetica-Bold')
+                    .fontSize(20)
+                    .fillColor('#2c3e50')
+                    .text('Elagance Carry', { align: 'center' })
+                    .moveDown(0.5);
+                doc.font('Helvetica-Bold')
+                    .fontSize(12)
+                    .fillColor('#2c3e20')
+                    .text('Where Every Bag Tells a Story.', { align: 'center' })
+                    .text('Sales Report', { align: 'center' })
+                    .moveDown(0.5);
 
-            //         //order table
-            //         if (orders.length > 0) {
-            //             doc.fontSize(14).text('Order Details', { underline: true });
-            //             doc.moveDown();
+                doc.font('Helvetica')
+                    .fontSize(12)
+                    .fillColor('#666')
+                    .text(`Date Range: ${dateRange === 'custom' ? `${startDate} to ${endDate}` : (dateRange || 'All Time')}`, { align: 'center' })
+                    .moveDown(2);
 
-            //             //table header
-            //             const tableTop = doc.y;
-            //         const col1 = 50;
-            //         const col2 = 120;
-            //         const col3 = 220;
-            //         const col4 = 280;
-            //         const col5 = 340;
-            //         const col6 = 420;
+                doc.font('Helvetica-Bold')
+                    .fontSize(14)
+                    .fillColor('#2c3e50')
+                    .text('Summary', 50, doc.y, { underline: true })
+                    .moveDown(0.5);
 
-            //         doc.fontSize(10).font('Helvetica-Bold')
-            //             .text('Order ID', col1, tableTop)
-            //             .text('Customer (User ID)', col2, tableTop)
-            //             .text('Date', col3, tableTop)
-            //             .text('Status', col4, tableTop)
-            //             .text('Discount', col5, tableTop)
-            //             .text('Final Amount', col6, tableTop);
+                doc.font('Helvetica')
+                    .fontSize(12)
+                    .fillColor('#333')
+                    .text(`Total Revenue: ₹${totalRevenue.toFixed(2)}`, 50)
+                    .text(`Total Orders: ${totalOrders}`, 50)
+                    .text(`Total Discount: ₹${totalDiscount.toFixed(2)}`, 50)
+                    .moveDown(1.5);
 
-            //             // Table Rows
-            //         let yPosition = tableTop + 20;
-            //         doc.font('Helvetica');
-            //         orders.forEach(order => {
-            //             if (yPosition > 700) { //to add nwe page when it at the end
-            //                 doc.addPage();
-            //                 yPosition = 50;
-            //             }
-            //             doc.text(order.orderId || 'N/A', col1, yPosition)
-            //                 .text(`${order.user.name} (${order.user._id})`, col2, yPosition)
-            //                 .text(order.createdAt ? new Date(order.createdAt).toLocaleDateString() : 'N/A', col3, yPosition)
-            //                 .text(order.status || 'N/A', col4, yPosition)
-            //                 .text(`₹${order.discount ? order.discount.toFixed(2) : '0.00'}`, col5, yPosition)
-            //                 .text(`₹${order.finalAmount ? order.finalAmount.toFixed(2) : '0.00'}`, col6, yPosition);
-            //             yPosition += 20;
-            //         });
-
-            //         }else {
-            //             doc.fontSize(12).text('No orders found for the selected date range.');
-            //         }
-
-            //         doc.end();
-            //     return;
-            // }
-                if (download === "pdf") {
-                    const doc = new PDFDocument({ margin: 30, size: 'A4' });
-                    res.setHeader('Content-Type', 'application/pdf');
-                    res.setHeader('Content-Disposition', 'attachment; filename="sales-report.pdf"');
-                    doc.pipe(res);
-            
-                    // Header
+                if (orders.length > 0) {
                     doc.font('Helvetica-Bold')
-                       .fontSize(20)
-                       .fillColor('#2c3e50')
-                       .text('Sales Report', { align: 'center' })
-                       .moveDown(1);
-            
-                    // Date Range Info
-                    doc.font('Helvetica')
-                       .fontSize(12)
-                       .fillColor('#666')
-                       .text(`Date Range: ${dateRange || 'All Time'}`, { align: 'center' })
-                       .moveDown(2);
-            
-                    // Summary Section
+                        .fontSize(14)
+                        .fillColor('#2c3e50')
+                        .text('Order Details', 50, doc.y, { underline: true })
+                        .moveDown(1);
+
+                    const tableData = {
+                        headers: [
+                            { label: 'Customer', width: 110 },
+                            { label: 'Date', width: 80 },
+                            { label: 'Status', width: 70 },
+                            { label: 'Discount', width: 70, align: 'right' },
+                            { label: 'Amount', width: 70, align: 'right' },
+                            { label: 'Payment', width: 90 }
+                        ],
+                        rows: orders.map(order => [
+                            order.user.name || 'N/A',
+                            order.createdAt ? new Date(order.createdAt).toLocaleDateString() : 'N/A',
+                            order.status || 'N/A',
+                            `₹${order.discount ? order.discount.toFixed(2) : '0.00'}`,
+                            `₹${order.finalAmount ? order.finalAmount.toFixed(2) : '0.00'}`,
+                            order.paymentMethod || 'N/A'
+                        ])
+                    };
+
+                    const startX = 50;
+                    let startY = doc.y;
+                    const rowHeight = 20;
+                    const pageHeight = 700;
+
                     doc.font('Helvetica-Bold')
-                       .fontSize(14)
-                       .fillColor('#2c3e50')
-                       .text('Summary', 50, doc.y, { underline: true })
-                       .moveDown(0.5);
-            
-                    doc.font('Helvetica')
-                       .fontSize(12)
-                       .fillColor('#333')
-                       .text(`Total Revenue: ₹${totalRevenue.toFixed(2)}`, 50)
-                       .text(`Total Orders: ${totalOrders}`, 50)
-                       .text(`Total Discount: ₹${totalDiscount.toFixed(2)}`, 50)
-                       .moveDown(1.5);
-            
-                    // Table Setup
-                    if (orders.length > 0) {
-                        doc.font('Helvetica-Bold')
-                           .fontSize(14)
-                           .fillColor('#2c3e50')
-                           .text('Order Details', 50, doc.y, { underline: true })
-                           .moveDown(1);
-            
-                        const tableData = {
-                            headers: [
-                                { label: 'Customer', width: 150 },  // Increased width since we removed Order ID
-                                { label: 'Date', width: 100 },
-                                { label: 'Status', width: 80 },
-                                { label: 'Discount', width: 80, align: 'right' },
-                                { label: 'Amount', width: 80, align: 'right' }
-                            ],
-                            rows: orders.map(order => [
-                                order.user.name,  // Only showing customer name, no ID
-                                order.createdAt ? new Date(order.createdAt).toLocaleDateString() : 'N/A',
-                                order.status || 'N/A',
-                                `₹${order.discount ? order.discount.toFixed(2) : '0.00'}`,
-                                `₹${order.finalAmount ? order.finalAmount.toFixed(2) : '0.00'}`
-                            ])
-                        };
-            
-                        // Draw table manually for better control
-                        const startX = 50;
-                        let startY = doc.y;
-                        const rowHeight = 20;
-                        const pageHeight = 700;
-            
-                        // Draw headers
-                        doc.font('Helvetica-Bold')
-                           .fontSize(10)
-                           .fillColor('#ffffff');
-                        
-                        let xPos = startX;
-                        tableData.headers.forEach((header, i) => {
-                            doc.rect(xPos, startY, header.width, rowHeight)
-                               .fill('#34495e');
-                            doc.text(header.label, xPos + 5, startY + 5, {
-                                width: header.width - 10,
-                                align: header.align || 'left'
-                            });
-                            xPos += header.width;
+                        .fontSize(10)
+                        .fillColor('#ffffff');
+
+                    let xPos = startX;
+                    tableData.headers.forEach((header, i) => {
+                        doc.rect(xPos, startY, header.width, rowHeight)
+                            .fill('#34495e');
+                        doc.text(header.label, xPos + 5, startY + 5, {
+                            width: header.width - 10,
+                            align: header.align || 'left'
                         });
-            
-                        // Draw rows
-                        doc.font('Helvetica')
-                           .fontSize(10)
-                           .fillColor('#333');
-                        
-                        let currentY = startY + rowHeight;
-                        tableData.rows.forEach((row, rowIndex) => {
-                            if (currentY > pageHeight) {
-                                doc.addPage();
-                                currentY = 50;
-                                // Redraw headers on new page
-                                xPos = startX;
-                                doc.font('Helvetica-Bold')
-                                   .fillColor('#ffffff');
-                                tableData.headers.forEach(header => {
-                                    doc.rect(xPos, currentY, header.width, rowHeight)
-                                       .fill('#34495e');
-                                    doc.text(header.label, xPos + 5, currentY + 5, {
-                                        width: header.width - 10,
-                                        align: header.align || 'left'
-                                    });
-                                    xPos += header.width;
-                                });
-                                currentY += rowHeight;
-                            }
-            
+                        xPos += header.width;
+                    });
+
+                    doc.font('Helvetica')
+                        .fontSize(10)
+                        .fillColor('#333');
+
+                    let currentY = startY + rowHeight;
+                    tableData.rows.forEach((row, rowIndex) => {
+                        if (currentY > pageHeight) {
+                            doc.addPage();
+                            currentY = 80;
                             xPos = startX;
-                            row.forEach((cell, i) => {
-                                const bgColor = rowIndex % 2 === 0 ? '#f5f6fa' : '#ffffff';
-                                doc.rect(xPos, currentY, tableData.headers[i].width, rowHeight)
-                                   .fill(bgColor);
-                                doc.fillColor('#333')
-                                   .text(cell, xPos + 5, currentY + 5, {
-                                       width: tableData.headers[i].width - 10,
-                                       align: tableData.headers[i].align || 'left'
-                                   });
-                                xPos += tableData.headers[i].width;
+                            doc.font('Helvetica-Bold')
+                                .fillColor('#ffffff');
+                            tableData.headers.forEach(header => {
+                                doc.rect(xPos, currentY, header.width, rowHeight)
+                                    .fill('#34495e');
+                                doc.text(header.label, xPos + 5, currentY + 5, {
+                                    width: header.width - 10,
+                                    align: header.align || 'left'
+                                });
+                                xPos += header.width;
                             });
                             currentY += rowHeight;
-                        });
-            
-                        // Draw table borders
-                        doc.lineWidth(0.5)
-                           .strokeColor('#dcdcdc')
-                           .rect(startX, startY, 490, currentY - startY)  // Adjusted width due to removed column
-                           .stroke();
-                    } else {
-                        doc.font('Helvetica')
-                           .fontSize(12)
-                           .fillColor('#666')
-                           .text('No orders found for the selected date range.', 50);
-                    }
-            
-                    // Footer
-                    doc.moveDown(2)
-                       .fontSize(10)
-                       .fillColor('#666')
-                       .text(`Generated on: ${new Date().toLocaleString()}`, 50, doc.page.height - 50, { align: 'left' })
-                       .text('Page ' + doc.pageNumber, 0, doc.page.height - 50, { align: 'right', width: 540 });
-            
-                    doc.end();
-                    return;
-                }
-            
+                        }
 
-         
-            else if (download === "excel") {
-                const workbook = new ExcelJS.Workbook(); // Create new workbook
+                        xPos = startX;
+                        row.forEach((cell, i) => {
+                            const bgColor = rowIndex % 2 === 0 ? '#f5f6fa' : '#ffffff';
+                            doc.rect(xPos, currentY, tableData.headers[i].width, rowHeight)
+                                .fill(bgColor);
+                            doc.fillColor('#333')
+                                .text(cell, xPos + 5, currentY + 5, {
+                                    width: tableData.headers[i].width - 10,
+                                    align: tableData.headers[i].align || 'left'
+                                });
+                            xPos += tableData.headers[i].width;
+                        });
+                        currentY += rowHeight;
+                    });
+
+                    doc.lineWidth(0.5)
+                        .strokeColor('#dcdcdc')
+                        .rect(startX, startY, 490, currentY - startY)
+                        .stroke();
+
+                    doc.moveDown(2);
+                    doc.font('Helvetica-Bold')
+                        .fontSize(14)
+                        .fillColor('#2c3e50')
+                        .text('Payment Method Summary', 50, doc.y, { underline: true })
+                        .moveDown(1);
+
+                    const paymentMethodTotals = {};
+                    orders.forEach(order => {
+                        const method = order.paymentMethod || 'Unknown';
+                        if (!paymentMethodTotals[method]) {
+                            paymentMethodTotals[method] = 0;
+                        }
+                        paymentMethodTotals[method] += order.finalAmount || 0;
+                    });
+
+                    const pmTableTop = doc.y;
+                    const pmCol1 = 150;
+                    const pmCol2 = 300;
+
+                    doc.font('Helvetica-Bold')
+                        .fontSize(10)
+                        .fillColor('#ffffff')
+                        .rect(pmCol1, pmTableTop, 150, rowHeight).fill('#34495e')
+                        .rect(pmCol2, pmTableTop, 100, rowHeight).fill('#34495e')
+                        .text('Payment Method', pmCol1 + 5, pmTableTop + 5)
+                        .text('Total Amount', pmCol2 + 5, pmTableTop + 5);
+
+                    let pmY = pmTableTop + rowHeight;
+
+                    if (pmY + (Object.keys(paymentMethodTotals).length * rowHeight) > pageHeight) {
+                        doc.addPage();
+                        pmY = 80;
+                        doc.font('Helvetica-Bold')
+                            .fontSize(14)
+                            .fillColor('#2c3e50')
+                            .text('Payment Method Summary', 50, pmY, { underline: true })
+                            .moveDown(1);
+
+                        pmY = doc.y;
+                        doc.font('Helvetica-Bold')
+                            .fontSize(10)
+                            .fillColor('#ffffff')
+                            .rect(pmCol1, pmY, 150, rowHeight).fill('#34495e')
+                            .rect(pmCol2, pmY, 100, rowHeight).fill('#34495e')
+                            .text('Payment Method', pmCol1 + 5, pmY + 5)
+                            .text('Total Amount', pmCol2 + 5, pmY + 5);
+
+                        pmY += rowHeight;
+                    }
+
+                    doc.font('Helvetica')
+                        .fontSize(10)
+                        .fillColor('#333');
+
+                    Object.entries(paymentMethodTotals).forEach(([method, amount], index) => {
+                        const bgColor = index % 2 === 0 ? '#f5f6fa' : '#ffffff';
+                        doc.rect(pmCol1, pmY, 150, rowHeight).fill(bgColor)
+                            .rect(pmCol2, pmY, 100, rowHeight).fill(bgColor)
+                            .text(method, pmCol1 + 5, pmY + 5)
+                            .text(`₹${amount.toFixed(2)}`, pmCol2 + 5, pmY + 5);
+                        pmY += rowHeight;
+                    });
+
+                    doc.lineWidth(0.5)
+                        .strokeColor('#dcdcdc')
+                        .rect(pmCol1, pmTableTop, 150, pmY - pmTableTop)
+                        .rect(pmCol2, pmTableTop, 100, pmY - pmTableTop)
+                        .stroke();
+                } else {
+                    doc.font('Helvetica')
+                        .fontSize(12)
+                        .fillColor('#666')
+                        .text('No orders found for the selected date range.', 50);
+                }
+
+                doc.moveDown(2)
+                    .fontSize(10)
+                    .fillColor('#666')
+                    .text(`Generated on: ${new Date().toLocaleString()}`, 50, doc.page.height - 50, { align: 'left' })
+                    .text('Page ' + doc.pageNumber, 0, doc.page.height - 50, { align: 'right', width: 540 });
+
+                doc.end();
+                return;
+            } else if (download === "excel") {
+                const workbook = new ExcelJS.Workbook();
                 const worksheet = workbook.addWorksheet('Sales Report');
-            
-            
+
                 worksheet.addRow(['Sales Report']).font = { size: 16, bold: true };
-                worksheet.addRow([]); // Empty row
+                worksheet.addRow([]);
                 worksheet.addRow(['Summary']).font = { size: 14, bold: true };
                 worksheet.addRow(['Total Revenue', `₹${totalRevenue.toFixed(2)}`]);
                 worksheet.addRow(['Total Orders', totalOrders]);
                 worksheet.addRow(['Total Discount', `₹${totalDiscount.toFixed(2)}`]);
-                worksheet.addRow([]); // Empty row
-            
-                // Order table
+                worksheet.addRow([]);
+
                 if (orders.length > 0) {
                     worksheet.addRow(['Order Details']).font = { size: 14, bold: true };
-            
-                    // Table headers
-                    worksheet.addRow([
+
+                    const headerRow = worksheet.addRow([
                         'Customer',
                         'Date',
                         'Status',
                         'Discount',
-                        'Amount'
-                    ]).font = { bold: true };
-            
-                    // Table rows
+                        'Amount',
+                        'Payment Method'
+                    ]);
+                    headerRow.font = { bold: true };
+
                     orders.forEach(order => {
                         worksheet.addRow([
-                            order.user.name, // Only customer name, no user ID
+                            order.user.name || 'N/A',
                             order.createdAt ? new Date(order.createdAt).toLocaleDateString() : 'N/A',
                             order.status || 'N/A',
                             `₹${order.discount ? order.discount.toFixed(2) : '0.00'}`,
-                            `₹${order.finalAmount ? order.finalAmount.toFixed(2) : '0.00'}`
+                            `₹${order.finalAmount ? order.finalAmount.toFixed(2) : '0.00'}`,
+                            order.paymentMethod || 'N/A'
                         ]);
                     });
-            
-                    // Auto-fit columns
+
+                    worksheet.addRow([]);
+                    worksheet.addRow(['Payment Method Summary']).font = { size: 14, bold: true };
+
+                    const paymentMethodTotals = {};
+                    orders.forEach(order => {
+                        const method = order.paymentMethod || 'Unknown';
+                        if (!paymentMethodTotals[method]) {
+                            paymentMethodTotals[method] = 0;
+                        }
+                        paymentMethodTotals[method] += order.finalAmount || 0;
+                    });
+
+                    worksheet.addRow(['Payment Method', 'Total Amount']).font = { bold: true };
+                    Object.entries(paymentMethodTotals).forEach(([method, amount]) => {
+                        worksheet.addRow([method, `₹${amount.toFixed(2)}`]);
+                    });
+
                     worksheet.columns.forEach(column => {
                         let maxLength = 0;
                         column.eachCell({ includeEmpty: true }, cell => {
@@ -472,20 +580,19 @@ const getSalesReport = async (req, res) => {
                         });
                         column.width = maxLength < 10 ? 10 : maxLength + 2;
                     });
-            
-                    // Optional: Add some basic styling
+
                     worksheet.getRow(1).alignment = { horizontal: 'center' };
                     worksheet.getRow(3).alignment = { horizontal: 'left' };
-                    worksheet.getRow(8).font = { bold: true }; // Header row
+                    worksheet.getRow(8).font = { bold: true };
                     worksheet.columns.forEach((column, i) => {
-                        if (i === 3 || i === 4) { // Right-align Discount and Amount columns
+                        if (i === 3 || i === 4) {
                             column.alignment = { horizontal: 'right' };
                         }
                     });
                 } else {
                     worksheet.addRow(['No orders found for the selected date range.']);
                 }
-            
+
                 res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
                 res.setHeader('Content-Disposition', 'attachment; filename="sales-report.xlsx"');
                 await workbook.xlsx.write(res);
@@ -494,22 +601,491 @@ const getSalesReport = async (req, res) => {
             }
         }
 
-        
+        console.log("Rendering salesReport with data:", {
+            totalRevenue,
+            totalOrders,
+            totalDiscount,
+            selectedDateRange: dateRange || "all",
+            startDate: startDate || "",
+            endDate: endDate || "",
+            ordersCount: orders.length,
+            currentPage,
+            totalPages
+        });
+
         res.render("salesReport", {
             currentPage: "salesReport",
             totalRevenue: totalRevenue || 0,
             totalOrders: totalOrders || 0,
             totalDiscount: totalDiscount || 0,
             selectedDateRange: dateRange || "all",
+            startDate: startDate || "",
+            endDate: endDate || "",
             orders: orders || [],
+            currentPage: currentPage,
+            totalPages: totalPages,
+            limit: limit
         });
     } catch (error) {
-        console.error("Failed to generate sales report:", error);
-        const errorMessage = "An unexpected error occurred while generating the sales report.";
+        console.error("Failed to generate sales report:", error.message, error.stack);
+        const errorMessage = `An unexpected error occurred while generating the sales report: ${error.message}`;
         const errorCode = 500;
         res.status(500).render("admin/pageerror", { errorMessage, errorCode });
     }
 };
+
+
+
+
+// const getSalesReport = async (req, res) => {
+//     try {
+//         console.log("Request Query:", req.query);
+
+//         const { dateRange, download } = req.query;
+
+    
+//         let matchStage = {};
+//         const now = new Date();
+
+//         if (dateRange === "daily") {
+//             const startOfDay = new Date(now.setHours(0, 0, 0, 0));
+//             matchStage = { createdAt: { $gte: startOfDay } };
+//         } else if (dateRange === "weekly") {
+//             const oneWeekAgo = new Date();
+//             oneWeekAgo.setDate(now.getDate() - 7);
+//             matchStage = { createdAt: { $gte: oneWeekAgo } };
+//         } else if (dateRange === "monthly") {
+//             const oneMonthAgo = new Date();
+//             oneMonthAgo.setDate(now.getDate() - 30);
+//             matchStage = { createdAt: { $gte: oneMonthAgo } };
+//         } else if (dateRange === "yearly") {
+//             const thisYear = now.getFullYear();
+//             matchStage = { createdAt: { $gte: new Date(`${thisYear}-01-01`) } };
+//         } else {
+//             matchStage = {};
+//         }
+
+//         console.log("Match Stage:", matchStage);
+
+   
+//         let totalRevenue = 0;
+//         try {
+//             const totalRevenueResult = await Order.aggregate([
+//                 { $match: matchStage },
+//                 { $group: { _id: null, totalRevenue: { $sum: "$finalAmount" } } },
+//             ]);
+//             totalRevenue = totalRevenueResult[0]?.totalRevenue || 0;
+//             console.log("Total Revenue:", totalRevenue);
+//         } catch (aggError) {
+//             console.error("Error calculating total revenue:", aggError);
+//             totalRevenue = 0; 
+//         }
+
+//         let totalOrders = 0;
+//         try {
+//             totalOrders = await Order.countDocuments(matchStage);
+//             console.log("Total Orders:", totalOrders);
+//         } catch (countError) {
+//             console.error("Error counting orders:", countError);
+//             totalOrders = 0; 
+//         }
+
+      
+//         let totalDiscount = 0;
+//         try {
+//             const totalDiscountResult = await Order.aggregate([
+//                 { $match: matchStage },
+//                 { $unwind: "$orderedItems" },
+//                 {
+//                     $lookup: {
+//                         from: "products",
+//                         localField: "orderedItems.product",
+//                         foreignField: "_id",
+//                         as: "productDetails",
+//                     },
+//                 },
+//                 { $unwind: "$productDetails" },
+//                 {
+//                     $addFields: {
+//                         effectiveDiscount: {
+//                             $cond: [
+//                                 { $ifNull: ["$productDetails.salePrice", false] },
+//                                 {
+//                                     $subtract: [
+//                                         "$productDetails.regularPrice",
+//                                         "$productDetails.salePrice",
+//                                     ],
+//                                 },
+//                                 {
+//                                     $multiply: [
+//                                         "$productDetails.regularPrice",
+//                                         { $divide: ["$productDetails.productOffer", 100] },
+//                                     ],
+//                                 },
+//                             ],
+//                         },
+//                     },
+//                 },
+//                 {
+//                     $group: {
+//                         _id: null,
+//                         totalDiscount: {
+//                             $sum: {
+//                                 $multiply: ["$orderedItems.quantity", "$effectiveDiscount"],
+//                             },
+//                         },
+//                     },
+//                 },
+//             ]);
+//             totalDiscount = totalDiscountResult[0]?.totalDiscount || 0;
+//             console.log("Total Discount:", totalDiscount);
+//         } catch (discountError) {
+//             console.error("Error calculating total discount:", discountError);
+//             totalDiscount = 0; 
+//         }
+
+     
+//         let orders = [];
+//         try {
+//             orders = await Order.find(matchStage)
+//                 .populate({
+//                     path: "user",
+//                     select: "_id name email",
+//                 })
+//                 .select("orderId createdAt status discount finalAmount")
+//                 .sort({ createdAt: -1 });
+
+//             orders = orders.filter(order => order && order.user && order.user._id && order.user.name && order.user.email);
+//             console.log("Valid Orders:", orders);
+//         } catch (ordersError) {
+//             console.error("Error fetching orders:", ordersError);
+//             orders = [];
+//         }
+
+//         //create pdf file
+//         if(download){
+
+//             // if(download==="pdf"){
+//             //     const doc=new PDFDocument() ;
+//             //     res.setHeader('content-type','application/pdf');
+//             //     res.setHeader('content-disposition','attachment;filename==="sales-report.pdf"')
+//             //     doc.pipe(res);
+
+//             //     doc.fontSize(20).text('Sales Report',{align:'center'});
+//             //     doc.moveDown();
+
+//             //     //summary section
+//             //     doc.fontSize(14).text('Summary', { underline: true });
+//             //     doc.fontSize(12)
+//             //         .text(`Total Revenue: ₹${totalRevenue.toFixed(2)}`)
+//             //         .text(`Total Orders: ${totalOrders}`)
+//             //         .text(`Total Discount: ₹${totalDiscount.toFixed(2)}`)
+//             //         .moveDown();
+
+
+//             //         //order table
+//             //         if (orders.length > 0) {
+//             //             doc.fontSize(14).text('Order Details', { underline: true });
+//             //             doc.moveDown();
+
+//             //             //table header
+//             //             const tableTop = doc.y;
+//             //         const col1 = 50;
+//             //         const col2 = 120;
+//             //         const col3 = 220;
+//             //         const col4 = 280;
+//             //         const col5 = 340;
+//             //         const col6 = 420;
+
+//             //         doc.fontSize(10).font('Helvetica-Bold')
+//             //             .text('Order ID', col1, tableTop)
+//             //             .text('Customer (User ID)', col2, tableTop)
+//             //             .text('Date', col3, tableTop)
+//             //             .text('Status', col4, tableTop)
+//             //             .text('Discount', col5, tableTop)
+//             //             .text('Final Amount', col6, tableTop);
+
+//             //             // Table Rows
+//             //         let yPosition = tableTop + 20;
+//             //         doc.font('Helvetica');
+//             //         orders.forEach(order => {
+//             //             if (yPosition > 700) { //to add nwe page when it at the end
+//             //                 doc.addPage();
+//             //                 yPosition = 50;
+//             //             }
+//             //             doc.text(order.orderId || 'N/A', col1, yPosition)
+//             //                 .text(`${order.user.name} (${order.user._id})`, col2, yPosition)
+//             //                 .text(order.createdAt ? new Date(order.createdAt).toLocaleDateString() : 'N/A', col3, yPosition)
+//             //                 .text(order.status || 'N/A', col4, yPosition)
+//             //                 .text(`₹${order.discount ? order.discount.toFixed(2) : '0.00'}`, col5, yPosition)
+//             //                 .text(`₹${order.finalAmount ? order.finalAmount.toFixed(2) : '0.00'}`, col6, yPosition);
+//             //             yPosition += 20;
+//             //         });
+
+//             //         }else {
+//             //             doc.fontSize(12).text('No orders found for the selected date range.');
+//             //         }
+
+//             //         doc.end();
+//             //     return;
+//             // }
+//                 if (download === "pdf") {
+//                     const doc = new PDFDocument({ margin: 30, size: 'A4' });
+//                     res.setHeader('Content-Type', 'application/pdf');
+//                     res.setHeader('Content-Disposition', 'attachment; filename="sales-report.pdf"');
+//                     doc.pipe(res);
+            
+//                     // Header
+//                     doc.font('Helvetica-Bold')
+//                        .fontSize(20)
+//                        .fillColor('#2c3e50')
+//                        .text('Sales Report', { align: 'center' })
+//                        .moveDown(1);
+            
+//                     // Date Range Info
+//                     doc.font('Helvetica')
+//                        .fontSize(12)
+//                        .fillColor('#666')
+//                        .text(`Date Range: ${dateRange || 'All Time'}`, { align: 'center' })
+//                        .moveDown(2);
+            
+//                     // Summary Section
+//                     doc.font('Helvetica-Bold')
+//                        .fontSize(14)
+//                        .fillColor('#2c3e50')
+//                        .text('Summary', 50, doc.y, { underline: true })
+//                        .moveDown(0.5);
+            
+//                     doc.font('Helvetica')
+//                        .fontSize(12)
+//                        .fillColor('#333')
+//                        .text(`Total Revenue: ₹${totalRevenue.toFixed(2)}`, 50)
+//                        .text(`Total Orders: ${totalOrders}`, 50)
+//                        .text(`Total Discount: ₹${totalDiscount.toFixed(2)}`, 50)
+//                        .moveDown(1.5);
+            
+//                     // Table Setup
+//                     if (orders.length > 0) {
+//                         doc.font('Helvetica-Bold')
+//                            .fontSize(14)
+//                            .fillColor('#2c3e50')
+//                            .text('Order Details', 50, doc.y, { underline: true })
+//                            .moveDown(1);
+            
+//                         const tableData = {
+//                             headers: [
+//                                 { label: 'Customer', width: 150 },  // Increased width since we removed Order ID
+//                                 { label: 'Date', width: 100 },
+//                                 { label: 'Status', width: 80 },
+//                                 { label: 'Discount', width: 80, align: 'right' },
+//                                 { label: 'Amount', width: 80, align: 'right' },
+//                                 { label: 'Payment', width: 90 }  
+//                             ],
+//                             rows: orders.map(order => [
+//                                 order.user.name,  // Only showing customer name, no ID
+//                                 order.createdAt ? new Date(order.createdAt).toLocaleDateString() : 'N/A',
+//                                 order.status || 'N/A',
+//                                 `₹${order.discount ? order.discount.toFixed(2) : '0.00'}`,
+//                                 `₹${order.finalAmount ? order.finalAmount.toFixed(2) : '0.00'}`,
+//                                 order.paymentMethod || 'N/A' 
+//                             ])
+//                         };
+            
+//                         // Draw table manually for better control
+//                         const startX = 50;
+//                         let startY = doc.y;
+//                         const rowHeight = 20;
+//                         const pageHeight = 700;
+            
+//                         // Draw headers
+//                         doc.font('Helvetica-Bold')
+//                            .fontSize(10)
+//                            .fillColor('#ffffff');
+                        
+//                         let xPos = startX;
+//                         tableData.headers.forEach((header, i) => {
+//                             doc.rect(xPos, startY, header.width, rowHeight)
+//                                .fill('#34495e');
+//                             doc.text(header.label, xPos + 5, startY + 5, {
+//                                 width: header.width - 10,
+//                                 align: header.align || 'left'
+//                             });
+//                             xPos += header.width;
+//                         });
+            
+//                         // Draw rows
+//                         doc.font('Helvetica')
+//                            .fontSize(10)
+//                            .fillColor('#333');
+                        
+//                         let currentY = startY + rowHeight;
+//                         tableData.rows.forEach((row, rowIndex) => {
+//                             if (currentY > pageHeight) {
+//                                 doc.addPage();
+//                                 currentY = 50;
+//                                 // Redraw headers on new page
+//                                 xPos = startX;
+//                                 doc.font('Helvetica-Bold')
+//                                    .fillColor('#ffffff');
+//                                 tableData.headers.forEach(header => {
+//                                     doc.rect(xPos, currentY, header.width, rowHeight)
+//                                        .fill('#34495e');
+//                                     doc.text(header.label, xPos + 5, currentY + 5, {
+//                                         width: header.width - 10,
+//                                         align: header.align || 'left'
+//                                     });
+//                                     xPos += header.width;
+//                                 });
+//                                 currentY += rowHeight;
+//                             }
+            
+//                             xPos = startX;
+//                             row.forEach((cell, i) => {
+//                                 const bgColor = rowIndex % 2 === 0 ? '#f5f6fa' : '#ffffff';
+//                                 doc.rect(xPos, currentY, tableData.headers[i].width, rowHeight)
+//                                    .fill(bgColor);
+//                                 doc.fillColor('#333')
+//                                    .text(cell, xPos + 5, currentY + 5, {
+//                                        width: tableData.headers[i].width - 10,
+//                                        align: tableData.headers[i].align || 'left'
+//                                    });
+//                                 xPos += tableData.headers[i].width;
+//                             });
+//                             currentY += rowHeight;
+//                         });
+            
+//                         // Draw table borders
+//                         doc.lineWidth(0.5)
+//                            .strokeColor('#dcdcdc')
+//                            .rect(startX, startY, 490, currentY - startY)  // Adjusted width due to removed column
+//                            .stroke();
+//                     } else {
+//                         doc.font('Helvetica')
+//                            .fontSize(12)
+//                            .fillColor('#666')
+//                            .text('No orders found for the selected date range.', 50);
+//                     }
+            
+//                     // Footer
+//                     doc.moveDown(2)
+//                        .fontSize(10)
+//                        .fillColor('#666')
+//                        .text(`Generated on: ${new Date().toLocaleString()}`, 50, doc.page.height - 50, { align: 'left' })
+//                        .text('Page ' + doc.pageNumber, 0, doc.page.height - 50, { align: 'right', width: 540 });
+            
+//                     doc.end();
+//                     return;
+//                 }
+            
+
+//                 else if (download === "excel") {
+//                     const workbook = new ExcelJS.Workbook(); // Create new workbook
+//                     const worksheet = workbook.addWorksheet('Sales Report');
+                
+//                     worksheet.addRow(['Sales Report']).font = { size: 16, bold: true };
+//                     worksheet.addRow([]); // Empty row
+//                     worksheet.addRow(['Summary']).font = { size: 14, bold: true };
+//                     worksheet.addRow(['Total Revenue', `₹${totalRevenue.toFixed(2)}`]);
+//                     worksheet.addRow(['Total Orders', totalOrders]);
+//                     worksheet.addRow(['Total Discount', `₹${totalDiscount.toFixed(2)}`]);
+//                     worksheet.addRow([]); // Empty row
+                
+//                     // Order table
+//                     if (orders.length > 0) {
+//                         worksheet.addRow(['Order Details']).font = { size: 14, bold: true };
+                
+//                         // Table headers
+//                         const headerRow = worksheet.addRow([
+//                             'Customer',
+//                             'Date',
+//                             'Status',
+//                             'Discount',
+//                             'Amount',
+//                             'Payment Method'  // Updated header with proper spacing
+//                         ]);
+//                         headerRow.font = { bold: true };
+                
+//                         // Table rows
+//                         orders.forEach(order => {
+//                             worksheet.addRow([
+//                                 order.user.name, // Only customer name, no user ID
+//                                 order.createdAt ? new Date(order.createdAt).toLocaleDateString() : 'N/A',
+//                                 order.status || 'N/A',
+//                                 `₹${order.discount ? order.discount.toFixed(2) : '0.00'}`,
+//                                 `₹${order.finalAmount ? order.finalAmount.toFixed(2) : '0.00'}`,
+//                                 order.paymentMethod ? order.paymentMethod : 'N/A'  // Handle potential undefined values
+//                             ]);
+//                         });
+                
+//                         // Add payment method breakdown if needed
+//                         worksheet.addRow([]); // Empty row
+//                         worksheet.addRow(['Payment Method Summary']).font = { size: 14, bold: true };
+                        
+//                         // Calculate totals by payment method
+//                         const paymentMethodTotals = {};
+//                         orders.forEach(order => {
+//                             const method = order.paymentMethod || 'Unknown';
+//                             if (!paymentMethodTotals[method]) {
+//                                 paymentMethodTotals[method] = 0;
+//                             }
+//                             paymentMethodTotals[method] += order.finalAmount || 0;
+//                         });
+                        
+//                         // Add payment method summary
+//                         worksheet.addRow(['Payment Method', 'Total Amount']).font = { bold: true };
+//                         Object.entries(paymentMethodTotals).forEach(([method, amount]) => {
+//                             worksheet.addRow([method, `₹${amount.toFixed(2)}`]);
+//                         });
+                
+//                         // Auto-fit columns
+//                         worksheet.columns.forEach(column => {
+//                             let maxLength = 0;
+//                             column.eachCell({ includeEmpty: true }, cell => {
+//                                 const columnLength = cell.value ? cell.value.toString().length : 10;
+//                                 if (columnLength > maxLength) {
+//                                     maxLength = columnLength;
+//                                 }
+//                             });
+//                             column.width = maxLength < 10 ? 10 : maxLength + 2;
+//                         });
+                
+//                         // Optional: Add some basic styling
+//                         worksheet.getRow(1).alignment = { horizontal: 'center' };
+//                         worksheet.getRow(3).alignment = { horizontal: 'left' };
+//                         worksheet.getRow(8).font = { bold: true }; // Header row
+//                         worksheet.columns.forEach((column, i) => {
+//                             if (i === 3 || i === 4) { // Right-align Discount and Amount columns
+//                                 column.alignment = { horizontal: 'right' };
+//                             }
+//                         });
+//                     } else {
+//                         worksheet.addRow(['No orders found for the selected date range.']);
+//                     }
+                
+//                     res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+//                     res.setHeader('Content-Disposition', 'attachment; filename="sales-report.xlsx"');
+//                     await workbook.xlsx.write(res);
+//                     res.end();
+//                     return;
+//                 }
+//         }
+
+        
+//         res.render("salesReport", {
+//             currentPage: "salesReport",
+//             totalRevenue: totalRevenue || 0,
+//             totalOrders: totalOrders || 0,
+//             totalDiscount: totalDiscount || 0,
+//             selectedDateRange: dateRange || "all",
+//             orders: orders || [],
+//         });
+//     } catch (error) {
+//         console.error("Failed to generate sales report:", error);
+//         const errorMessage = "An unexpected error occurred while generating the sales report.";
+//         const errorCode = 500;
+//         res.status(500).render("admin/pageerror", { errorMessage, errorCode });
+//     }
+// };
 
 
 const loadDashboard = async (req, res) => {
@@ -604,7 +1180,7 @@ const loadDashboard = async (req, res) => {
             {
                 $match: {
                     $expr: { $eq: ["$_id", "$orders.orderedItems.product"] },
-                    "orders.status": { $nin: ["Cancelled", "Returned", "Return Request"] },
+                    "orders.status": { $nin: [OrderStatus.CANCELLED, OrderStatus.RETURNED, OrderStatus.RETURN_REQUEST] },
                     "orders.createdAt": { $gte: dayStart, $lte: dayEnd }
                 }
             },
@@ -662,7 +1238,7 @@ const loadDashboard = async (req, res) => {
                 $match: {
                     "productDetails.isBlocked": false,
                     "brandDetails.isBlocked": false,
-                    "status": { $nin: ["Cancelled", "Returned", "Return Request"] },
+                    "status": { $nin: [OrderStatus.CANCELLED, OrderStatus.RETURNED, OrderStatus.RETURN_REQUEST] },
                     "createdAt": { $gte: dayStart, $lte: dayEnd }
                 }
             },
@@ -703,7 +1279,7 @@ const loadDashboard = async (req, res) => {
         const topCategories = await Order.aggregate([
             {
                 $match: {
-                    status: { $nin: ["Cancelled", "Returned", "Return Request"] },
+                    status: { $nin: [OrderStatus.CANCELLED, OrderStatus.RETURNED, OrderStatus.RETURN_REQUEST] },
                     createdAt: { $gte: dayStart, $lte: dayEnd }
                 }
             },
@@ -765,7 +1341,7 @@ const loadDashboard = async (req, res) => {
         const totalRevenue = await Order.aggregate([
             {
                 $match: {
-                    status: { $nin: ["Cancelled", "Returned", "Return Request"] },
+                    status: { $nin: [OrderStatus.CANCELLED, OrderStatus.RETURNED, OrderStatus.RETURN_REQUEST] },
                     createdAt: { $gte: dayStart, $lte: dayEnd }
                 }
             },
@@ -778,7 +1354,7 @@ const loadDashboard = async (req, res) => {
         ]);
 
         const totalOrders = await Order.countDocuments({
-            status: { $nin: ["Cancelled", "Returned", "Return Request"] },
+            status: { $nin: [OrderStatus.CANCELLED, OrderStatus.RETURNED, OrderStatus.RETURN_REQUEST] },
             createdAt: { $gte: dayStart, $lte: dayEnd }
         });
 
@@ -862,7 +1438,7 @@ const loadDashboard = async (req, res) => {
         const revenueTrend = await Order.aggregate([
             {
                 $match: {
-                    status: { $nin: ["Cancelled", "Returned", "Return Request"] },
+                    status: { $nin: [OrderStatus.CANCELLED, OrderStatus.RETURNED, OrderStatus.RETURN_REQUEST] },
                     createdAt: { $gte: dayStart, $lte: dayEnd }
                 }
             },

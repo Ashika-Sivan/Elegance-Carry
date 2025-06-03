@@ -57,15 +57,20 @@
             background-color: #ffffff;
             min-height: 100vh;
         }
-        .main-header {
-            background-color: #343a40;
-            color: #fff;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 10px 20px;
-            border-bottom: 1px solid #495057;
-        }
+       .main-header {
+    background-color: #343a40;
+    /* color: #fff; */
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 20px;
+    /* border-bottom: 1px solid white; Updated this line */
+    /* background-color: #ffffff; */
+    color: #212529;
+    border-bottom: 1px solid #dee2e6;
+    margin-left: 250px;
+}
+
         .main-header .nav img {
             width: 40px;
             height: 40px;
@@ -114,10 +119,8 @@
                     <i class="fas fa-plus-square"></i> Add Product</a></li>
                 <li><a href="/admin/products" class="menu-link" <%=currentPage==='products' ? 'active' : ''%>>
                     <i class="fas fa-shopping-bag"></i> Products</a></li>
-                <li><a href="/admin/coupon" class="menu-link <%=currentPage==='coupon' ? 'active' : '' %>">
+                <li><a href="/admin/couponList" class="menu-link <%=currentPage==='coupon' ? 'active' : '' %>">
                     <i class="fas fa-tags"></i> Coupon</a></li>
-                <li><a href="/admin/banner" class="menu-link" <%=currentPage==='banner' ? 'active' : ''%>>
-                    <i class="fas fa-image"></i> Banner</a></li>
                 <li><a href="/admin/adminOrderList" class="menu-link" <%=currentPage==='orderList' ? 'active' : ''%>>
                     <i class="fas fa-shopping-cart"></i> Orders</a></li>
                 <!-- Added Sales Report Menu Item -->
@@ -126,5 +129,25 @@
             </ul>
         </nav>
     </aside>
+    <header class="main-header">
+    <div class="d-flex align-items-center">
+        <h4 class="mb-0">Admin Panel</h4>
+    </div>
+    <div class="d-flex align-items-center">
+        <div class="dropdown">
+            <a href="#" class="d-flex align-items-center text-white text-decoration-none dropdown-toggle" id="adminDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                 <!-- <img src="https://via.placeholder.com/40" alt="Admin Profile"> -->
+                <span class="ms-2">Admin</span> 
+            </a>
+            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="adminDropdown"> 
+                <!-- <li><a class="dropdown-item" href="/admin/profile">Profile</a></li>
+                <li><a class="dropdown-item" href="/">Home</a></li>
+                <li><hr class="dropdown-divider"></li> -->
+                <li><a class="dropdown-item" href="/admin/logout">Logout</a></li>
+            </ul> 
+        </div>
+    </div>
+</header>
 
+</body>
     

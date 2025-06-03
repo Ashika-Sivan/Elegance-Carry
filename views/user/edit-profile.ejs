@@ -6,15 +6,15 @@
   <div class="profile-container">
     <div class="profile-box">
       <h1>Edit Profile</h1>
-      <form action="/edit-profile" method="POST">
+      <form action="/edit-profile" id="editProfileForm" method="POST">
         <ul class="profile-info">
           <li>
             <label>Full Name:</label>
-            <input type="text" name="fullName" value="<%= user.name %>" required>
+            <input type="text" name="fullName" id="fullName" value="<%= user.name %>" required>
           </li>
           <li>
             <label>Phone:</label>
-            <input type="text" name="phone" value="<%= user.phone %>" required>
+            <input type="text" name="phone" id="phone" value="<%= user.phone %>" required>
           </li>
         </ul>
         <div class="save-changes">
@@ -116,3 +116,87 @@
     }
   }
 </style>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+
+<script>
+  document.getElementById("editProfileForm").addEventListener("submit", async function (e) {
+    e.preventDefault();
+
+    if (!validateForm()) {
+      return;
+    }
+
+    const data = {
+      fullName: document.querySelector('input[name="fullName"]').value.trim(),
+      phone: document.querySelector('input[name="phone"]').value.trim()
+    };
+
+    try {
+      const response = await fetch("/edit-profile", {
+        method: 'PUT',
+        headers: {
+          'content-type': 'application/json'
+        },
+        body: JSON.stringify(data)
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        Swal.fire({
+          icon: 'success',
+          title: 'Updated',
+          text: result.message,
+          confirmButtonText: 'OK'
+        }).then(() => {
+          window.location.href = '/userProfile';
+        });
+      } else {
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: result.message,
+          confirmButtonText: 'OK'
+        });
+      }
+    } catch (error) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: "Something went wrong. Please try again.",
+        confirmButtonText: 'OK'
+      });
+    }
+  });
+
+  function validateForm() {
+    let isValid = true;
+
+    const nameVal = document.getElementById("fullName").value.trim();
+    const phoneVal = document.getElementById("phone").value.trim();
+
+    const namePattern = /^[A-Za-z\s]{2,50}$/;
+    const phonePattern = /^[6-9]\d{9}$/;
+
+    if (!namePattern.test(nameVal)) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Invalid Name',
+        text: 'Name must contain only letters and spaces (2–50 characters).'
+      });
+      isValid = false;
+    }
+
+    if (!phonePattern.test(phoneVal)) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Invalid Phone',
+        text: 'Please enter a valid 10-digit phone number starting with 6–9.'
+      });
+      isValid = false;
+    }
+
+    return isValid;
+  }
+</script>

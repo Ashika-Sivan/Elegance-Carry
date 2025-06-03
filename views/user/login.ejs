@@ -149,7 +149,7 @@
       function emailValidateChecking(e) {
         const emailval = emailid.value;
         const emailpattern =
-          /^[a-zA-Z0-9._-]+@([a-zA-Z0-9.-]+)\.([a-zA-Z]{2,4})$/;
+          /^[a-zA-Z0-9._-]+@([a-zA-Z0-9.-]+)\.([a-zA-Z]{2,4})$/;//^start of a string,[a-zA-Z0-9._-]:-allow digits leters underscores and hyphene/domain name/"/.":-between domain and  extension/"$":-end of the string
 
         if (!emailpattern.test(emailval)) {
           error1.style.display = "block";

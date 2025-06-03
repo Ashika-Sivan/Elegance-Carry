@@ -201,10 +201,6 @@
         <h2 class="section-title">Order Summary</h2>
         <div class="info-grid">
             <div class="info-item">
-                <div class="info-label">Order ID</div>
-                <div class="info-value">#<%= order._id %></div>
-            </div>
-            <div class="info-item">
                 <div class="info-label">Order Date</div>
                 <div class="info-value"><%= new Date(order.createdAt).toLocaleDateString() %></div>
             </div>
@@ -275,6 +271,7 @@
                         <th>Product</th>
                         <th>Name</th>
                         <th>Price</th>
+                        <th>status</th>
                         <th>Quantity</th>
                         <th>Total</th>
                     </tr>
@@ -289,6 +286,9 @@
                         </td>
                         <td><%= item.product.productName %></td>
                         <td>₹<%= item.price.toLocaleString() %></td>
+                        <td style="color: <%= (item.status === 'Cancelled' || item.status === 'Returned') ? 'red' : 'black'&&(item.status==='Delivered')?'green':'black' %>">
+                            <%= item.status %>
+                        </td>                        
                         <td><%= item.quantity %></td>
                         <td>₹<%= (item.price * item.quantity).toLocaleString() %></td>
                     </tr>
@@ -316,5 +316,6 @@
         </div>
     </div>
 </div>
+
 
 <%- include('../layouts/admin/footer') %>

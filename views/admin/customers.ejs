@@ -1,23 +1,64 @@
 <%- include("../../views/layouts/admin/header",{currentPage:'users'}) %>
-    <style>
-        .customers-container {
-            margin-left: 260px;
+<style>
+    .customers-container {
+        margin-left: 260px;
+    }
 
-        }
+    .dashboard-wrapper {
+        margin-top: 50px;
+    }
 
-        .dashboard-wrapper {
-            margin-top: 50px;
-        }
+    .search-container {
+        position: relative;
+        margin: 20px 0;
+    }
 
-        /* .dashboard-wrapper {
+    .search-input {
+        transition: all 0.3s ease;
+    }
+
+    .search-input:focus {
+        box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+    }
+
+    .clear-search-btn {
         position: absolute;
-        top: 70px;
-        left: 240px;
-        width: calc(100% - 240px);
-        padding: 2rem;
-        margin-left: 250px;
-    } */
-    </style>
+        right: 50px;
+        top: 50%;
+        transform: translateY(-50%);
+        background: none;
+        border: none;
+        font-size: 18px;
+        color: #6c757d;
+        cursor: pointer;
+        padding: 5px;
+    }
+
+    .clear-search-btn:hover {
+        color: #dc3545;
+    }
+
+    .active-search-info {
+        background-color: #e3f2fd;
+        border: 1px solid #2196f3;
+        border-radius: 5px;
+        padding: 10px;
+        margin-bottom: 15px;
+        color: #1976d2;
+    }
+
+    .pagination-container {
+        display: flex;
+        justify-content: center;
+        margin-top: 20px;
+    }
+
+    .no-results {
+        text-align: center;
+        padding: 40px;
+        color: #6c757d;
+    }
+</style>
 
 <div class="customers-container">
     <div class="content-header row">
@@ -26,67 +67,186 @@
         </div>
     </div>
     <div class="dashboard-wrapper">
+        <!-- Search Section -->
         <header class="card-header text-center mb-20">
-            <form action="/admin/users" method="get" class="d-inline">
-                <div class="input-group input-group-sm border border-1 border-grey rounded-pill"
-                    style="width: 500px; margin-left: 230px;">
-                    <input type="text" class="form-control border-0 rounded-pill" placeholder="Search customers..."
-                        name="search">
-                    <button class="btn border-0" type="submit">Search</button>
-                </div>
-            </form>
+            <div class="search-container">
+                <form action="/admin/users" method="get" class="d-inline" id="searchForm">
+                    <div class="input-group input-group-sm border border-1 border-grey rounded-pill"
+                        style="width: 500px; margin-left: 230px; position: relative;">
+                        <input type="text" 
+                               class="form-control border-0 rounded-pill search-input" 
+                               placeholder="Search customers by name, email, or phone..." 
+                               name="search" 
+                               id="searchInput"
+                               value="<%= searchQuery || '' %>">
+                        <% if (searchQuery && searchQuery.trim()) { %>
+                            <button type="button" class="clear-search-btn" onclick="clearSearch()" title="Clear search">
+                                ×
+                            </button>
+                        <% } %>
+                        <button class="btn border-0" type="submit">Search</button>
+                    </div>
+                </form>
+            </div>
         </header>
+
+        <!-- Active Search Info -->
+        <% if (searchQuery && searchQuery.trim()) { %>
+            <div class="active-search-info">
+                <strong>Search Results for:</strong> "<%= searchQuery %>" 
+                (<%= data.length %> customer<%= data.length !== 1 ? 's' : '' %> found)
+                <button type="button" class="btn btn-sm btn-outline-primary ms-2" onclick="clearSearch()">
+                    Clear Search
+                </button>
+            </div>
+        <% } %>
+
         <div class="right mt-5">
-            <table class="table table-striped">
-                <thead>
-                    <tr>
-                        <th scope="col"><b>Name</b></th>
-                        <th scope="col"><b>Email</b></th>
-                        <th scope="col"><b>Phone No</b></th>
-                        <th scope="col"><b>Action</b></th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <% for(let i=0; i < data.length; i++) { %>
+            <% if (data.length > 0) { %>
+                <table class="table table-striped">
+                    <thead>
                         <tr>
-                            <td><%= data[i].name %></td>
-                            <td><%= data[i].email %></td>
-                            <td><%= data[i].phone %></td>
-                            <td>
-                                <% if(data[i].isBlocked === false) { %>
-                                    <button class="btn btn-danger" style="width: 80px;"
-                                        onclick="confirmBlock('<%= data[i]._id %>', 'block')">
-                                        Block
-                                    </button>
-                                <% } else { %>
-                                    <button class="btn btn-success" style="width: 80px;"
-                                        onclick="confirmBlock('<%= data[i]._id %>', 'unblock')">
-                                        Unblock
-                                    </button>
-                                <% } %>
-                            </td>
+                            <th scope="col"><b>Name</b></th>
+                            <th scope="col"><b>Email</b></th>
+                            <th scope="col"><b>Phone No</b></th>
+                            <th scope="col"><b>Action</b></th>
                         </tr>
+                    </thead>
+                    <tbody>
+                        <% for(let i=0; i < data.length; i++) { %>
+                            <tr>
+                                <td><%= data[i].name %></td>
+                                <td><%= data[i].email %></td>
+                                <td><%= data[i].phone %></td>
+                                <td>
+                                    <% if(data[i].isBlocked === false) { %>
+                                        <button class="btn btn-danger" style="width: 80px;"
+                                            onclick="confirmBlock('<%= data[i]._id %>', 'block')">
+                                            Block
+                                        </button>
+                                    <% } else { %>
+                                        <button class="btn btn-success" style="width: 80px;"
+                                            onclick="confirmBlock('<%= data[i]._id %>', 'unblock')">
+                                            Unblock
+                                        </button>
+                                    <% } %>
+                                </td>
+                            </tr>
+                        <% } %>
+                    </tbody>
+                </table>
+            <% } else { %>
+                <div class="no-results">
+                    <h4>No customers found</h4>
+                    <% if (searchQuery && searchQuery.trim()) { %>
+                        <p>No customers match your search for "<%= searchQuery %>"</p>
+                        <button class="btn btn-primary" onclick="clearSearch()">Show All Customers</button>
+                    <% } else { %>
+                        <p>No customers are currently registered.</p>
                     <% } %>
-                </tbody>
-            </table>
+                </div>
+            <% } %>
         </div>
-        <div class="container mt-3">
-            <nav aria-label="Page navigation">
-                <ul class="pagination justify-content-center mb-20" style="margin-right: 200px;">
-                    <% for(let i=1; i <= totalPages; i++) { %>
-                        <li class="page-item <%= (i === currentPage) ? 'active' : '' %>">
-                            <a class="page-link" href="?page=<%= i %>"><%= i %></a>
-                        </li>
-                    <% } %>
-                </ul>
-            </nav>
-        </div>
+
+        <!-- Pagination -->
+        <% if (totalPages > 1) { %>
+            <div class="pagination-container">
+                <nav aria-label="Page navigation">
+                    <ul class="pagination justify-content-center mb-20">
+                        <!-- Previous Button -->
+                        <% if (currentPage > 1) { %>
+                            <li class="page-item">
+                                <a class="page-link" 
+                                   href="?page=<%= currentPage - 1 %><%= searchQuery ? '&search=' + encodeURIComponent(searchQuery) : '' %>">
+                                   Previous
+                                </a>
+                            </li>
+                        <% } %>
+
+                        <!-- Page Numbers -->
+                        <% for(let i = 1; i <= totalPages; i++) { %>
+                            <li class="page-item <%= (i === currentPage) ? 'active' : '' %>">
+                                <a class="page-link" 
+                                   href="?page=<%= i %><%= searchQuery ? '&search=' + encodeURIComponent(searchQuery) : '' %>">
+                                   <%= i %>
+                                </a>
+                            </li>
+                        <% } %>
+
+                        <!-- Next Button -->
+                        <% if (currentPage < totalPages) { %>
+                            <li class="page-item">
+                                <a class="page-link" 
+                                   href="?page=<%= currentPage + 1 %><%= searchQuery ? '&search=' + encodeURIComponent(searchQuery) : '' %>">
+                                   Next
+                                </a>
+                            </li>
+                        <% } %>
+                    </ul>
+                </nav>
+            </div>
+        <% } %>
     </div>
 </div>
 
 <!-- Add SweetAlert2 and custom script at the bottom -->
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
+// Real-time search functionality
+let searchTimeout;
+const searchInput = document.getElementById('searchInput');
+
+// Add real-time search as user types
+searchInput.addEventListener('input', function() {
+    clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(() => {
+        const query = this.value.trim();
+        if (query.length >= 2) { // Start searching after 2 characters
+            performSearch(query);
+        } else if (query.length === 0) {
+            // Clear search if input is empty
+            clearSearch();
+        }
+    }, 500); // Wait 500ms after user stops typing
+});
+
+// Handle Enter key press
+searchInput.addEventListener('keyup', function(event) {
+    if (event.key === 'Enter') {
+        event.preventDefault();
+        const query = this.value.trim();
+        if (query) {
+            performSearch(query);
+        }
+    }
+});
+
+function performSearch(searchQuery = null) {
+    const query = searchQuery || document.getElementById('searchInput').value.trim();
+    
+    if (query) {
+        const url = new URL(window.location.href);
+        const params = new URLSearchParams();
+        
+        params.set('search', query);
+        params.set('page', '1'); // Reset to first page when searching
+        
+        window.location.href = `${url.pathname}?${params.toString()}`;
+    }
+}
+
+function clearSearch() {
+    // Clear the search input
+    document.getElementById('searchInput').value = '';
+    
+    // Navigate to page without search parameter
+    const url = new URL(window.location.href);
+    const params = new URLSearchParams();
+    params.set('page', '1');
+    
+    window.location.href = `${url.pathname}`;
+}
+
 async function confirmBlock(customerId, action) {
     const url = action === 'block' ? '/admin/blockCustomer' : '/admin/unblockCustomer';
     const actionText = action === 'block' ? 'block' : 'unblock';
@@ -133,77 +293,4 @@ async function confirmBlock(customerId, action) {
 }
 </script>
 
-    <!-- <div class="customers-container">
-        <div class="content-header row">
-            <div class="d-flex justify-content-between align-items-center">
-                <h2 class="content-title card-title">Customers</h2>
-
-            </div>
-        </div>
-        <div class="dashboard-wrapper">
-            <header class="card-header text-center mb-20">
-                <form action="/admin/users" method="get" class="d-inline">
-                    <div class="input-group input-group-sm border border-1 border-grey rounded-pill"
-                        style="width: 500px; margin-left: 230px;">
-                        <input type="text" class="form-control border-0 rounded-pill" placeholder="Search customers..."
-                            name="search">
-                        <button class="btn  border-0" type="submit">Search</button>
-                    </div>
-                </form>
-            </header>
-            <div class="right mt-5">
-                <table class="table table-striped">
-                    <thead>
-                        <tr>
-                            <th scope="col"><b>Name</b></th>
-                            <th scope="col"><b>Email</b></th>
-                            <th scope="col"><b>Phone No</b></th>
-                            <th scope="col"><b>Action</b></th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <%for(let i=0;i<data.length;i++){%>
-                            <tr>
-                                <td>
-                                    <%=data[i].name%>
-                                </td>
-                                <td>
-                                    <%=data[i].email%>
-                                </td>
-                                <td>
-                                    <%=data[i].phone%>
-                                </td>
-                                <td>
-                                    <%if(data[i].isBlocked===false){%>
-                                        <button class="btn btn-danger" style="width: 80px;">
-                                            <a href="/admin/blockCustomer?id=<%=data[i]._id%>" class="text-white"
-                                                style="text-decoration: none;">Block</a>
-                                        </button>
-                                        <%}else{%>
-                                            <button class="btn btn-success" style="width: 80px;">
-                                                <a href="/admin/unblockCustomer?id=<%=data[i]._id%>" class="text-white"
-                                                    style="text-decoration: none;">Unblock</a>
-                                            </button>
-                                            <%}%>
-                                </td>
-                            </tr>
-                            <%}%>
-                    </tbody>
-                </table>
-            </div>
-            <div class="container mt-3">
-                <nav aria-label="Page navigation">
-                    <ul class="pagination justify-content-center mb-20" style="margin-right: 200px;">
-                        <%for(let i=1;i<=totalPages;i++){%>
-                            <li class="page-item <%=(i===currentPage) ? 'active' : '' %>">
-                                <a class="page-link" href="?page=<%= i %>">
-                                    <%= i %>
-                                </a>
-                            </li>
-                            <%}%>
-                    </ul>
-                </nav>
-            </div>
-        </div>
-    </div> -->
-    <%- include("../../views/layouts/admin/footer") %>
+<%- include("../../views/layouts/admin/footer") %>

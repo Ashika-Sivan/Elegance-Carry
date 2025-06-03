@@ -1,0 +1,140 @@
+<!-- Add this in your <head> if not already present -->
+    <%- include("../../views/layouts/admin/header",{currentPage:'users'}) %>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
+
+
+<style>
+    body {
+        background-color: #f8f9fa;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    .coupon-container {
+        background-color: #ffffff;
+        padding: 30px;
+        /* margin-top: 40px; */
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+       
+    }
+
+    .table th, .table td {
+        vertical-align: middle !important;
+        text-align: center;
+    }
+
+    .table thead {
+        background-color: #343a40;
+        color: white;
+    }
+
+    .btn-danger {
+        padding: 5px 10px;
+        font-size: 14px;
+        border-radius: 5px;
+    }
+
+    .pagination .page-item.active .page-link {
+        background-color: #343a40;
+        border-color: #343a40;
+    }
+
+    .pagination .page-link {
+        color: #343a40;
+    }
+
+    .text-center {
+        font-weight: bold;
+        font-size: 24px;
+        color: #343a40;
+    }
+    .addCoupon{
+        color: white;
+    }
+</style>
+
+<div class="container coupon-container"style="margin-left:260px ;max-width: 80%;">
+    <h3 class="text-center">🎁 Existing Coupons</h3>
+    <table class="table table-bordered table-hover mt-4">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Expiry Date</th>
+                <th>Discount Amount</th>
+                <th>Min Purchase</th>
+                <th>Max Usage</th>
+                <th>Used Count</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            <% coupons.forEach(coupon => { %>
+                <tr>
+                    <td><%= coupon.name %></td>
+                    <td><%= new Date(coupon.expiryOn).toLocaleDateString() %></td>
+                    <td>₹<%= coupon.discountAmount %></td>
+                    <td>₹<%= coupon.minimumPrice %></td>
+                    <td><%= coupon.maxUsage %></td>
+                    <td><%= coupon.usedCount %></td>
+                    <td>
+ <button type="button" class="btn btn-danger btn-sm delete-coupon-btn" data-coupon-id="<%= coupon._id %>">Delete</button>
+                    </td>
+                </tr>
+            <% }) %>
+        </tbody>
+    </table>
+    
+            <button type="submit" class="btn btn-primary" ><a href="/admin/coupon" class="addCoupon" style="text-decoration: none;">Add Coupon+</a></button>
+
+    <nav aria-label="Coupon pagination">
+        <ul class="pagination justify-content-center mt-4">
+            <% for (let i = 1; i <= totalPage; i++) { %>
+                <li class="page-item <%= i === currentPage ? 'active' : '' %>">
+                    <a class="page-link" href="?page=<%= i %>"><%= i %></a>
+                </li>
+            <% } %>
+        </ul>
+    </nav>
+</div>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script> document.querySelectorAll('.delete-coupon-btn').forEach(button => {
+        button.addEventListener('click', function () {
+            const couponId = this.getAttribute('data-coupon-id');
+
+            Swal.fire({
+                title: 'Are you sure?',
+                text: "You won't be able to revert this!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Yes, delete it!',
+                cancelButtonText: 'No, keep it'
+            }).then(async (result) => {
+                if (result.isConfirmed) {
+                    try {
+                        const response = await fetch(`/admin/deleteCoupon/${couponId}`, {
+                            method: 'DELETE',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            }
+                        });
+
+                        if (response.ok) {
+                            Swal.fire('Deleted!', 'Coupon has been deleted.', 'success')
+                                .then(() => {
+                                    window.location.reload();
+                                });
+                        } else {
+                            Swal.fire('Error!', 'Failed to delete coupon.', 'error');
+                        }
+                    } catch (error) {
+                        console.error('Error:', error);
+                        Swal.fire('Error!', 'Something went wrong.', 'error');
+                    }
+                }
+            });
+        });
+    });
+
+</script>
