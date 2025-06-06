@@ -73,6 +73,40 @@
         .login-link a:hover {
             text-decoration: underline;
         }
+        @media (max-width: 991.98px) {
+    .signup-container {
+        flex-direction: column;
+    }
+    .signup-image-section, 
+    .signup-form-section {
+        width: 100%;
+        padding: 30px 20px;
+    }
+    .signup-image-section {
+        justify-content: center;
+        padding: 20px 10px;
+    }
+    .signup-image-section img {
+        max-width: 60%;
+    }
+}
+
+@media (max-width: 576px) {
+    .signup-container {
+        box-shadow: none;
+        border-radius: 0;
+    }
+    .signup-image-section img {
+        max-width: 70%;
+    }
+    h3.text-center {
+        font-size: 1.5rem;
+    }
+    .btn-primary {
+        font-size: 0.95rem;
+    }
+}
+
     </style>
 </head>
 <body>

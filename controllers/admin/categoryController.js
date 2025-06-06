@@ -194,10 +194,7 @@ const removeCategoryOffer = async(req, res) => {
         const products = await Product.find({category: category._id});
         
         for (const product of products) {
-           
             product.salePrice = product.regularPrice;
-            
-           
             if (product.productOffer > 0) {
                 const discountAmount = Math.floor(product.regularPrice * (product.productOffer / 100));
                 product.salePrice = product.regularPrice - discountAmount;

@@ -49,6 +49,8 @@ passport.use(
       }
     )
   );
+
+  
   //passport call to store userid in the sesssion here only user id
   passport.serializeUser((user, done) => {
     done(null, user.id);

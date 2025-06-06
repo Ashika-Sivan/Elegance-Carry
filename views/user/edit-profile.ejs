@@ -1,202 +1,389 @@
 <%- include("../layouts/user/header.ejs") %>
-<%- include("../layouts/user/sidebar.ejs")%>
-
-<div style="margin-bottom: 10rem;">
-  <!-- Edit Profile Container -->
-  <div class="profile-container">
-    <div class="profile-box">
-      <h1>Edit Profile</h1>
-      <form action="/edit-profile" id="editProfileForm" method="POST">
-        <ul class="profile-info">
-          <li>
-            <label>Full Name:</label>
-            <input type="text" name="fullName" id="fullName" value="<%= user.name %>" required>
-          </li>
-          <li>
-            <label>Phone:</label>
-            <input type="text" name="phone" id="phone" value="<%= user.phone %>" required>
-          </li>
-        </ul>
-        <div class="save-changes">
-          <button type="submit">Save Changes</button>
-          <button type="button" onclick="window.location.href='/userProfile';">Cancel</button>
-        </div>
-      </form>
-    </div>
-  </div>
-</div>
-
-<%- include("../layouts/user/footer.ejs") %>
 
 <style>
-  /* Existing styles from your profile page */
-  .profile-container {
-    margin-left: 270px;
-    padding: 20px;
-  }
-
-  .profile-box {
-    background-color: #fff;
-    border-radius: 8px;
-    padding: 20px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    max-width: 600px;
-    margin: auto;
-  }
-
-  /* Additional styles for the edit form */
-  .profile-info {
-    list-style: none;
-    padding: 0;
-  }
-
-  .profile-info li {
-    margin-bottom: 20px;
-  }
-
-  .profile-info label {
-    display: block;
-    font-weight: bold;
-    margin-bottom: 5px;
-    color: #555;
-  }
-
-  .profile-info input {
-    width: 100%;
-    padding: 8px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    font-size: 16px;
-  }
-
-  .profile-info input:focus {
-    outline: none;
-    border-color: #0044cc;
-    box-shadow: 0 0 5px rgba(0, 68, 204, 0.2);
-  }
-
-  .save-changes {
-    text-align: center;
-    margin-top: 20px;
-  }
-
-  .save-changes button {
-    background-color: #0044cc;
-    color: #fff;
-    border: none;
-    padding: 10px 20px;
-    border-radius: 4px;
-    cursor: pointer;
-    margin: 0 10px;
-    font-size: 16px;
-  }
-
-  .save-changes button[type="button"] {
-    background-color: #666;
-  }
-
-  .save-changes button:hover {
-    opacity: 0.9;
-  }
-
-  @media screen and (max-width: 768px) {
-    .profile-container {
-      margin-left: 220px;
+    /* Container for Sidebar and Edit Profile */
+    .container {
+        display: flex;
+        max-width: 1200px;
+        margin: 20px auto;
+        gap: 20px;
+        padding: 0 15px;
     }
-  }
 
-  @media screen and (max-width: 480px) {
+    /* Profile Container */
     .profile-container {
-      margin-left: 120px;
+        flex: 1;
+        padding: 20px;
+        font-family: 'Assistant', -apple-system, BlinkMacSystemFont, sans-serif;
     }
-    
+
+    .profile-box {
+        background-color: #fff;
+        border-radius: 12px;
+        padding: 30px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+        max-width: 600px;
+        margin: auto;
+        transition: all 0.3s ease;
+    }
+
+    .profile-box h1 {
+        text-align: left;
+        margin-bottom: 30px;
+        color: #282c3f;
+        font-size: 1.8rem;
+        font-weight: 600;
+        border-bottom: 1px solid #eaeaec;
+        padding-bottom: 15px;
+        position: relative;
+    }
+
+    .profile-box h1::after {
+        content: '';
+        width: 50px;
+        height: 3px;
+        background: #ff3f6c;
+        position: absolute;
+        bottom: -1px;
+        left: 0;
+        border-radius: 2px;
+    }
+
+    .google-user-notice {
+        background-color: #e3f2fd;
+        border: 1px solid #bbdefb;
+        border-radius: 8px;
+        padding: 12px;
+        margin-bottom: 20px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .google-user-notice p {
+        margin: 0;
+        color: #1565c0;
+        font-size: 14px;
+    }
+
+    .info-icon {
+        font-size: 16px;
+    }
+
+    .profile-info {
+        list-style: none;
+        padding: 0;
+    }
+
+    .profile-info li {
+        margin-bottom: 20px;
+        padding: 0 15px;
+        transition: all 0.3s ease;
+    }
+
+    .profile-info li:hover {
+        background: #f9f9f9;
+        border-radius: 8px;
+    }
+
+    .profile-info label {
+        display: block;
+        font-weight: 500;
+        margin-bottom: 5px;
+        color: #555;
+        font-size: 12px;
+        text-transform: uppercase;
+    }
+
+    .profile-info input {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid #ddd;
+        border-radius: 6px;
+        font-size: 16px;
+        transition: all 0.3s ease;
+    }
+
+    .profile-info input:disabled {
+        background-color: #f5f5f5;
+        color: #666;
+        cursor: not-allowed;
+    }
+
+    .profile-info input:focus:not(:disabled) {
+        outline: none;
+        border-color: #ff3f6c;
+        box-shadow: 0 0 5px rgba(255, 63, 108, 0.2);
+    }
+
+    .field-note {
+        display: block;
+        color: #666;
+        font-size: 12px;
+        margin-top: 4px;
+        font-style: italic;
+    }
+
+    .save-changes {
+        display: flex;
+        gap: 15px;
+        padding: 20px 15px;
+        margin-top: 20px;
+        justify-content: center;
+    }
+
     .save-changes button {
-      width: 100%;
-      margin: 5px 0;
+        padding: 12px 45px;
+        font-size: 14px;
+        font-weight: 600;
+        border-radius: 8px;
+        cursor: pointer;
+        text-transform: uppercase;
+        transition: all 0.3s ease;
     }
-  }
+
+    .save-changes button[type="submit"] {
+        background: linear-gradient(90deg, #ff3f6c 0%, #ff5a82 100%);
+        color: #fff;
+        border: none;
+    }
+
+    .save-changes button[type="submit"]:hover {
+        background: linear-gradient(90deg, #e6365d 0%, #e64e73 100%);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 10px rgba(255, 63, 108, 0.2);
+    }
+
+    .save-changes button[type="button"] {
+        background-color: #fff;
+        color: #282c3f;
+        border: 1px solid #d4d5d9;
+    }
+
+    .save-changes button[type="button"]:hover {
+        background-color: #f5f5f5;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Responsive Design */
+    @media (max-width: 1024px) {
+        .container {
+            flex-direction: column;
+        }
+
+        .profile-container {
+            margin-left: 0;
+            padding: 15px;
+        }
+
+        .profile-box {
+            padding: 20px;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .profile-box h1 {
+            font-size: 1.5rem;
+        }
+
+        .profile-info li {
+            padding: 0 10px;
+        }
+
+        .profile-info label {
+            font-size: 11px;
+        }
+
+        .profile-info input {
+            font-size: 14px;
+            padding: 8px;
+        }
+
+        .google-user-notice p {
+            font-size: 13px;
+        }
+
+        .save-changes {
+            flex-direction: column;
+        }
+
+        .save-changes button {
+            width: 100%;
+            padding: 10px;
+            font-size: 13px;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .profile-box h1 {
+            font-size: 1.3rem;
+        }
+
+        .profile-box h1::after {
+            width: 40px;
+        }
+
+        .profile-info li {
+            margin-bottom: 15px;
+        }
+
+        .profile-info label {
+            font-size: 10px;
+        }
+
+        .profile-info input {
+            font-size: 13px;
+            padding: 6px;
+        }
+
+        .google-user-notice p {
+            font-size: 12px;
+        }
+
+        .google-user-notice {
+            padding: 10px;
+        }
+
+        .info-icon {
+            font-size: 14px;
+        }
+
+        .field-note {
+            font-size: 11px;
+        }
+
+        .save-changes button {
+            padding: 8px;
+            font-size: 12px;
+        }
+    }
 </style>
+
+<div style="margin-bottom: 10rem;">
+    <div class="container">
+        <%- include("../layouts/user/sidebar.ejs") %>
+
+        <!-- Edit Profile Container -->
+        <div class="profile-container">
+            <div class="profile-box">
+                <h1>Edit Profile</h1>
+                
+                <% if (isGoogleUser) { %>
+                    <div class="google-user-notice">
+                        <i class="info-icon">ℹ️</i>
+                        <p>You signed in with Google. Password management is handled by Google.</p>
+                    </div>
+                <% } %>
+
+                <form action="/edit-profile" id="editProfileForm" method="PUT">
+                    <ul class="profile-info">
+                        <li>
+                            <label>Full Name:</label>
+                            <input type="text" name="fullName" id="fullName" value="<%= user.name %>" required>
+                        </li>
+                        <li>
+                            <label>Email:</label>
+                            <input type="email" name="email" id="email" value="<%= user.email %>" disabled>
+                            <small class="field-note">Email cannot be changed</small>
+                        </li>
+                        <li>
+                            <label>Phone:</label>
+                            <input type="text" name="phone" id="phone" value="<%= user.phone %>" required>
+                        </li>
+                    </ul>
+                    <div class="save-changes">
+                        <button type="submit">Save Changes</button>
+                        <button type="button" onclick="window.location.href='/userProfile';">Cancel</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-
 <script>
-  document.getElementById("editProfileForm").addEventListener("submit", async function (e) {
-    e.preventDefault();
+    document.getElementById("editProfileForm").addEventListener("submit", async function (e) {
+        e.preventDefault();
 
-    if (!validateForm()) {
-      return;
+        if (!validateForm()) {
+            return;
+        }
+
+        const data = {
+            fullName: document.querySelector('input[name="fullName"]').value.trim(),
+            phone: document.querySelector('input[name="phone"]').value.trim()
+        };
+
+        try {
+            const response = await fetch("/edit-profile", {
+                method: 'PUT',
+                headers: {
+                    'content-type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Updated',
+                    text: result.message,
+                    confirmButtonText: 'OK'
+                }).then(() => {
+                    window.location.href = '/userProfile';
+                });
+            } else {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: result.message,
+                    confirmButtonText: 'OK'
+                });
+            }
+        } catch (error) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: "Something went wrong. Please try again.",
+                confirmButtonText: 'OK'
+            });
+        }
+    });
+
+    function validateForm() {
+        let isValid = true;
+
+        const nameVal = document.getElementById("fullName").value.trim();
+        const phoneVal = document.getElementById("phone").value.trim();
+
+        const namePattern = /^[A-Za-z\s]{2,50}$/;
+        const phonePattern = /^[6-9]\d{9}$/;
+
+        if (!namePattern.test(nameVal)) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Invalid Name',
+                text: 'Name must contain only letters and spaces (2–50 characters).'
+            });
+            isValid = false;
+        }
+
+        if (!phonePattern.test(phoneVal)) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Invalid Phone',
+                text: 'Please enter a valid 10-digit phone number starting with 6–9.'
+            });
+            isValid = false;
+        }
+
+        return isValid;
     }
-
-    const data = {
-      fullName: document.querySelector('input[name="fullName"]').value.trim(),
-      phone: document.querySelector('input[name="phone"]').value.trim()
-    };
-
-    try {
-      const response = await fetch("/edit-profile", {
-        method: 'PUT',
-        headers: {
-          'content-type': 'application/json'
-        },
-        body: JSON.stringify(data)
-      });
-
-      const result = await response.json();
-
-      if (result.success) {
-        Swal.fire({
-          icon: 'success',
-          title: 'Updated',
-          text: result.message,
-          confirmButtonText: 'OK'
-        }).then(() => {
-          window.location.href = '/userProfile';
-        });
-      } else {
-        Swal.fire({
-          icon: 'error',
-          title: 'Error',
-          text: result.message,
-          confirmButtonText: 'OK'
-        });
-      }
-    } catch (error) {
-      Swal.fire({
-        icon: 'error',
-        title: 'Error',
-        text: "Something went wrong. Please try again.",
-        confirmButtonText: 'OK'
-      });
-    }
-  });
-
-  function validateForm() {
-    let isValid = true;
-
-    const nameVal = document.getElementById("fullName").value.trim();
-    const phoneVal = document.getElementById("phone").value.trim();
-
-    const namePattern = /^[A-Za-z\s]{2,50}$/;
-    const phonePattern = /^[6-9]\d{9}$/;
-
-    if (!namePattern.test(nameVal)) {
-      Swal.fire({
-        icon: 'error',
-        title: 'Invalid Name',
-        text: 'Name must contain only letters and spaces (2–50 characters).'
-      });
-      isValid = false;
-    }
-
-    if (!phonePattern.test(phoneVal)) {
-      Swal.fire({
-        icon: 'error',
-        title: 'Invalid Phone',
-        text: 'Please enter a valid 10-digit phone number starting with 6–9.'
-      });
-      isValid = false;
-    }
-
-    return isValid;
-  }
 </script>
+
+<%- include("../layouts/user/footer.ejs") %>

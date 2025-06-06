@@ -69,6 +69,10 @@
     z-index: 1000;
   }
 
+  .sort-options.active {
+    display: block;
+  }
+
   .sort-options div {
     padding: 12px 16px;
     cursor: pointer;
@@ -100,12 +104,14 @@
   body {
     font-family: Arial, sans-serif;
     background-color: #f5f5f5;
+    margin: 0;
   }
   .container {
     max-width: 1300px;
     margin: 20px auto;
     display: flex;
     gap: 20px;
+    padding: 0 10px;
   }
 
   .pagination {
@@ -134,6 +140,7 @@
     padding: 20px;
     border-radius: 8px;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
   }
   .filter-title {
     font-size: 16px;
@@ -159,7 +166,7 @@
     justify-content: center;
     margin-bottom: 20px;
   }
-  .search-button{
+  .search-button {
     border-radius: 20px;
   }
   .search-input {
@@ -338,21 +345,157 @@
     opacity: 0.8;
   }
 
+  .search-button,
+  .clear-search-btn {
+    padding: 10px 16px;
+    margin-left: 10px;
+    border: none;
+    border-radius: 20px;
+    background-color: #ff3f6c;
+    color: white;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    font-size: 14px;
+  }
 
-  /* .badge {
-  font-size: 0.75rem;
-  padding: 5px 10px;
-  z-index: 1;
-}
+  .search-button:hover,
+  .clear-search-btn:hover {
+    background-color: #e6365d;
+  }
 
-.badge small {
-  display: block;
-  font-size: 0.6rem;
-  opacity: 0.8;
-} */
+  .clear-search-btn {
+    background-color: #d4d5d9;
+    color: #333;
+  }
+
+  .clear-search-btn:hover {
+    background-color: #b1b1b1;
+  }
+
+  /* Responsive Styles */
+  .sidebar-toggle {
+    display: none;
+    background-color: #ff3f6c;
+    color: white;
+    border: none;
+    padding: 10px;
+    border-radius: 5px;
+    cursor: pointer;
+    margin-bottom: 10px;
+  }
+
+  @media (max-width: 1024px) {
+    .container {
+      flex-direction: column;
+    }
+
+    .sidebar {
+      width: 100%;
+      display: none;
+    }
+
+    .sidebar.active {
+      display: block;
+    }
+
+    .sidebar-toggle {
+      display: block;
+    }
+
+    .product-grid {
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    }
+
+    .search-input {
+      width: 70%;
+    }
+  }
+
+  @media (max-width: 768px) {
+    .product-grid {
+      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    }
+
+    .product-card img {
+      height: 200px;
+    }
+
+    .product-card h5 {
+      font-size: 14px;
+      min-height: 36px;
+    }
+
+    .product-card p {
+      font-size: 16px;
+    }
+
+    .search-bar {
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .search-input {
+      width: 100%;
+    }
+
+    .search-button,
+    .clear-search-btn {
+      width: 100%;
+      margin-left: 0;
+    }
+
+    .sort-button {
+      min-width: 150px;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .product-grid {
+      grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    }
+
+    .product-card img {
+      height: 150px;
+    }
+
+    .product-card h5 {
+      font-size: 12px;
+      min-height: 32px;
+    }
+
+    .product-card p {
+      font-size: 14px;
+    }
+
+    .add-to-cart-btn {
+      padding: 8px;
+      font-size: 12px;
+    }
+
+    .wishlist-btn {
+      width: 28px;
+      height: 28px;
+    }
+
+    .wishlist-btn i {
+      font-size: 14px;
+    }
+
+    .offer-badge {
+      font-size: 10px;
+      padding: 3px 8px;
+    }
+
+    .offer-badge small {
+      font-size: 8px;
+    }
+  }
 </style>
+
 <div class="container">
-  <aside class="sidebar">
+  <button class="sidebar-toggle" onclick="toggleSidebar()">☰ Filter</button>
+  <aside class="sidebar" id="sidebar">
     <% if (activeFilters.category || activeFilters.brand || activeFilters.search) { %>
       <div class="clear-filters">
         <button onclick="clearAllFilters()" class="clear-btn">
@@ -400,17 +543,19 @@
 
   <main class="shop-content">
     <div class="search-bar">
-      <input type="text" 
-             class="search-input" 
-             placeholder="Search for products..." 
-             value="<%= searchQuery || '' %>"
-             id="searchInput">
-      <button class="search-button">Search</button>
+      <input 
+        type="text" 
+        class="search-input" 
+        placeholder="Search for products..." 
+        value="<%= searchQuery || '' %>"
+        id="searchInput"
+      >
+      <button class="search-button" onclick="searchProducts()">Search</button>
       <% if (activeFilters.search) { %>
         <button class="clear-search-btn" onclick="clearSearch()">Clear</button>
       <% } %>
     </div>
-    
+
     <div class="sort-bar">
       <div class="sort-dropdown">
         <button class="sort-button" id="sortButton" onclick="toggleSortOptions()">
@@ -483,44 +628,74 @@
     <a class="btn" href="/shop?page=<%= currentPage + 1 %>&sort=<%= currentSort %><%= activeFilters.category ? '&category=' + activeFilters.category : '' %><%= activeFilters.brand ? '&brand=' + activeFilters.brand : '' %><%= activeFilters.search ? '&search=' + encodeURIComponent(activeFilters.search) : '' %>">Next</a>
   <% } %>
 </div>
+<script>
+  function toggleSidebar() {
+    const sidebar = document.getElementById('sidebar');
+    sidebar.classList.toggle('active');
+  }
 
-<%- include("../../views/layouts/user/footer") %>
+  function toggleSortOptions() {
+    const sortOptions = document.getElementById('sortOptions');
+    sortOptions.classList.toggle('active');
+  }
+
+  function sortProducts(sortType) {
+    const sortInput = document.getElementById('sort');
+    sortInput.value = sortType;
+
+    // Construct the URL with current filters
+    const urlParams = new URLSearchParams(window.location.search);
+    urlParams.set('sort', sortType);
+    window.location.search = urlParams.toString();
+  }
+
+  // Close dropdown when clicking outside
+  document.addEventListener('click', function(event) {
+    const sortDropdown = document.querySelector('.sort-dropdown');
+    const sortOptions = document.getElementById('sortOptions');
+    const sortButton = document.getElementById('sortButton');
+
+    if (!sortDropdown.contains(event.target)) {
+      sortOptions.classList.remove('active');
+    }
+  });
+</script>
 
 <script>
-  // Real-time search functionality
+  
   let searchTimeout;
   const searchInput = document.getElementById('searchInput');
   
-  // Add real-time search as user types
+
   searchInput.addEventListener('input', function() {
     clearTimeout(searchTimeout);
     searchTimeout = setTimeout(() => {
       const query = this.value.trim();
-      if (query.length >= 2) { // Start searching after 2 characters
+      if (query.length >= 2) { 
         performSearch(query);
       } else if (query.length === 0) {
-        // Clear search if input is empty
+      
         clearSearch();
       }
-    }, 500); // Wait 500ms after user stops typing
+    }, 500); 
   });
 
   function sortProducts(sortType) {
     const url = new URL(window.location.href);
     const params = new URLSearchParams(url.search);
     
-    // Set the new sort parameter
+  
     params.set('sort', sortType);
     
-    // Reset to first page when sorting
+   
     params.set('page', '1');
     
-    // Preserve existing filters
+
     const category = params.get('category');
     const brand = params.get('brand');
     const search = params.get('search');
     
-    // Build the new URL with all parameters
+  
     let newUrl = `${url.pathname}?sort=${sortType}`;
     if (category) newUrl += `&category=${category}`;
     if (brand) newUrl += `&brand=${brand}`;
@@ -689,13 +864,11 @@
         params.set('sort', currentSort);
       }
       
-      // Set search query
+
       params.set('search', query);
       params.set('page', '1');
       
-      // Clear filters when searching (optional - you can keep them if needed)
-      // params.delete('category');
-      // params.delete('brand');
+    
       
       window.location.href = `${url.pathname}?${params.toString()}`;
     }
@@ -755,13 +928,13 @@
     params.delete('search');
     params.set('page', '1');
     
-    // Clear the search input
+   
     document.querySelector('.search-input').value = '';
     
     window.location.href = `${url.pathname}?${params.toString()}`;
   }
 
-  // Close dropdown when clicking outside
+  
   document.addEventListener('click', function(event) {
     const sortButton = document.getElementById('sortButton');
     const sortOptions = document.getElementById('sortOptions');
@@ -771,3 +944,4 @@
     }
   });
 </script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>

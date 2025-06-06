@@ -136,6 +136,11 @@ const getAllProducts = async (req, res) => {
             .exec();
 
         const count = await Product.countDocuments(query);
+        let sum=0
+        const productSum=productData.forEach((item)=>{
+            sum+=item.salePrice
+
+        })
 
         const category = await Category.find({ isListed: true });
         const brand = await Brand.find({ isBlocked: false });
@@ -148,6 +153,7 @@ const getAllProducts = async (req, res) => {
                 cat: category,
                 brand: brand,
                 search: search, 
+                sum
             });
         } else {
             res.render("page-404");
@@ -160,7 +166,7 @@ const getAllProducts = async (req, res) => {
 
 const blockProduct = async (req, res) => {
     try {
-        let id = req.body.id; // Changed from req.query to req.body
+        let id = req.body.id
 
         await Product.updateOne({ _id: id }, { $set: { isBlocked: true } });
         res.status(HttpStatus.OK).json({ success: true });
@@ -171,7 +177,7 @@ const blockProduct = async (req, res) => {
 
 const unblockProduct = async (req, res) => {
     try {
-        let id = req.body.id; // Changed from req.query to req.body
+        let id = req.body.id; 
         await Product.updateOne({ _id: id }, { $set: { isBlocked: false } });
         res.status(HttpStatus.OK).json({ success: true });
     } catch (error) {
@@ -182,7 +188,7 @@ const unblockProduct = async (req, res) => {
 const getEditProduct = async (req, res) => {
     try {
         const id = req.query.id;
-        console.log("Product ID:", id); // Log the ID
+        console.log("Product ID:", id); 
 
         if (!id) {
             console.error("Product ID is missing");
@@ -202,7 +208,7 @@ const getEditProduct = async (req, res) => {
             product: product,
             cat: category,
             brand: brand,
-            currentPage: "editProduct", // Use a string instead of a variable `page`
+            currentPage: "editProduct", 
         });
     } catch (error) {
         console.error("Error in getEditProduct:", error);
@@ -215,7 +221,7 @@ const editProduct = async (req, res) => {
         const id = req.params.id;
         console.log('Product ID:', id); 
 
-        // current product
+      
         const product = await Product.findById(id);
         if (!product) {
             throw new Error(Messages.PRODUCT_NOT_FOUND);
@@ -236,13 +242,13 @@ const editProduct = async (req, res) => {
             });
         }
 
-        // Handle images
+      
         const images = [];
         if (req.files && req.files.length > 0) {
             images.push(...req.files.map(file => file.filename));
         }
 
-        // Prepare update fields
+     
         const updateFields = {
             productName: data.productName,
             description: data.description,
@@ -254,12 +260,12 @@ const editProduct = async (req, res) => {
             color: data.color
         };
 
-        // Only add images if there are new ones
+        
         if (images.length > 0) {
             updateFields.$push = { productImage: { $each: images } };
         }
 
-        // Update the product
+    
         const updatedProduct = await Product.findByIdAndUpdate(
             id,
             updateFields,

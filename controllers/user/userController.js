@@ -197,16 +197,17 @@ const signup = async (req, res) => {
     const otp = generateOtp();
     const emailSent = await sendVerificationEmail(email, otp);
     if (!emailSent) {
-      return res.render("signup", { message: "Error sending email" });
+      // return res.render("signup", { message: "Error sending email" });
+      console.log('no recipient found .......................................')
     }
 
    
-    req.session.userOtp = otp;
+    req.session.userOtp = otp.toString();
     req.session.otpCreatedAt = Date.now(); 
     req.session.userData = {
-      name,
-      phone,
-      email,
+      name:name.trim(),
+      phone:phone.trim(),
+      email:email.trim().toLowerCase(),
       password,
       referalCode: referalCode || null,
       userReferralCode,
@@ -215,7 +216,14 @@ const signup = async (req, res) => {
     req.session.otpExpiry = Date.now() + 5 * 60 * 1000; 
 
     console.log("OTP Sent", otp);
-    res.render("verify-otp");
+      console.log("Session data stored:", {
+      email: req.session.userData.email,
+      name: req.session.userData.name,
+      otpExpiry: new Date(req.session.otpExpiry)
+    });
+    
+    res.render("verify-otp",{message:'null'});
+
   } catch (error) {
     console.log("Signup error:", error);
     res.redirect("/pageNotFound");
@@ -225,6 +233,12 @@ const signup = async (req, res) => {
 const verifyOtp = async (req, res) => {
   try {
     const { otp } = req.body;
+    if(!otp||otp.toString().trim()===''){
+      return res.status(400).json({
+        success:false,
+        message:'please enter a valid otp'
+      })
+    }
 
     
     if (!req.session.userOtp || !req.session.userData || !req.session.otpExpiry) {

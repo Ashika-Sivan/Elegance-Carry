@@ -21,6 +21,7 @@
 <div class="right mt-5" style="margin-left: 300px;">
     <table class="table table-striped">
         <thead>
+             <p><%=sum%></p>
             <tr>
                 <th scope="col"><b>Product Name</b></th>
                 <th scope="col"><b>Brand</b></th>
@@ -53,6 +54,7 @@
                                 </button>
                             <% } %>
                         </td>
+                      
                         <!-- Block/Unblock Buttons -->
                         <td>
                             <% if(data[i].isBlocked === false) { %>
@@ -83,6 +85,8 @@
         </tbody>
     </table>
 </div>
+ 
+
 
 <div class="container mt-3">
     <nav aria-label="Page navigation">
@@ -119,13 +123,26 @@
 
 <script>
 async function addOffer(productId) {
-    const {value: amount} = await Swal.fire({
+    const {value: amount,isConfirmed} = await Swal.fire({
         title: 'Offer in percentage',
         input: 'number',
         inputLabel: 'percentage',
-        inputPlaceHolder: '%'
+        inputPlaceHolder: '%',
+        showCancelButton:true,
+        confirmButtonText:"Add offer",
+        cancelButtonText:'cancel',
+        inputValidator:(value)=>{
+            if(!value){
+                return 'please enter a percentage!';
+            }
+            if(value<1||value>100){
+                return 'Offer must be between 1 and 100';
+            }
+            return null
+        }
     });
-    $.ajax({
+    if(isConfirmed&&amount){
+         $.ajax({
         url: "/admin/addProductOffer",
         method: 'post',
         data: {
@@ -137,10 +154,13 @@ async function addOffer(productId) {
                 location.reload();
                 Swal.fire('Offer added', 'The Offer has been added', 'success');
             } else {
-                alert(response.message || "Failed to add offer");
+                Swal.fire('Error',response.message || "Failed to add offer",'error');
             }
         }
     });
+
+    }
+   
 }
 
 function removeOffer(productId) {

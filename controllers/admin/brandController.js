@@ -31,9 +31,19 @@ const getBrandPage=async(req,res)=>{
 
 const addBrand = async (req, res) => {
     try {
-        const brandName = req.body.name; 
+        const brandName = req.body.name.trim()
         const existingBrand = await Brand.findOne({ name: brandName });
+
+        if(!brandName){
+            return res.status(HttpStatus.BAD_REQUEST).send('brand name required')
+        }
         
+    const validPattern = /^[A-Za-z0-9\s&().,-]+$/;
+    if (!validPattern.test(brandName)) {
+        return res.status(400).send("Brand name contains invalid characters.");
+     }
+
+     
         if (!existingBrand) {
             const newBrand = new Brand({
                 name: brandName,
@@ -53,7 +63,7 @@ const addBrand = async (req, res) => {
 
 const blockBrand = async (req, res) => {
     try {
-        const id = req.body.id; // Changed from req.query to req.body
+        const id = req.body.id; 
         await Brand.updateOne({ _id: id }, { $set: { isBlocked: true } });
         res.status(HttpStatus.OK).json({ success: true });
     } catch (error) {
@@ -63,7 +73,7 @@ const blockBrand = async (req, res) => {
 
 const unBlockBrand = async (req, res) => {
     try {
-        const id = req.body.id; // Changed from req.query to req.body
+        const id = req.body.id; 
         await Brand.updateOne({ _id: id }, { $set: { isBlocked: false } });
         res.status(HttpStatus.OK).json({ success: true });
     } catch (error) {

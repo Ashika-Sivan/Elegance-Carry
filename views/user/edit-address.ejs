@@ -125,7 +125,7 @@
             <select class="form-input" id="addressType" name="addressType" required>
                 <option value="" disabled>Select Address Type</option>
                 <option value="home" <%= address.addressType === 'home' ? 'selected' : '' %>>Home</option>
-                <option value="Office" <%= address.addressType === 'Office' ? 'selected' : '' %>>Office</option>
+                <option value="office" <%= address.addressType === 'office' ? 'selected' : '' %>>Office</option>
                 <option value="Other" <%= address.addressType === 'Other' ? 'selected' : '' %>>Other</option>
             </select>
         </div>
@@ -316,11 +316,11 @@ function setupInputRestrictions() {
     });
 }
 
-// Main form validation
+
 function validateForm() {
     const requiredFields = ["addressType", "name", "city", "landMark", "state", "pincode", "phone", "altPhone"];
     
-    // Check required fields
+
     for (const field of requiredFields) {
         const input = document.getElementById(field);
         if (!input.value.trim()) {
@@ -333,7 +333,7 @@ function validateForm() {
         }
     }
 
-    // Validate name
+  
     const name = document.getElementById('name').value;
     const nameValidation = isValidName(name);
     if (!nameValidation.valid) {
@@ -345,7 +345,7 @@ function validateForm() {
         return false;
     }
 
-    // Validate pincode
+
     const pincode = document.getElementById('pincode').value;
     const pincodeValidation = isValidPincode(pincode);
     if (!pincodeValidation.valid) {
@@ -357,7 +357,7 @@ function validateForm() {
         return false;
     }
 
-    // Validate phone number
+  
     const phoneNumber = document.getElementById('phone').value;
     const phoneValidation = isValidPhoneNumber(phoneNumber);
     if (!phoneValidation.valid) {
@@ -369,7 +369,7 @@ function validateForm() {
         return false;
     }
 
-    // Validate alternate phone number
+ 
     const altPhoneNumber = document.getElementById('altPhone').value;
     const altPhoneValidation = isValidPhoneNumber(altPhoneNumber);
     if (!altPhoneValidation.valid) {
@@ -381,7 +381,7 @@ function validateForm() {
         return false;
     }
 
-    // Check if phone numbers are different
+
     if (phoneNumber === altPhoneNumber) {
         Swal.fire({
             title: 'Phone Number Error',
@@ -394,20 +394,21 @@ function validateForm() {
     return true;
 }
 
-// Initialize form validation
+
 document.addEventListener('DOMContentLoaded', function() {
-    // Set up input restrictions
+   
     setupInputRestrictions();
 
-    // Set up form submission handling
+    
     const form = document.getElementById('addressForm');
     form.addEventListener('submit', function(event) {
-        event.preventDefault(); // Always prevent default first
+        event.preventDefault();
         if (validateForm()) {
-            this.submit(); // Only submit if validation passes
+            this.submit(); 
         }
     });
 });
+
 </script>
 
 <%- include("../../views/layouts/user/footer") %>

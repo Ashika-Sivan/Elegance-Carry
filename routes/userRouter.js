@@ -64,6 +64,7 @@ router.post("/addAddress",userAuth,profileController.postAddAddress);
 router.get("/editAddress", userAuth, profileController.editAddress);
 router.post("/editAddress",userAuth,profileController.postEditAddress)///PENDING
 router.delete("/deleteAddress/:id", userAuth, profileController.deleteAddress);
+
 //cart management
 router.get("/cart",userAuth,cartController.loadCartPage)
 router.post("/cart",userAuth,cartController.postAddToCart)

@@ -58,6 +58,7 @@ const productDetails = async (req, res) => {
 //this controller is for guest users
 const loadShopPage = async (req, res) => {
     try {
+        const userId=req.session.user
         const page = parseInt(req.query.page) || 1;
         const limit = 12;
         const skip = (page - 1) * limit;
@@ -124,6 +125,8 @@ const loadShopPage = async (req, res) => {
             .limit(limit)
             .populate('category')
             .populate('brand');
+
+      
 
         const totalProducts = await Product.countDocuments(filterQuery);
         const totalPages = Math.ceil(totalProducts / limit);

@@ -127,47 +127,54 @@
             isOtpExpired = false;
             startOtpTimer();
         }
+function validateOtpForm() {
+    const otpInput = document.getElementById('otp').value;
 
-        function validateOtpForm() {
-            const otpInput = document.getElementById('otp').value;
-            
-            // Check if OTP is expired before making the request
-            if (isOtpExpired) {
+    if (isOtpExpired) {
+        Swal.fire({
+            icon: 'error',
+            title: 'OTP Expired',
+            text: 'Your verification code has expired. Please request a new code.'
+        });
+        return false;
+    }
+
+    $.ajax({
+        type: 'POST',
+        url: '/verify-passForgot-otp',
+        data: { otp: otpInput },
+        success: function(response) {
+            if (response.success) {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'OTP Verified',
+                    text: 'Your OTP has been verified successfully!',
+                    confirmButtonText: 'Continue'
+                }).then(() => {
+                    window.location.href = '/reset-password';
+                });
+            } else {
                 Swal.fire({
                     icon: 'error',
-                    title: 'OTP Expired',
-                    text: 'Your verification code has expired. Please request a new code.'
+                    title: 'Invalid OTP',
+                    text: response.message || 'The OTP you entered is invalid. Please try again.'
                 });
-                return false;
             }
-
-            $.ajax({
-                type: 'POST',
-                url: '/verify-passForgot-otp',
-                data: { otp: otpInput },
-                success: function(response) {
-                    if (response.success) {
-                        window.location.href = '/reset-password';
-                    } else {
-                        // Show error popup for invalid OTP
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Invalid OTP',
-                            text: response.message || 'The OTP you entered is invalid. Please try again.'
-                        });
-                    }
-                },
-                error: function() {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Error',
-                        text: 'Something went wrong. Please try again.'
-                    });
-                }
+        },
+        error: function() {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'Something went wrong. Please try again.'
             });
-            return false;
         }
-function resendOtp() {
+    });
+
+    return false;
+}
+
+
+        function resendOtp() {
     const resendButton = document.querySelector('.resend-button');
     resendButton.disabled = true;
 

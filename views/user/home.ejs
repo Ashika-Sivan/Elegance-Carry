@@ -1,6 +1,6 @@
 <%- include("../layouts/user/header.ejs") %>
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
 <style>
 /* General Styles */
 body {
@@ -9,12 +9,45 @@ body {
   padding: 0;
 }
 
-
-.hero-banner img {
-  object-fit: cover;
-  height: 400px;
+/* Hero Section */
+.hero-section {
+  position: relative;
 }
 
+.carousel-item img {
+  width: 100%;
+  height: 400px;
+  object-fit: cover;
+}
+
+.carousel-caption {
+  position: absolute;
+  bottom: 20%;
+  left: 5%;
+  right: 5%;
+  text-align: left;
+  color: #fff;
+  background: rgba(0, 0, 0, 0.5);
+  padding: 15px;
+  border-radius: 8px;
+}
+
+.banner-title {
+  font-size: clamp(1.5rem, 5vw, 2.5rem);
+  font-weight: bold;
+  margin-bottom: 8px;
+}
+
+.banner-subtitle {
+  font-size: clamp(0.9rem, 3vw, 1.2rem);
+}
+
+.carousel-control-prev-icon,
+.carousel-control-next-icon {
+  filter: invert(100%);
+}
+
+/* Best Seller Section */
 .best-seller .card {
   border: 1px solid #ddd;
   border-radius: 8px;
@@ -25,69 +58,36 @@ body {
   transform: translateY(-5px);
 }
 
-.wishlist-btn {
-  font-size: 1.2rem;
-  color: #ff0000;
+.best-seller .card-img-top {
+  max-height: 150px;
+  object-fit: contain;
+  padding: 0.5rem;
+  background-color: #fff;
 }
 
-.featured-product img {
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+.best-seller .card-title {
+  font-size: clamp(0.9rem, 2.5vw, 1rem);
+  font-weight: 600;
 }
 
-@media (max-width: 768px) {
-  .hero-banner img {
-    height: 200px;
-  }
-  .best-seller .card-img-top {
-    max-height: 120px;
-  }
+.best-seller .card-body {
+  padding: 0.75rem;
 }
 
-
-
-/* Hero Section Styles */
-.hero-section {
-  position: relative;
+.best-seller .btn-sm {
+  font-size: clamp(0.75rem, 2vw, 0.85rem);
+  padding: 0.4rem 0.8rem;
 }
 
-.carousel-item img {
-  height: 400px;
-  object-fit: cover;
-}
-
-.carousel-caption {
-  position: absolute;
-  bottom: 20%;
-  left: 10%;
-  right: 10%;
-  text-align: left;
-  color: #fff;
-  background: rgba(0, 0, 0, 0.5);
-  padding: 20px;
-  border-radius: 8px;
-}
-
-.banner-title {
-  font-size: 2.5rem;
-  font-weight: bold;
-  margin-bottom: 10px;
-}
-
-.banner-subtitle {
-  font-size: 1.2rem;
-}
-
-.carousel-control-prev-icon,
-.carousel-control-next-icon {
-  filter: invert(100%);
-}.featured-product {
+/* Featured Products Section */
+.featured-product {
   background-color: #f8f9fa;
-  padding: 40px 0;
+  padding: 2rem 0;
 }
 
 .featured-product .card {
   border: none;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
   transition: transform 0.3s ease;
 }
 
@@ -103,218 +103,305 @@ body {
 }
 
 .featured-product .card-title {
-  font-size: 1rem;
+  font-size: clamp(0.9rem, 2.5vw, 1rem);
   font-weight: 600;
   margin-bottom: 0.5rem;
 }
 
 .featured-product .current-price {
-  font-size: 1.1rem;
+  font-size: clamp(0.95rem, 2.5vw, 1.1rem);
   font-weight: 600;
   color: #000;
 }
 
 .featured-product .original-price {
-  font-size: 0.9rem;
+  font-size: clamp(0.8rem, 2vw, 0.9rem);
   color: #6c757d;
 }
 
 .featured-product .btn-primary {
   background-color: #ff3f6c;
   border: none;
-  padding: 0.5rem 1rem;
+  padding: 0.4rem 0.8rem;
+  font-size: clamp(0.75rem, 2vw, 0.85rem);
 }
 
 .featured-product .btn-primary:hover {
-  background-color: #ff3f6c;
+  background-color: #e0355e;
 }
 
+/* Wishlist Button */
 .wishlist-btn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background-color: white;
+  border: none;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
   cursor: pointer;
-  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s ease;
 }
 
-@media (max-width: 768px) {
-  .featured-product .card-img-top {
-    height: 150px;
-  }
+.wishlist-btn:hover {
+  transform: scale(1.1);
 }
 
-.wishlist-btn {
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    background-color: white;
-    border: none;
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
-    cursor: pointer;
-    z-index: 1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    transition: all 0.2s ease;
-  }
+.wishlist-btn i {
+  color: #9e9e9e;
+  font-size: clamp(14px, 2.5vw, 16px);
+  transition: color 0.2s ease;
+}
 
-  .wishlist-btn:hover {
-    transform: scale(1.1);
-  }
+.wishlist-btn.in-wishlist i,
+.wishlist-btn i.in-wishlist {
+  color: #ff3f6c;
+}
 
-  .wishlist-btn i {
-    color: #9e9e9e;
-    font-size: 16px;
-    transition: all 0.2s ease;
-  }
-
-  .wishlist-btn.in-wishlist i,
-  .wishlist-btn i.in-wishlist {
-    color: #ff3f6c;
-  }
-  .badge {
-  font-size: 0.75rem;
-  padding: 5px 10px;
+/* Badge */
+.badge {
+  font-size: clamp(0.65rem, 2vw, 0.75rem);
+  padding: 5px 8px;
   z-index: 1;
 }
 
 .badge small {
-  display: block;
-  font-size: 0.6rem;
+  font-size: clamp(0.55rem, 1.5vw, 0.6rem);
   opacity: 0.8;
 }
+
+/* Responsive Adjustments */
+@media (max-width: 992px) {
+  .carousel-item img {
+    height: 300px;
+  }
+
+  .carousel-caption {
+    padding: 10px;
+    bottom: 15%;
+  }
+
+  .banner-title {
+    font-size: clamp(1.2rem, 4vw, 2rem);
+  }
+
+  .banner-subtitle {
+    font-size: clamp(0.8rem, 3vw, 1rem);
+  }
+
+  .best-seller .card-img-top {
+    max-height: 130px;
+  }
+
+  .featured-product .card-img-top {
+    height: 160px;
+  }
+}
+
+@media (max-width: 576px) {
+  .carousel-item img {
+    height: 200px;
+  }
+
+  .carousel-caption {
+    display: block; /* Show caption on mobile */
+    padding: 8px;
+    bottom: 10%;
+    left: 3%;
+    right: 3%;
+  }
+
+  .banner-title {
+    font-size: clamp(1rem, 3.5vw, 1.5rem);
+  }
+
+  .banner-subtitle {
+    font-size: clamp(0.7rem, 2.5vw, 0.9rem);
+  }
+
+  .best-seller .card-img-top {
+    max-height: 120px;
+  }
+
+  .best-seller .card-body {
+    padding: 0.5rem;
+  }
+
+  .best-seller .btn-sm {
+    padding: 0.3rem 0.6rem;
+    font-size: clamp(0.7rem, 2vw, 0.8rem);
+  }
+
+  .featured-product .card-img-top {
+    height: 140px;
+  }
+
+  .featured-product .card-body {
+    padding: 0.5rem;
+  }
+
+  .featured-product .btn-primary {
+    padding: 0.3rem 0.6rem;
+    font-size: clamp(0.7rem, 2vw, 0.8rem);
+  }
+
+  .wishlist-btn {
+    width: 28px;
+    height: 28px;
+  }
+
+  .wishlist-btn i {
+    font-size: clamp(12px, 2vw, 14px);
+  }
+
+  .badge {
+    font-size: clamp(0.6rem, 1.8vw, 0.7rem);
+    padding: 4px 6px;
+  }
+
+  .badge small {
+    font-size: clamp(0.5rem, 1.5vw, 0.55rem);
+  }
+}
+
 </style>
 
 
-<main>
-  <!-- Hero Section -->
-  <section class="hero-section mb-4">
-    <div id="carouselExampleAutoplaying" class="carousel slide" data-bs-ride="carousel">
-      <div class="carousel-inner">+
-        <div class="carousel-item active">
-          <img src="/home/banner1.jpg" class="d-block w-100" alt="Banner 1" />
-          <div class="carousel-caption d-none d-md-block">
-            <h2 class="banner-title">By The Seine</h2>
-            <p class="banner-subtitle">Sac Seau Cherry Red</p>
+<body>
+  <main>
+    <!-- Hero Section -->
+    <section class="hero-section mb-4">
+      <div id="carouselExampleAutoplaying" class="carousel slide" data-bs-ride="carousel">
+        <div class="carousel-inner">
+          <div class="carousel-item active">
+            <img src="/home/banner1.jpg" class="d-block w-100 img-fluid" alt="Banner 1" />
+            <div class="carousel-caption d-block">
+              <h2 class="banner-title">By The Seine</h2>
+              <p class="banner-subtitle">Sac Seau Cherry Red</p>
+            </div>
+          </div>
+          <div class="carousel-item">
+            <img src="/home/banner2.jpg" class="d-block w-100 img-fluid" alt="Banner 2" />
+            <div class="carousel-caption d-block">
+              <h2 class="banner-title">Elegant Collection</h2>
+              <p class="banner-subtitle">Discover Modern Accessories</p>
+            </div>
+          </div>
+          <div class="carousel-item">
+            <img src="/home/banner3.jpg" class="d-block w-100 img-fluid" alt="Banner 3" />
+            <div class="carousel-caption d-block">
+              <h2 class="banner-title">New Arrivals</h2>
+              <p class="banner-subtitle">Step Into Style</p>
+            </div>
           </div>
         </div>
-        <div class="carousel-item">
-          <img src="/home/banner2.jpg" class="d-block w-100" alt="Banner 2" />
-          <div class="carousel-caption d-none d-md-block">
-            <h2 class="banner-title">Elegant Collection</h2>
-            <p class="banner-subtitle">Discover Modern Accessories</p>
-          </div>
-        </div>
-        <div class="carousel-item">
-          <img src="/home/banner3.jpg" class="d-block w-100" alt="Banner 3" />
-          <div class="carousel-caption d-none d-md-block">
-            <h2 class="banner-title">New Arrivals</h2>
-            <p class="banner-subtitle">Step Into Style</p>
-          </div>
-        </div>
+        <button class="carousel-control-prev" type="button" data-bs-target="#carouselExampleAutoplaying" data-bs-slide="prev">
+          <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+          <span class="visually-hidden">Previous</span>
+        </button>
+        <button class="carousel-control-next" type="button" data-bs-target="#carouselExampleAutoplaying" data-bs-slide="next">
+          <span class="carousel-control-next-icon" aria-hidden="true"></span>
+          <span class="visually-hidden">Next</span>
+        </button>
       </div>
-      <button class="carousel-control-prev" type="button" data-bs-target="#carouselExampleAutoplaying" data-bs-slide="prev">
-        <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-        <span class="visually-hidden">Previous</span>
-      </button>
-      <button class="carousel-control-next" type="button" data-bs-target="#carouselExampleAutoplaying" data-bs-slide="next">
-        <span class="carousel-control-next-icon" aria-hidden="true"></span>
-        <span class="visually-hidden">Next</span>
-      </button>
-    </div>
-  </section>
+    </section>
 
-  <!-- Best Seller Section -->
-  <section class="best-seller mt-4">
-    <div class="container">
-      <h2 class="text-center mb-4">Best Seller</h2>
-      <div class="row g-3">
-        <% products.forEach(product => { %>
-          <div class="col-6 col-md-3">
-            <div class="card h-100 text-center">
-              <button class="wishlist-btn position-absolute top-0 end-0 p-2" 
-                      style="background: none; border: none; cursor: pointer;" 
-                      onclick="toggleWishlist('<%= product._id %>', this)">
-                <i class="fa<%= product.inWishlist ? 's in-wishlist' : 'r' %> fa-heart"></i>
-              </button>
-              <% if (product.activeOffer && product.activeOffer.percentage > 0) { %>
-                <span class="badge bg-danger position-absolute top-0 start-0 m-2">
-                  <%= product.activeOffer.percentage %>% OFF
-                  <small>(<%= product.activeOffer.type === 'product' ? 'Product' : 'Category' %> Offer)</small>
-                </span>
-              <% } %>
-              <a href="/productDetails?id=<%= product._id %>">
-                <img src="/img/<%= product.productImage && product.productImage[0] %>" class="card-img-top img-fluid" alt="<%= product.productName %>" style="max-height: 150px; object-fit: contain;">
-              </a>
-            
-              <div class="card-body">
-                <h5 class="card-title" style="font-size: 1rem;"><%= product.productName %></h5>
-                <p class="text-muted mb-1" style="font-size: 0.9rem;">Brand: <%= product.brand?.name || 'N/A' %></p>
-                <p class="text-muted mb-1" style="font-size: 0.9rem;">Category: <%= product.category?.name || 'N/A' %></p>
-                <p class="mb-1">₹<%= product.salePrice.toLocaleString('en-IN') %>
-                  <span class="text-muted">
-                    <strike>₹<%= product.regularPrice.toLocaleString('en-IN') %></strike>
+    <!-- Best Seller Section -->
+    <section class="best-seller mt-4">
+      <div class="container">
+        <h2 class="text-center mb-4">Best Seller</h2>
+        <div class="row g-3">
+          <% products.forEach(product => { %>
+            <div class="col-6 col-md-3">
+              <div class="card h-100 text-center">
+                <button class="wishlist-btn position-absolute top-0 end-0 p-2" 
+                        data-product-id="<%= product._id %>"
+                        onclick="toggleWishlist('<%= product._id %>', this)">
+                  <i class="fa<%= product.inWishlist ? 's in-wishlist' : 'r' %> fa-heart"></i>
+                </button>
+                <% if (product.activeOffer && product.activeOffer.percentage > 0) { %>
+                  <span class="badge bg-danger position-absolute top-0 start-0 m-2">
+                    <%= product.activeOffer.percentage %>% OFF
+                    <small>(<%= product.activeOffer.type === 'product' ? 'Product' : 'Category' %> Offer)</small>
                   </span>
-                </p>
-                <button class="btn btn-sm" style="background-color: #ff3f6c; border-color: #ff3f6c; color: white;" onclick="addToCart('<%=product._id%>')">Add to Cart</button>
+                <% } %>
+                <a href="/productDetails?id=<%= product._id %>">
+                  <img src="/img/<%= product.productImage && product.productImage[0] %>" class="card-img-top img-fluid" alt="<%= product.productName %>">
+                </a>
+                <div class="card-body">
+                  <h5 class="card-title"><%= product.productName %></h5>
+                  <p class="text-muted mb-1">Brand: <%= product.brand?.name || 'N/A' %></p>
+                  <p class="text-muted mb-1">Category: <%= product.category?.name || 'N/A' %></p>
+                  <p class="mb-1">₹<%= product.salePrice.toLocaleString('en-IN') %>
+                    <span class="text-muted">
+                      <strike>₹<%= product.regularPrice.toLocaleString('en-IN') %></strike>
+                    </span>
+                  </p>
+                  <button class="btn btn-sm" style="background-color: #ff3f6c; border-color: #ff3f6c; color: white;" onclick="addToCart('<%= product._id %>')">Add to Cart</button>
+                </div>
               </div>
             </div>
-          </div>          
-        <% }) %>
-      </div>
-    </div>
-  </section>
-
-
-
-
-<section class="featured-product mt-5 mb-5">
-  <div class="container">
-    <h2 class="text-center mb-4">Featured Products</h2>
-    <div class="row g-4">
-      <% 
-        let displayProducts = featuredProducts && featuredProducts.length > 0 ? 
-          featuredProducts : 
-          products.sort(() => 0.5 - Math.random()).slice(0, 3);
-      %>
-      
-      <% if (displayProducts && displayProducts.length > 0) { %>
-        <% displayProducts.forEach(product => { %>
-          <div class="col-12 col-md-4">
-            <div class="card h-100">
-              <button class="wishlist-btn position-absolute top-0 end-0 p-2" 
-                      style="background: none; border: none; cursor: pointer;" 
-                      onclick="toggleWishlist('<%= product._id %>', this)">
-                      <i class="fa<%= product.inWishlist ? 's in-wishlist' : 'r' %> fa-heart"></i>
-              </button>
-              <% if (product.activeOffer && product.activeOffer.percentage > 0) { %>
-                <span class="badge bg-danger position-absolute top-0 start-0 m-2">
-                  <%= product.activeOffer.percentage %>% OFF
-                </span>
-              <% } %>
-              <a href="/productDetails?id=<%= product._id %>">
-                <img 
-                  src="/img/<%= product.productImage[0] || 'placeholder.jpg' %>" 
-                  class="card-img-top" 
-                  alt="<%= product.productName %>">
-              </a>
-              <div class="card-body">
-                <h5 class="card-title"><%= product.productName %></h5>
-                <p class="text-muted">Brand: <%= product.brand?.name || 'N/A' %></p>
-                <p>Price: ₹<%= product.salePrice.toLocaleString('en-IN') %></p>
-                <button class="btn btn-sm" style="background-color: #ff3f6c; border-color: #ff3f6c; color: white;" onclick="addToCart('<%=product._id%>')">Add to Cart</button>
-              </div>
-            </div>
-          </div>
-        <% }); %>
-      <% } else { %>
-        <div class="col-12">
-          <p class="text-center">No products available</p>
+          <% }) %>
         </div>
-      <% } %>
-    </div>
-  </div>
-</section>
+      </div>
+    </section>
+
+    <!-- Featured Products Section -->
+    <section class="featured-product mt-5 mb-5">
+      <div class="container">
+        <h2 class="text-center mb-4">Featured Products</h2>
+        <div class="row g-4">
+          <% 
+            let displayProducts = featuredProducts && featuredProducts.length > 0 ? 
+              featuredProducts : 
+              products.sort(() => 0.5 - Math.random()).slice(0, 3);
+          %>
+          <% if (displayProducts && displayProducts.length > 0) { %>
+            <% displayProducts.forEach(product => { %>
+              <div class="col-12 col-md-4">
+                <div class="card h-100">
+                  <button class="wishlist-btn position-absolute top-0 end-0 p-2" 
+                          data-product-id="<%= product._id %>"
+                          onclick="toggleWishlist('<%= product._id %>', this)">
+                    <i class="fa<%= product.inWishlist ? 's in-wishlist' : 'r' %> fa-heart"></i>
+                  </button>
+                  <% if (product.activeOffer && product.activeOffer.percentage > 0) { %>
+                    <span class="badge bg-danger position-absolute top-0 start-0 m-2">
+                      <%= product.activeOffer.percentage %>% OFF
+                    </span>
+                  <% } %>
+                  <a href="/productDetails?id=<%= product._id %>">
+                    <img 
+                      src="/img/<%= product.productImage[0] || 'placeholder.jpg' %>" 
+                      class="card-img-top img-fluid" 
+                      alt="<%= product.productName %>">
+                  </a>
+                  <div class="card-body">
+                    <h5 class="card-title"><%= product.productName %></h5>
+                    <p class="text-muted">Brand: <%= product.brand?.name || 'N/A' %></p>
+                    <p>Price: ₹<%= product.salePrice.toLocaleString('en-IN') %></p>
+                    <button class="btn btn-sm" style="background-color: #ff3f6c; border-color: #ff3f6c; color: white;" onclick="addToCart('<%= product._id %>')">Add to Cart</button>
+                  </div>
+                </div>
+              </div>
+            <% }); %>
+          <% } else { %>
+            <div class="col-12">
+              <p class="text-center">No products available</p>
+            </div>
+          <% } %>
+        </div>
+      </div>
+    </section>
+  </main>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
 
 <script>
 function addToCart(productId) {

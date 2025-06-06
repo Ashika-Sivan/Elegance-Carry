@@ -38,15 +38,17 @@
       <div class="card-body">
           <div class="row">
               <div class="col-md-3">
-                  <form method="post" action="/admin/addBrand" enctype="multipart/form-data">
-                      <div class="mb-4">
-                          <label for="product_name" class="form-label">Brand Name</label>
-                          <input type="text" name="name" placeholder="Type here" class="form-control" />
-                      </div>
-                      <div class="d-grid">
-                          <button class="btn btn-primary mt-20" type="submit">Add Brand</button>
-                      </div>
-                  </form>
+             <form id="addBrandForm" method="post" action="/admin/addBrand" enctype="multipart/form-data" onsubmit="return validateBrandForm()">
+  <div class="mb-4">
+    <label for="brandName" class="form-label">Brand Name</label>
+    <input type="text" id="brandName" name="name" placeholder="Type here" class="form-control" />
+    <div id="brandNameError" class="error-message"></div>
+  </div>
+  <div class="d-grid">
+    <button class="btn btn-primary mt-20" type="submit">Add Brand</button>
+  </div>
+</form>
+
               </div>
               <div class="col-md-7 ml-105">
                   <div class="table-responsive">
@@ -142,7 +144,7 @@ async function confirmBlock(brandId, action) {
                       `The brand has been ${actionText}ed.`,
                       'success'
                   ).then(() => {
-                      location.reload(); // Refresh to show updated status
+                      location.reload(); 
                   });
               } else {
                   throw new Error('Request failed');
@@ -163,6 +165,31 @@ async function confirmBlock(brandId, action) {
       return confirm("Are You Sure You Want to Delete this Brand")
     }
   </script>
+
+
+<script>
+function validateBrandForm() {
+  const brandInput = document.getElementById("brandName");
+  const errorDiv = document.getElementById("brandNameError");
+  const name = brandInput.value.trim();
+
+  errorDiv.textContent = ""; 
+
+  if (name === "") {
+    errorDiv.textContent = "Brand name cannot be empty or just spaces.";
+    return false; 
+  }
+
+  const namePattern = /^[A-Za-z0-9\s&().,-]+$/;
+  if (!namePattern.test(name)) {
+    errorDiv.textContent = "Brand name contains invalid characters.";
+    return false;
+  }
+
+  return true; 
+}
+</script>
+
 
 
   <%- include("../../views/layouts/admin/footer") %>

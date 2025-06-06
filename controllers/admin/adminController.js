@@ -23,7 +23,7 @@ const pageerror = async (req, res) => {
 
 
 const loadLogin = async (req, res) => {
-    // console.log('Accessed /admin/login');
+    console.log('Accessed /admin/login');
     try {
         if (req.session.admin) {
             console.log('Admin is already logged in');
@@ -49,7 +49,7 @@ const login = async (req, res) => {
                 req.session.admin = true;
                 return res.redirect('/admin/dashboard'); // Redirect to /admin
             } else {
-                return res.render('admin-login', { error: Messages.INV });
+                return res.render('admin-login', { error: Messages.INVALID_CREDENTIALS });
             }
         } else {
             return res.render('admin-login', { error: Messages.INVALID_CREDENTIALS });
@@ -140,7 +140,6 @@ const getSalesReport = async (req, res) => {
                 { $group: { _id: null, totalRevenue: { $sum: { $ifNull: ["$finalAmount", 0] } } } },
             ]);
             totalRevenue = totalRevenueResult[0]?.totalRevenue || 0;
-            // console.log("Total Revenue:", totalRevenue);
         } catch (aggError) {
             console.error("Error calculating total revenue:", aggError.message, aggError.stack);
             totalRevenue = 0;
@@ -217,7 +216,6 @@ const getSalesReport = async (req, res) => {
                 },
             ]);
             totalDiscount = totalDiscountResult[0]?.totalDiscount || 0;
-            // console.log("Total Discount:", totalDiscount);
         } catch (discountError) {
             console.error("Error calculating total discount:", discountError.message, discountError.stack);
             totalDiscount = 0;
@@ -262,17 +260,7 @@ const getSalesReport = async (req, res) => {
                 }
 
                 orders = orders.filter(order => order && order.user && order.user._id && order.user.name && order.user.email);
-                // console.log("Valid Orders:", orders.map(order => ({
-                //     orderId: order.orderId,
-                //     userId: order.user._id,
-                //     userName: order.user.name,
-                //     userEmail: order.user.email,
-                //     createdAt: order.createdAt,
-                //     status: order.status,
-                //     discount: order.discount,
-                //     finalAmount: order.finalAmount,
-                //     paymentMethod: order.paymentMethod
-                // })));
+             
             }
         } catch (ordersError) {
             console.error("Error fetching orders:", ordersError.message, ordersError.stack);
@@ -1275,7 +1263,6 @@ const loadDashboard = async (req, res) => {
             { $limit: 10 }
         ]);
 
-        // Top 10 categories
         const topCategories = await Order.aggregate([
             {
                 $match: {

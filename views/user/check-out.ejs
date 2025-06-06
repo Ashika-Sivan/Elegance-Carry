@@ -1,575 +1,863 @@
 <%- include("../layouts/user/header.ejs") %>
-<%- include("../layouts/user/sidebar.ejs") %>
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-<body>
-    <style>
-        body {
-            font-family: 'Whitney', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            margin: 0;
-            padding: 0;
-            background-color: #fafbfc;
-            color: #282c3f;
+
+<style>
+    body {
+        font-family: 'Whitney', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        margin: 0;
+        padding: 0;
+        background-color: #fafbfc;
+        color: #282c3f;
+    }
+
+    /* Container for Sidebar and Main Content */
+    .container-wrapper {
+        display: flex;
+        max-width: 1400px;
+        margin: 20px auto;
+        gap: 20px;
+        padding: 0 15px;
+    }
+
+    /* Main Content */
+    .main-content {
+        flex: 1;
+    }
+
+    .checkout-container {
+        display: grid;
+        grid-template-columns: 67% 30%;
+        gap: 3%;
+        padding: 0 20px;
+    }
+
+    .checkout-left {
+        order: 1;
+    }
+
+    .checkout-right {
+        order: 2;
+        position: sticky;
+        top: 20px;
+        height: fit-content;
+    }
+
+    .checkout-section {
+        background: white;
+        border-radius: 4px;
+        box-shadow: 0 1px 3px rgba(40,44,63,0.1);
+        margin-bottom: 16px;
+        padding: 16px;
+    }
+
+    .section-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 16px;
+    }
+
+    .section-title {
+        font-size: 16px;
+        font-weight: 600;
+        text-transform: uppercase;
+        color: #282c3f;
+        margin: 0;
+    }
+
+    .edit-button {
+        color: #ff3f6c;
+        font-size: 14px;
+        font-weight: 600;
+        border: none;
+        background: none;
+        cursor: pointer;
+        padding: 8px 16px;
+    }
+
+    .contact-info {
+        font-size: 14px;
+        line-height: 1.5;
+    }
+
+    /* Address Styles */
+    .address-item {
+        padding: 16px;
+        border: 1px solid #eaeaec;
+        border-radius: 4px;
+        margin-bottom: 12px;
+        position: relative;
+    }
+
+    .address-type {
+        font-size: 14px;
+        color: #535766;
+        margin-bottom: 8px;
+        font-weight: 600;
+        text-transform: uppercase;
+    }
+
+    .address-details {
+        font-size: 14px;
+        line-height: 1.6;
+        padding-right: 100px;
+    }
+
+    .address-actions {
+        position: absolute;
+        top: 16px;
+        right: 16px;
+        display: flex;
+        gap: 12px;
+    }
+
+    .address-action-btn {
+        padding: 6px 12px;
+        border-radius: 4px;
+        font-size: 12px;
+        font-weight: 600;
+        cursor: pointer;
+        text-transform: uppercase;
+        transition: all 0.3s ease;
+    }
+
+    .edit-address-btn {
+        color: #526cd0;
+        border: 1px solid #526cd0;
+        background: transparent;
+    }
+
+    .delete-address-btn {
+        color: #ff3f6c;
+        border: 1px solid #ff3f6c;
+        background: transparent;
+    }
+
+    .edit-address-btn:hover {
+        background: #f5f6ff;
+    }
+
+    .delete-address-btn:hover {
+        background: #fff1f4;
+    }
+
+    /* Payment Methods */
+    .payment-method {
+        display: flex;
+        align-items: center;
+        padding: 16px;
+        border: 1px solid #eaeaec;
+        border-radius: 4px;
+        margin-bottom: 12px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .payment-method:hover {
+        border-color: #ff3f6c;
+        background: #fff1f4;
+    }
+
+    .payment-method input[type="radio"] {
+        margin-right: 12px;
+    }
+
+    .payment-method label {
+        font-size: 14px;
+        font-weight: 500;
+    }
+
+    /* Coupon Section */
+    .coupon-section {
+        border-bottom: 1px solid #eaeaec;
+        margin-bottom: 16px;
+        padding-bottom: 16px;
+    }
+
+    .coupon-header {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 12px;
+        cursor: pointer;
+        padding: 8px 0;
+    }
+
+    .coupon-icon {
+        color: #526cd0;
+        font-size: 20px;
+    }
+
+    .coupon-title {
+        font-size: 14px;
+        font-weight: 600;
+        color: #282c3f;
+        flex-grow: 1;
+    }
+
+    .coupon-toggle {
+        color: #ff3f6c;
+        font-size: 14px;
+        font-weight: 600;
+    }
+
+    .coupon-content {
+        background: #fff;
+        padding: 16px;
+        border: 1px solid #eaeaec;
+        border-radius: 4px;
+    }
+
+    .coupon-input-group {
+        display: flex;
+        align-items: center;
+        border: 1px solid #d4d5d9;
+        border-radius: 4px;
+        padding: 4px;
+        background: #fff;
+    }
+
+    .coupon-input-group input {
+        flex: 1;
+        border: none;
+        padding: 8px 12px;
+        font-size: 14px;
+        outline: none;
+    }
+
+    .coupon-input-group button {
+        padding: 8px 16px;
+        background: #ff3f6c;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        font-weight: 600;
+        font-size: 13px;
+        text-transform: uppercase;
+        cursor: pointer;
+    }
+
+    .available-offers {
+        margin-top: 16px;
+    }
+
+    .offer-item {
+        display: flex;
+        align-items: flex-start;
+        gap: 8px;
+        padding: 8px 0;
+        font-size: 13px;
+        color: #535766;
+    }
+
+    .offer-icon {
+        color: #03a685;
+        font-size: 16px;
+        margin-top: 2px;
+    }
+
+    /* Order Summary Styles */
+    .order-item {
+        display: flex;
+        padding: 16px 0;
+        border-bottom: 1px solid #eaeaec;
+    }
+
+    .order-image img {
+        width: 60px;
+        height: 80px;
+        object-fit: cover;
+        border-radius: 4px;
+    }
+
+    .order-details {
+        margin-left: 16px;
+        flex: 1;
+    }
+
+    .product-name {
+        font-size: 14px;
+        font-weight: 600;
+        margin-bottom: 4px;
+        color: #282c3f;
+    }
+
+    .product-size-qty {
+        font-size: 13px;
+        color: #535766;
+        margin-bottom: 4px;
+    }
+
+    .product-price {
+        font-size: 14px;
+        font-weight: 600;
+        color: #282c3f;
+    }
+
+    /* Price Summary Styles */
+    .price-summary {
+        font-size: 14px;
+    }
+
+    .price-row {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 12px;
+        color: #535766;
+    }
+
+    .price-total {
+        padding-top: 12px;
+        border-top: 1px solid #eaeaec;
+        font-weight: 600;
+        font-size: 15px;
+        color: #282c3f;
+    }
+
+    .discount-green {
+        color: #03a685;
+    }
+
+    .apply-coupon-btn {
+        border-radius: 4px;
+        color: #ff3f6c;
+        background-color: #ffff;
+        border-color: #ff3f6c;
+    }
+
+    .checkout-button {
+        width: 100%;
+        padding: 14px;
+        background: #ff3f6c;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        font-size: 14px;
+        font-weight: 600;
+        text-transform: uppercase;
+        cursor: pointer;
+        margin-top: 16px;
+        transition: background 0.3s ease;
+    }
+
+    .checkout-button:hover {
+        background: #ff527b;
+    }
+
+    /* Coupon Dropdown Styles */
+    .coupon-dropdown-container {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        margin-top: 10px;
+    }
+
+    .coupon-dropdown {
+        flex: 1;
+        padding: 10px;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        font-size: 14px;
+        background-color: white;
+        cursor: pointer;
+    }
+
+    .coupon-dropdown:focus {
+        outline: none;
+        border-color: #ff3f6c;
+    }
+
+    .apply-coupon-btn, .remove-coupon-btn {
+        padding: 10px 15px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 14px;
+        font-weight: 500;
+        transition: background-color 0.3s;
+    }
+
+    .apply-coupon-btn {
+        background-color: #ff3f6c;
+        color: white;
+    }
+
+    .apply-coupon-btn:hover {
+        background-color: #e6356a;
+    }
+
+    .remove-coupon-btn {
+        background-color: #6c757d;
+        color: white;
+    }
+
+    .remove-coupon-btn:hover {
+        background-color: #5a6268;
+    }
+
+    .coupon-dropdown:disabled {
+        background-color: #f8f9fa;
+        cursor: not-allowed;
+    }
+
+    /* Responsive Design */
+    @media (max-width: 1024px) {
+        .container-wrapper {
+            flex-direction: column;
+        }
+
+        .main-content {
+            margin-left: 0;
         }
 
         .checkout-container {
-            max-width: 1000px;
-            margin: 20px auto;
-            display: grid;
-            grid-template-columns: 67% 30%;
-            gap: 3%;
-            padding: 0 20px;
-        }
-
-        .checkout-left {
-            order: 1;
+            grid-template-columns: 1fr;
+            padding: 10px;
         }
 
         .checkout-right {
+            order: 1;
+            position: relative;
+            top: 0;
+        }
+
+        .checkout-left {
             order: 2;
-            position: sticky;
-            top: 20px;
-            height: fit-content;
         }
+    }
 
+    @media (max-width: 768px) {
         .checkout-section {
-            background: white;
-            border-radius: 4px;
-            box-shadow: 0 1px 3px rgba(40,44,63,0.1);
-            margin-bottom: 16px;
-            padding: 16px;
-        }
-
-        .section-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 16px;
+            padding: 12px;
+            margin-bottom: 12px;
         }
 
         .section-title {
-            font-size: 16px;
-            font-weight: 600;
-            text-transform: uppercase;
-            color: #282c3f;
-            margin: 0;
+            font-size: 14px;
         }
 
         .edit-button {
-            color: #ff3f6c;
-            font-size: 14px;
-            font-weight: 600;
-            border: none;
-            background: none;
-            cursor: pointer;
-            padding: 8px 16px;
+            font-size: 12px;
+            padding: 6px 12px;
         }
 
         .contact-info {
-            font-size: 14px;
-            line-height: 1.5;
+            font-size: 13px;
         }
 
-        /* Address Styles */
         .address-item {
-            padding: 16px;
-            border: 1px solid #eaeaec;
-            border-radius: 4px;
-            margin-bottom: 12px;
-            position: relative;
+            padding: 12px;
         }
 
         .address-type {
-            font-size: 14px;
-            color: #535766;
-            margin-bottom: 8px;
-            font-weight: 600;
-            text-transform: uppercase;
+            font-size: 13px;
         }
 
         .address-details {
-            font-size: 14px;
-            line-height: 1.6;
-            padding-right: 100px;
+            font-size: 13px;
+            padding-right: 0;
         }
 
         .address-actions {
-            position: absolute;
-            top: 16px;
-            right: 16px;
-            display: flex;
-            gap: 12px;
+            position: relative;
+            top: 0;
+            right: 0;
+            margin-top: 10px;
         }
 
         .address-action-btn {
-            padding: 6px 12px;
-            border-radius: 4px;
-            font-size: 12px;
-            font-weight: 600;
-            cursor: pointer;
-            text-transform: uppercase;
-            transition: all 0.3s ease;
+            padding: 5px 10px;
+            font-size: 11px;
         }
 
-        .edit-address-btn {
-            color: #526cd0;
-            border: 1px solid #526cd0;
-            background: transparent;
-        }
-
-        .delete-address-btn {
-            color: #ff3f6c;
-            border: 1px solid #ff3f6c;
-            background: transparent;
-        }
-
-        .edit-address-btn:hover {
-            background: #f5f6ff;
-        }
-
-        .delete-address-btn:hover {
-            background: #fff1f4;
-        }
-
-        /* Payment Methods */
         .payment-method {
-            display: flex;
-            align-items: center;
-            padding: 16px;
-            border: 1px solid #eaeaec;
-            border-radius: 4px;
-            margin-bottom: 12px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .payment-method:hover {
-            border-color: #ff3f6c;
-            background: #fff1f4;
-        }
-
-        .payment-method input[type="radio"] {
-            margin-right: 12px;
+            padding: 12px;
         }
 
         .payment-method label {
-            font-size: 14px;
-            font-weight: 500;
-        }
-
-        /* Coupon Section */
-        .coupon-section {
-            border-bottom: 1px solid #eaeaec;
-            margin-bottom: 16px;
-            padding-bottom: 16px;
+            font-size: 13px;
         }
 
         .coupon-header {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            margin-bottom: 12px;
-            cursor: pointer;
-            padding: 8px 0;
+            gap: 8px;
         }
 
         .coupon-icon {
-            color: #526cd0;
-            font-size: 20px;
+            font-size: 18px;
         }
 
         .coupon-title {
-            font-size: 14px;
-            font-weight: 600;
-            color: #282c3f;
-            flex-grow: 1;
+            font-size: 13px;
         }
 
         .coupon-toggle {
-            color: #ff3f6c;
-            font-size: 14px;
-            font-weight: 600;
+            font-size: 12px;
         }
 
         .coupon-content {
-            background: #fff;
-            padding: 16px;
-            border: 1px solid #eaeaec;
-            border-radius: 4px;
-        }
-
-        .coupon-input-group {
-            display: flex;
-            align-items: center;
-            border: 1px solid #d4d5d9;
-            border-radius: 4px;
-            padding: 4px;
-            background: #fff;
+            padding: 12px;
         }
 
         .coupon-input-group input {
-            flex: 1;
-            border: none;
-            padding: 8px 12px;
-            font-size: 14px;
-            outline: none;
+            padding: 6px 10px;
+            font-size: 13px;
         }
 
         .coupon-input-group button {
-            padding: 8px 16px;
-            background: #ff3f6c;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            font-weight: 600;
-            font-size: 13px;
-            text-transform: uppercase;
-            cursor: pointer;
-        }
-
-        .available-offers {
-            margin-top: 16px;
+            padding: 6px 12px;
+            font-size: 12px;
         }
 
         .offer-item {
-            display: flex;
-            align-items: flex-start;
-            gap: 8px;
-            padding: 8px 0;
-            font-size: 13px;
-            color: #535766;
+            font-size: 12px;
         }
 
-        .offer-icon {
-            color: #03a685;
-            font-size: 16px;
-            margin-top: 2px;
-        }
-
-        /* Order Summary Styles */
         .order-item {
-            display: flex;
-            padding: 16px 0;
-            border-bottom: 1px solid #eaeaec;
+            padding: 12px 0;
         }
 
         .order-image img {
-            width: 60px;
-            height: 80px;
-            object-fit: cover;
-            border-radius: 4px;
+            width: 50px;
+            height: 65px;
         }
 
         .order-details {
-            margin-left: 16px;
-            flex: 1;
+            margin-left: 12px;
         }
 
         .product-name {
-            font-size: 14px;
-            font-weight: 600;
-            margin-bottom: 4px;
-            color: #282c3f;
+            font-size: 13px;
         }
 
         .product-size-qty {
-            font-size: 13px;
-            color: #535766;
-            margin-bottom: 4px;
+            font-size: 12px;
         }
 
         .product-price {
-            font-size: 14px;
-            font-weight: 600;
-            color: #282c3f;
+            font-size: 13px;
         }
 
-        
-
-        /* Price Summary Styles */
         .price-summary {
-            font-size: 14px;
+            font-size: 13px;
         }
 
         .price-row {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 12px;
-            color: #535766;
+            margin-bottom: 10px;
         }
 
         .price-total {
-            padding-top: 12px;
-            border-top: 1px solid #eaeaec;
-            font-weight: 600;
-            font-size: 15px;
-            color: #282c3f;
-        }
-
-        .discount-green {
-            color: #03a685;
-        }
-
-        .apply-coupon-btn{
-              border-radius: 4px;
-              color: #ff3f6c;
-              background-color: #ffff;
-              border-color: #ff3f6c;
-              
-
+            font-size: 14px;
         }
 
         .checkout-button {
-            width: 100%;
-            padding: 14px;
-            background: #ff3f6c;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            font-size: 14px;
-            font-weight: 600;
-            text-transform: uppercase;
-            cursor: pointer;
-            margin-top: 16px;
-            transition: background 0.3s ease;
+            padding: 12px;
+            font-size: 13px;
+            margin-top: 12px;
         }
 
-        .checkout-button:hover {
-            background: #ff527b;
+        .coupon-dropdown {
+            padding: 8px;
+            font-size: 13px;
         }
 
-        /* Responsive Design */
-        @media (max-width: 768px) {
-            .checkout-container {
-                grid-template-columns: 1fr;
-                padding: 10px;
-            }
+        .apply-coupon-btn, .remove-coupon-btn {
+            padding: 8px 12px;
+            font-size: 13px;
+        }
+    }
 
-            .checkout-right {
-                order: 1;
-                position: relative;
-            }
-
-            .checkout-left {
-                order: 2;
-            }
-
-            .address-actions {
-                position: relative;
-                top: 0;
-                right: 0;
-                margin-top: 12px;
-            }
-
-            .address-details {
-                padding-right: 0;
-            }
+    @media (max-width: 480px) {
+        .checkout-container {
+            padding: 5px;
         }
 
-        
-    </style>
+        .checkout-section {
+            padding: 10px;
+            margin-bottom: 10px;
+        }
 
- <main>
-    <div class="checkout-container" data-total-amount="<%= totalAmount %>" data-delivery-charge="<%= deliveryCharge %>" data-final-amount="<%= finalAmount %>">
-        <div class="checkout-left">
-            <!-- Contact Details -->
-            <div class="checkout-section">
-                <div class="section-header">
-                    <h2 class="section-title">Contact Details</h2>
-                    <button class="edit-button" onclick="window.location.href='/edit-profile'">EDIT</button>
-                </div>
-                <div class="contact-info">
-                    <p><%= user.name %></p>
-                    <p><%= user.phone %></p>
-                    <p><%= user.email %></p>
-                </div>
-            </div>
+        .section-title {
+            font-size: 13px;
+        }
 
-            <!-- Address Section -->
-            <div class="checkout-section">
-                <div class="section-header">
-                    <h2 class="section-title">Select Delivery Address</h2>
-                    <button class="edit-button" onclick="window.location.href='/addAddress?from=checkout'">ADD NEW</button>
-                </div>
-                <% if (addresses && addresses.length > 0) { %>
-                    <% addresses.forEach((address) => { %>
-                        <div class="address-item">
-                            <input type="radio" name="selectedAddress" value="<%= address._id %>" id="address-<%= address._id %>">
-                            <label for="address-<%= address._id %>">
-                                <div class="address-type"><%= address.addressType %></div>
-                                <div class="address-details">
-                                    <strong><%= address.name %></strong><br>
-                                    <%= address.street %>,<br>
-                                    <%= address.city %>, <%= address.state %>,<br>
-                                    <%= address.landMark %> - <%= address.pincode %><br>
-                                    Phone: <%= address.phone %>
-                                </div>
-                            </label>
-                            <div class="address-actions">
-                                <button class="address-action-btn edit-address-btn" onclick="editAddress('<%= address._id %>')">Edit</button>
-                                <button class="address-action-btn delete-address-btn" onclick="deleteAddress('<%= address._id %>')">Delete</button>
-                            </div>
-                        </div>
-                    <% }); %>
-                <% } else { %>
-                    <p>No addresses found. Please add a delivery address.</p>
-                <% } %>
-            </div>
+        .edit-button {
+            font-size: 11px;
+            padding: 5px 10px;
+        }
 
-            <!-- Payment Methods -->
-            <div class="checkout-section">
-                <h2 class="section-title">Payment Method</h2>
-                <div class="payment-method">
-                    <input type="radio" name="payment-method" id="cod" value="COD" checked>
-                    <label for="cod">Cash on Delivery</label>
-                </div>
-                <div class="payment-method">
-                    <input type="radio" name="payment-method" id="razorpay" value="Razorpay">
-                    <label for="razorpay">Online</label>
-                </div>
-                <div class="payment-method">
-                    <input type="radio" name="payment-method" value="Wallet" id="walletOption" onclick="checkWalletBalance()">
-                    <label for="walletOption">
-                        Pay with Wallet (Balance: ₹<span id="walletBalance"><%= walletBalance %></span>)
-                    </label>
-                </div>
-            </div>
-        </div>
+        .contact-info {
+            font-size: 12px;
+        }
 
-        <div class="checkout-right">
-            <!-- Price Summary with Coupon -->
-            <div class="checkout-section">
-                <div class="coupon-section">
-                    <div class="coupon-header">
-                        <span class="coupon-icon">🏷️</span>
-                        <span class="coupon-title">Apply Coupon</span>
-                    </div>
-                    <div id="coupon-message" class="coupon-message"></div>
-                    <!-- Coupon Dropdown -->
-                    <div class="coupon-dropdown-container">
-                        <% if (coupons && coupons.length > 0) { %>
-                            <select id="coupon-dropdown" class="coupon-dropdown">
-                                <option value="">Select a coupon</option>
-                                <% coupons.forEach(coupon => { %>
-                                    <option value="<%= coupon._id %>" data-discount="<%= coupon.discountAmount %>" data-min-price="<%= coupon.minimumPrice %>">
-                                        <%= coupon.name %> - ₹<%= coupon.discountAmount %> off (Min ₹<%= coupon.minimumPrice %>)
-                                    </option>
-                                <% }) %>
-                            </select>
-                            <button id="apply-coupon-btn" class="apply-coupon-btn">Apply</button>
-                            <button id="remove-coupon-btn" class="remove-coupon-btn" style="display: none;">Remove</button>
-                        <% } else { %>
-                            <p>No coupons available for this order.</p>
-                        <% } %>
-                    </div>
-                </div>
+        .address-item {
+            padding: 10px;
+        }
 
-                <div class="price-summary">
-                    <div class="price-row">
-                        <span>Total MRP</span>
-                        <span>₹<%= totalAmount %></span>
-                    </div>
-                    <div class="price-row">
-                        <span>Discount</span>
-                        <span class="discount-green">-₹<%= discount %></span>
-                    </div>
-                    <div class="price-row">
-                        <span>Delivery Charge</span>
-                        <span>₹<%= deliveryCharge %></span>
-                    </div>
-                    <div class="price-row">
-                        <span>Coupon Discount</span>
-                        <span class="discount-green" id="coupon-discount">-₹<%= couponDiscount || 0 %></span>
-                    </div>
-                    <div class="price-row price-total">
-                        <span>Total Amount</span>
-                        <span id="final-amount">₹<%= finalAmount %></span>
-                    </div>
-                </div>
-                <button class="checkout-button" id="placeOrderBtn">Place Order</button>
-            </div>
+        .address-type {
+            font-size: 12px;
+            margin-bottom: 6px;
+        }
 
-            <!-- Order Items -->
-            <div class="checkout-section">
-                <h2 class="section-title">Order Summary</h2>
-                <% if (cart && cart.items && cart.items.length > 0) { %>
-                    <% cart.items.forEach((item) => { %>
-                        <div class="order-item">
-                            <div class="order-image">
-                                <img src="/img/<%= item.productId?.productImage?.[0] || 'default.png' %>"
-                                     alt="<%= item.productId?.productName || 'Product Image' %>">
-                            </div>
-                            <div class="order-details">
-                                <div class="product-name"><%= item.productId?.productName || 'Unknown Product' %></div>
-                                <div class="product-size-qty">Qty: <%= item.quantity %></div>
-                                <div class="product-price">₹<%= parseInt(item.totalPrice) %></div>
-                            </div>
-                        </div>
-                    <% }) %>
-                <% } else { %>
-                    <p>No items in cart.</p>
-                <% } %>
-            </div>
-        </div>
-    </div>
-</main>
+        .address-details {
+            font-size: 12px;
+            line-height: 1.5;
+        }
 
-<style>
-/* Additional CSS for coupon dropdown */
-.coupon-dropdown-container {
-    display: flex;
-    gap: 10px;
-    align-items: center;
-    margin-top: 10px;
-}
+        .address-actions {
+            flex-direction: column;
+            gap: 8px;
+            margin-top: 8px;
+        }
 
-.coupon-dropdown {
-    flex: 1;
-    padding: 10px;
-    border: 1px solid #ddd;
-    border-radius: 5px;
-    font-size: 14px;
-    background-color: white;
-    cursor: pointer;
-}
+        .address-action-btn {
+            padding: 4px 8px;
+            font-size: 10px;
+        }
 
-.coupon-dropdown:focus {
-    outline: none;
-    border-color: #ff3f6c;
-}
+        .payment-method {
+            padding: 10px;
+        }
 
-.apply-coupon-btn, .remove-coupon-btn {
-    padding: 10px 15px;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    font-size: 14px;
-    font-weight: 500;
-    transition: background-color 0.3s;
-}
+        .payment-method label {
+            font-size: 12px;
+        }
 
-.apply-coupon-btn {
-    background-color: #ff3f6c;
-    color: white;
-}
+        .coupon-header {
+            gap: 6px;
+        }
 
-.apply-coupon-btn:hover {
-    background-color: #e6356a;
-}
+        .coupon-icon {
+            font-size: 16px;
+        }
 
-.remove-coupon-btn {
-    background-color: #6c757d;
-    color: white;
-}
+        .coupon-title {
+            font-size: 12px;
+        }
 
-.remove-coupon-btn:hover {
-    background-color: #5a6268;
-}
+        .coupon-toggle {
+            font-size: 11px;
+        }
 
-.coupon-dropdown:disabled {
-    background-color: #f8f9fa;
-    cursor: not-allowed;
-}
+        .coupon-content {
+            padding: 10px;
+        }
+
+        .coupon-input-group input {
+            padding: 5px 8px;
+            font-size: 12px;
+        }
+
+        .coupon-input-group button {
+            padding: 5px 10px;
+            font-size: 11px;
+        }
+
+        .offer-item {
+            font-size: 11px;
+        }
+
+        .order-item {
+            padding: 10px 0;
+        }
+
+        .order-image img {
+            width: 40px;
+            height: 50px;
+        }
+
+        .order-details {
+            margin-left: 10px;
+        }
+
+        .product-name {
+            font-size: 12px;
+        }
+
+        .product-size-qty {
+            font-size: 11px;
+        }
+
+        .product-price {
+            font-size: 12px;
+        }
+
+        .price-summary {
+            font-size: 12px;
+        }
+
+        .price-row {
+            margin-bottom: 8px;
+        }
+
+        .price-total {
+            font-size: 13px;
+        }
+
+        .checkout-button {
+            padding: 10px;
+            font-size: 12px;
+            margin-top: 10px;
+        }
+
+        .coupon-dropdown {
+            padding: 6px;
+            font-size: 12px;
+        }
+
+        .apply-coupon-btn, .remove-coupon-btn {
+            padding: 6px 10px;
+            font-size: 12px;
+        }
+    }
 </style>
+
+<div class="container-wrapper">
+    <%- include("../layouts/user/sidebar.ejs") %>
+
+    <main class="main-content">
+        <div class="checkout-container" data-total-amount="<%= totalAmount %>" data-delivery-charge="<%= deliveryCharge %>" data-final-amount="<%= finalAmount %>">
+            <div class="checkout-left">
+                <!-- Contact Details -->
+                <div class="checkout-section">
+                    <div class="section-header">
+                        <h2 class="section-title">Contact Details</h2>
+                        <button class="edit-button" onclick="window.location.href='/edit-profile'">EDIT</button>
+                    </div>
+                    <div class="contact-info">
+                        <p><%= user.name %></p>
+                        <p><%= user.phone %></p>
+                        <p><%= user.email %></p>
+                    </div>
+                </div>
+
+                <!-- Address Section -->
+                <div class="checkout-section">
+                    <div class="section-header">
+                        <h2 class="section-title">Select Delivery Address</h2>
+                        <button class="edit-button" onclick="window.location.href='/addAddress?from=checkout'">ADD NEW</button>
+                    </div>
+                    <% if (addresses && addresses.length > 0) { %>
+                        <% addresses.forEach((address) => { %>
+                            <div class="address-item">
+                                <input type="radio" name="selectedAddress" value="<%= address._id %>" id="address-<%= address._id %>">
+                                <label for="address-<%= address._id %>">
+                                    <div class="address-type"><%= address.addressType %></div>
+                                    <div class="address-details">
+                                        <strong><%= address.name %></strong><br>
+                                        <%= address.street %>,<br>
+                                        <%= address.city %>, <%= address.state %>,<br>
+                                        <%= address.landMark %> - <%= address.pincode %><br>
+                                        Phone: <%= address.phone %>
+                                    </div>
+                                </label>
+                                <div class="address-actions">
+                                    <button class="address-action-btn edit-address-btn" onclick="window.location.href='/editAddress?from=checkout&id=<%= address._id %>'">Edit</button>
+                                    <button class="address-action-btn delete-address-btn" onclick="deleteAddress('<%= address._id %>')">Delete</button>
+                                </div>
+                            </div>
+                        <% }); %>
+                    <% } else { %>
+                        <p>No addresses found. Please add a delivery address.</p>
+                    <% } %>
+                </div>
+
+                <!-- Payment Methods -->
+                <div class="checkout-section">
+                    <h2 class="section-title">Payment Method</h2>
+                    <div class="payment-method">
+                        <input type="radio" name="payment-method" id="cod" value="COD" checked>
+                        <label for="cod">Cash on Delivery</label>
+                    </div>
+                    <div class="payment-method">
+                        <input type="radio" name="payment-method" id="razorpay" value="Razorpay">
+                        <label for="razorpay">Online</label>
+                    </div>
+                    <div class="payment-method">
+                        <input type="radio" name="payment-method" value="Wallet" id="walletOption" onclick="checkWalletBalance()">
+                        <label for="walletOption">
+                            Pay with Wallet (Balance: ₹<span id="walletBalance"><%= walletBalance %></span>)
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="checkout-right">
+                <!-- Price Summary with Coupon -->
+                <div class="checkout-section">
+                    <div class="coupon-section">
+                        <div class="coupon-header">
+                            <span class="coupon-icon">🏷️</span>
+                            <span class="coupon-title">Apply Coupon</span>
+                        </div>
+                        <div id="coupon-message" class="coupon-message"></div>
+                        <!-- Coupon Dropdown -->
+                        <div class="coupon-dropdown-container">
+                            <% if (coupons && coupons.length > 0) { %>
+                                <select id="coupon-dropdown" class="coupon-dropdown">
+                                    <option value="">Select a coupon</option>
+                                    <% coupons.forEach(coupon => { %>
+                                        <option value="<%= coupon._id %>" data-discount="<%= coupon.discountAmount %>" data-min-price="<%= coupon.minimumPrice %>">
+                                            <%= coupon.name %> - ₹<%= coupon.discountAmount %> off (Min ₹<%= coupon.minimumPrice %>)
+                                        </option>
+                                    <% }) %>
+                                </select>
+                                <button id="apply-coupon-btn" class="apply-coupon-btn">Apply</button>
+                                <button id="remove-coupon-btn" class="remove-coupon-btn" style="display: none;">Remove</button>
+                            <% } else { %>
+                                <p>No coupons available for this order.</p>
+                            <% } %>
+                        </div>
+                    </div>
+
+                    <div class="price-summary">
+                        <div class="price-row">
+                            <span>Total MRP</span>
+                            <span>₹<%= totalAmount %></span>
+                        </div>
+                        <div class="price-row">
+                            <span>Discount</span>
+                            <span class="discount-green">-₹<%= discount %></span>
+                        </div>
+                        <div class="price-row">
+                            <span>Delivery Charge</span>
+                            <span>₹<%= deliveryCharge %></span>
+                        </div>
+                        <div class="price-row">
+                            <span>Coupon Discount</span>
+                            <span class="discount-green" id="coupon-discount">-₹<%= couponDiscount || 0 %></span>
+                        </div>
+                        <div class="price-row price-total">
+                            <span>Total Amount</span>
+                            <span id="final-amount">₹<%= finalAmount %></span>
+                        </div>
+                    </div>
+                    <button class="checkout-button" id="placeOrderBtn">Place Order</button>
+                </div>
+
+                <!-- Order Items -->
+                <div class="checkout-section">
+                    <h2 class="section-title">Order Summary</h2>
+                    <% if (cart && cart.items && cart.items.length > 0) { %>
+                        <% cart.items.forEach((item) => { %>
+                            <div class="order-item">
+                                <div class="order-image">
+                                    <img src="/img/<%= item.productId?.productImage?.[0] || 'default.png' %>"
+                                         alt="<%= item.productId?.productName || 'Product Image' %>">
+                                </div>
+                                <div class="order-details">
+                                    <div class="product-name"><%= item.productId?.productName || 'Unknown Product' %></div>
+                                    <div class="product-size-qty">Qty: <%= item.quantity %></div>
+                                    <div class="product-price">₹<%= parseInt(item.totalPrice) %></div>
+                                </div>
+                            </div>
+                        <% }) %>
+                    <% } else { %>
+                        <p>No items in cart.</p>
+                    <% } %>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
 
 <script>
 function checkWalletBalance() {
@@ -745,7 +1033,7 @@ function deleteAddress(id) {
                     method: 'DELETE',
                     headers: {
                         'Content-Type': 'application/json',
-                        'X-Requested-With': 'XMLHttpRequest' //custom header thatit is an ajax request
+                        'X-Requested-With': 'XMLHttpRequest'
                     }
                 });
                 
@@ -853,7 +1141,7 @@ function attachPlaceOrderListener() {
                         key: data.razorpayKeyId,
                         amount: data.amount,
                         currency: "INR",
-                        name: "Your Shop Name",
+                        name: "Elegance Carry",
                         description: "Order Payment",
                         order_id: data.razorpayOrderId,
                         handler: async function (response) {
@@ -915,7 +1203,7 @@ function attachPlaceOrderListener() {
                     razorpayInstance.on('payment.failed', async function (response) {
                         try {
                             await fetch('/updateOrderStatusOnFailure', {
-                                method: 'POST',
+                                method: 'PATCH',
                                 headers: {
                                     'Content-Type': 'application/json'
                                 },
@@ -1034,3 +1322,5 @@ function attachPlaceOrderListener() {
 <!-- Include SweetAlert2 and Razorpay -->
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+
+<%- include("../layouts/user/footer.ejs") %>

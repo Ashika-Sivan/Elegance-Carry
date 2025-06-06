@@ -34,6 +34,7 @@
     transform: translateY(-2px);
     box-shadow: 0 4px 8px rgba(0, 0, 8px rgba(4px, 8px, 0, 0.15);
   }
+ 
 
   .stat-card h3 {
     font-size: 0.9rem;
@@ -179,6 +180,28 @@
     cursor: not-allowed;
     pointer-events: none;
   }
+
+ .view-Details {
+  padding: 8px 16px;
+  background-color: #007BFF; /* Bootstrap blue */
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.view-Details:hover {
+  background-color: #0056b3;
+  transform: translateY(-2px);
+}
+
+.view-Details:active {
+  transform: translateY(0);
+  background-color: #004494;
+}
+
 </style>
 
 <section class="content-main">
@@ -287,7 +310,13 @@
               <td class="p-4 font-medium text-gray-800">₹<%= order.finalAmount.toLocaleString('en-IN') %></td>
               <td class="p-4 text-gray-800"><%= new Date(order.createdAt).toLocaleDateString('en-IN') %></td>
               <td class="p-4">
-                <button onclick="window.location.href='/admin/order/<%= order._id %>'" class="text-blue-600 hover:underline">View Details</button>
+            <button 
+              onclick="window.location.href='/admin/order/<%= order._id %>'" 
+              class="bg-blue-600 text-black px-4 py-2 rounded hover:bg-blue-700 transition duration-200"
+              >
+             View Details
+              </button>
+
                 <% if (order.orderedItems.some(item => item.status === 'Return Request')) { %>
                   <button class="approve-btn" onclick="approveReturn('<%= order._id %>')">Approve Return</button>
                 <% } %>

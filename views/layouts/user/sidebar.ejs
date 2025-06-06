@@ -1,84 +1,182 @@
-<div class="sidebar">
-  <h2 class="sidebar-title">My Account</h2>
+<style>
+    /* Sidebar Styling */
+    .sidebar {
+        width: 220px;
+        background: linear-gradient(180deg, #ffffff 0%, #f9f9f9 100%);
+        height: calc(100vh - 150px);
+        position: sticky;
+        top: 126px;
+        padding: 20px;
+        box-shadow: 2px 0 15px rgba(0, 0, 0, 0.05);
+        font-family: 'Poppins', sans-serif;
+        border-radius: 0 10px 10px 0;
+        transition: all 0.3s ease;
+    }
 
-  <div class="menu-item">
-    <a href="/userProfile" class="menu-link">Dashboard</a>
-  </div>
+    /* Sidebar Title */
+    .sidebar-title {
+        text-align: center;
+        margin-bottom: 25px;
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: #333;
+        letter-spacing: 0.5px;
+        position: relative;
+    }
 
-  <div class="menu-item">
-    <a href="/loadAddresses" class="menu-link">Addresses</a>
-  </div>
+    .sidebar-title::after {
+        content: '';
+        width: 40px;
+        height: 3px;
+        background: #ff3f6c;
+        position: absolute;
+        bottom: -8px;
+        left: 50%;
+        transform: translateX(-50%);
+        border-radius: 2px;
+    }
 
-  <div class="menu-item">
-    <a href="/cart" class="menu-link">Cart</a>
-  </div>
+    /* Menu Items */
+    .menu-item {
+        margin-bottom: 12px;
+    }
 
-  <div class="menu-item">
-    <a href="/wishlist" class="menu-link">Wishlist</a>
-  </div>
+    /* Menu Links */
+    .menu-link {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 12px 15px;
+        font-size: 1rem;
+        font-weight: 500;
+        text-decoration: none;
+        color: #444;
+        background: rgba(0, 0, 0, 0.03);
+        border-radius: 8px;
+        transition: all 0.3s ease;
+    }
 
-  <div class="menu-item">
-    <a href="/orderList" class="menu-link">Orders</a>
-  </div>
+    /* Icon Styling */
+    .menu-link i {
+        font-size: 1.1rem;
+        color: #666;
+        transition: all 0.3s ease;
+    }
 
-  <div class="menu-item">
-    <a href="/wallet" class="menu-link">Wallet</a>
-  </div>
+    /* Hover Effect */
+    .menu-link:hover {
+        background: #ff3f6c;
+        color: #fff;
+        transform: translateX(5px);
+        box-shadow: 0 2px 8px rgba(255, 63, 108, 0.2);
+    }
 
+    .menu-link:hover i {
+        color: #fff;
+    }
 
+    /* Active Menu */
+    .menu-link:active {
+        background: #e62e5c;
+        color: #fff;
+        box-shadow: 0 2px 8px rgba(230, 46, 92, 0.2);
+    }
+
+    .menu-link:active i {
+        color: #fff;
+    }
+
+    /* Sidebar Toggle Button */
+    .sidebar-toggle {
+        display: none;
+        background: #ff3f6c;
+        color: white;
+        border: none;
+        padding: 12px;
+        border-radius: 8px;
+        cursor: pointer;
+        margin-bottom: 15px;
+        width: 100%;
+        text-align: center;
+        font-size: 1rem;
+        font-weight: 500;
+        transition: all 0.3s ease;
+    }
+
+    .sidebar-toggle:hover {
+        background: #e62e5c;
+        transform: scale(1.02);
+    }
+
+    /* Responsive Styles */
+    @media (max-width: 1024px) {
+        .sidebar {
+            width: 100%;
+            position: relative;
+            top: 0;
+            height: auto;
+            display: none;
+            border-radius: 0;
+        }
+
+        .sidebar.active {
+            display: block;
+        }
+
+        .sidebar-toggle {
+            display: block;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .sidebar-title {
+            font-size: 1.3rem;
+        }
+
+        .menu-link {
+            font-size: 0.9rem;
+            padding: 10px 12px;
+        }
+
+        .menu-link i {
+            font-size: 1rem;
+        }
+
+        .sidebar-toggle {
+            padding: 10px;
+            font-size: 0.9rem;
+        }
+    }
+</style>
+
+<div class="sidebar-container">
+    <button class="sidebar-toggle" onclick="toggleSidebar()">☰ Menu</button>
+    <aside class="sidebar" id="sidebar">
+        <h2 class="sidebar-title">My Account</h2>
+        <div class="menu-item">
+            <a href="/userProfile" class="menu-link"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
+        </div>
+        <div class="menu-item">
+            <a href="/loadAddresses" class="menu-link"><i class="fas fa-map-marker-alt"></i> Addresses</a>
+        </div>
+        <div class="menu-item">
+            <a href="/cart" class="menu-link"><i class="fas fa-shopping-cart"></i> Cart</a>
+        </div>
+        <div class="menu-item">
+            <a href="/wishlist" class="menu-link"><i class="fas fa-heart"></i> Wishlist</a>
+        </div>
+        <div class="menu-item">
+            <a href="/orderList" class="menu-link"><i class="fas fa-box"></i> Orders</a>
+        </div>
+        <div class="menu-item">
+            <a href="/wallet" class="menu-link"><i class="fas fa-wallet"></i> Wallet</a>
+        </div>
+    </aside>
 </div>
 
-<style>
-/* Sidebar Styling */
-.sidebar {
-  width: 200px;
-  background-color: #fff;
-  height: calc(100vh - 150px);
-  position: absolute;
-  top: 126px;
-  left: 0;
-  padding: 20px;
-  box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
-  font-family: 'Poppins', sans-serif;
-}
-
-/* Sidebar Title */
-.sidebar-title {
-  text-align: center;
-  margin-bottom: 20px;
-  font-size: 1.4rem;
-  font-weight: 600;
-  color: #333;
-}
-
-/* Menu Items */
-.menu-item {
-  margin-bottom: 10px;
-}
-
-/* Menu Links */
-.menu-link {
-  display: block;
-  padding: 12px 15px;
-  font-size: 1rem;
-  font-weight: 500;
-  text-decoration: none;
-  color: #333;
-  background: rgba(0, 0, 0, 0.05);
-  border-radius: 5px;
-  transition: all 0.3s ease;
-}
-
-/* Hover Effect */
-.menu-link:hover {
-  background: #ff3f6c;
-  color: #fff;
-  transform: scale(1.05);
-}
-
-/* Active Menu */
-.menu-link:active {
-  background: #e62e5c;
-  color: #fff;
-}
-</style>
+<script>
+    function toggleSidebar() {
+        const sidebar = document.getElementById('sidebar');
+        sidebar.classList.toggle('active');
+    }
+</script>

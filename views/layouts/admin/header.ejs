@@ -1,18 +1,18 @@
-<!DOCTYPE HTML>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>Elegance Carry</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="shortcut icon" type="image/x-icon" href="#">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
     <style>
-
         body {
             font-family: Arial, sans-serif;
             background-color: #f8f9fa;
             margin: 0;
             padding: 0;
         }
+
         .navbar-aside {
             width: 250px;
             background-color: #343a40;
@@ -21,23 +21,30 @@
             color: #fff;
             display: flex;
             flex-direction: column;
+            transition: transform 0.3s ease;
         }
+
         .navbar-aside .brand-wrap {
             text-align: center;
             padding: 15px 0;
             border-bottom: 1px solid #495057;
         }
-        .navbar-aside .brand-wrap img {
-            max-width: 150px;
+
+        .navbar-aside .brand-wrap p {
+            margin: 0;
+            font-size: 18px;
         }
+
         .navbar-aside nav ul {
             list-style: none;
             padding: 0;
             margin: 0;
         }
+
         .navbar-aside nav ul li {
             margin: 5px 0;
         }
+
         .navbar-aside nav ul li a {
             text-decoration: none;
             color: #adb5bd;
@@ -46,59 +53,145 @@
             border-radius: 5px;
             transition: background 0.3s, color 0.3s;
         }
+
         .navbar-aside nav ul li a:hover,
         .navbar-aside nav ul li a.active {
             background-color: #495057;
             color: #fff;
         }
-        .main-wrap {
+
+        .main-header {
+            background-color: #343a40;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 20px;
+            color: #212529;
+            border-bottom: 1px solid #dee2e6;
             margin-left: 250px;
-            padding: 20px;
-            background-color: #ffffff;
-            min-height: 100vh;
+            transition: margin-left 0.3s ease;
         }
-       .main-header {
-    background-color: #343a40;
-    /* color: #fff; */
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 10px 20px;
-    /* border-bottom: 1px solid white; Updated this line */
-    /* background-color: #ffffff; */
-    color: #212529;
-    border-bottom: 1px solid #dee2e6;
-    margin-left: 250px;
-}
 
         .main-header .nav img {
             width: 40px;
             height: 40px;
             border-radius: 50%;
         }
+
         .main-header .dropdown-menu {
             background-color: #343a40;
             color: #fff;
             border: none;
         }
+
         .main-header .dropdown-menu .dropdown-item:hover {
             background-color: #495057;
         }
-        .dashboard-content {
-            margin-top: 20px;
+
+        .hamburger {
+            display: none;
+            font-size: 24px;
+            color: #fff;
+            cursor: pointer;
         }
-        .dashboard-content h1 {
-            font-size: 28px;
-            color: #343a40;
-            margin-bottom: 20px;
+
+        /* Responsive Styles */
+        @media (max-width: 1024px) {
+            .navbar-aside {
+                transform: translateX(-250px);
+            }
+
+            .navbar-aside.active {
+                transform: translateX(0);
+            }
+
+            .main-header {
+                margin-left: 0;
+            }
+
+            .hamburger {
+                display: block;
+            }
+
+            .main-header {
+                padding: 10px 15px;
+            }
+
+            .main-header h4 {
+                font-size: 18px;
+            }
+
+            .main-header .dropdown-toggle {
+                font-size: 14px;
+            }
+
+            .main-header .dropdown-menu {
+                font-size: 14px;
+            }
         }
-       
+
+        @media (max-width: 768px) {
+            .navbar-aside {
+                width: 200px;
+            }
+
+            .navbar-aside .brand-wrap p {
+                font-size: 16px;
+            }
+
+            .navbar-aside nav ul li a {
+                padding: 8px 12px;
+                font-size: 14px;
+            }
+
+            .main-header h4 {
+                font-size: 16px;
+            }
+
+            .main-header .dropdown-toggle {
+                font-size: 12px;
+            }
+
+            .main-header .dropdown-menu {
+                font-size: 12px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .navbar-aside {
+                width: 180px;
+            }
+
+            .navbar-aside .brand-wrap p {
+                font-size: 14px;
+            }
+
+            .navbar-aside nav ul li a {
+                padding: 6px 10px;
+                font-size: 12px;
+            }
+
+            .main-header {
+                padding: 8px 10px;
+            }
+
+            .main-header h4 {
+                font-size: 14px;
+            }
+
+            .main-header .dropdown-toggle {
+                font-size: 10px;
+            }
+
+            .main-header .dropdown-menu {
+                font-size: 10px;
+            }
+
+            .hamburger {
+                font-size: 20px;
+            }
+        }
     </style>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/cropperjs/dist/cropper.min.css">
-
-
 </head>
 <body>
     <aside class="navbar-aside">
@@ -107,47 +200,51 @@
         </div>
         <nav>
             <ul>
-                <li><a href="/admin/dashboard" class="menu-link <%= currentPage==='dashboard' ? 'active' : '' %>">
+                <li><a href="/admin/dashboard" class="menu-link <%= currentPage === 'dashboard' ? 'active' : '' %>">
                     <i class="fas fa-tachometer-alt"></i> Dashboard</a></li>
-                <li><a href="/admin/users" class="menu-link <%= currentPage==='users' ? 'active' :'' %>">
+                <li><a href="/admin/users" class="menu-link <%= currentPage === 'users' ? 'active' : '' %>">
                     <i class="fas fa-users"></i> Customers</a></li>
-                <li><a href="/admin/category" class="menu-link <%=currentPage==='category' ? 'active' : '' %>">
+                <li><a href="/admin/category" class="menu-link <%= currentPage === 'category' ? 'active' : '' %>">
                     <i class="fas fa-th-large"></i> Category</a></li>
-                <li><a href="/admin/brands" class="menu-link" <%=currentPage==='brands' ? 'active' : '' %>>
+                <li><a href="/admin/brands" class="menu-link <%= currentPage === 'brands' ? 'active' : '' %>">
                     <i class="fas fa-star"></i> Brands</a></li>
-                <li><a href="/admin/addProducts" class="menu-link" <%=currentPage==='addProducts' ? 'active' : ''%>>
+                <li><a href="/admin/addProducts" class="menu-link <%= currentPage === 'addProducts' ? 'active' : '' %>">
                     <i class="fas fa-plus-square"></i> Add Product</a></li>
-                <li><a href="/admin/products" class="menu-link" <%=currentPage==='products' ? 'active' : ''%>>
+                <li><a href="/admin/products" class="menu-link <%= currentPage === 'products' ? 'active' : '' %>">
                     <i class="fas fa-shopping-bag"></i> Products</a></li>
-                <li><a href="/admin/couponList" class="menu-link <%=currentPage==='coupon' ? 'active' : '' %>">
+                <li><a href="/admin/couponList" class="menu-link <%= currentPage === 'coupon' ? 'active' : '' %>">
                     <i class="fas fa-tags"></i> Coupon</a></li>
-                <li><a href="/admin/adminOrderList" class="menu-link" <%=currentPage==='orderList' ? 'active' : ''%>>
+                <li><a href="/admin/adminOrderList" class="menu-link <%= currentPage === 'orderList' ? 'active' : '' %>">
                     <i class="fas fa-shopping-cart"></i> Orders</a></li>
-                <!-- Added Sales Report Menu Item -->
-                <li><a href="/admin/salesReport" class="menu-link" <%=currentPage==='salesReport' ? 'active' : ''%>>
+                <li><a href="/admin/salesReport" class="menu-link <%= currentPage === 'salesReport' ? 'active' : '' %>">
                     <i class="fas fa-chart-line"></i> Sales Report</a></li>
             </ul>
         </nav>
     </aside>
     <header class="main-header">
-    <div class="d-flex align-items-center">
-        <h4 class="mb-0">Admin Panel</h4>
-    </div>
-    <div class="d-flex align-items-center">
-        <div class="dropdown">
-            <a href="#" class="d-flex align-items-center text-white text-decoration-none dropdown-toggle" id="adminDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                 <!-- <img src="https://via.placeholder.com/40" alt="Admin Profile"> -->
-                <span class="ms-2">Admin</span> 
-            </a>
-            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="adminDropdown"> 
-                <!-- <li><a class="dropdown-item" href="/admin/profile">Profile</a></li>
-                <li><a class="dropdown-item" href="/">Home</a></li>
-                <li><hr class="dropdown-divider"></li> -->
-                <li><a class="dropdown-item" href="/admin/logout">Logout</a></li>
-            </ul> 
+        <div class="d-flex align-items-center">
+            <span class="hamburger">☰</span>
+            <h4 class="mb-0" style="color: aliceblue;">Admin Panel</h4>
         </div>
-    </div>
-</header>
+        <div class="d-flex align-items-center">
+            <div class="dropdown">
+                <a href="#" class="d-flex align-items-center text-white text-decoration-none dropdown-toggle" id="adminDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                    <span class="ms-2">Admin</span>
+                </a>
+                <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="adminDropdown">
+                    <li><a class="dropdown-item" href="/admin/logout" style="color: aliceblue;">Logout</a></li>
+                </ul>
+            </div>
+        </div>
+    </header>
 
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Toggle sidebar on hamburger click
+        document.querySelector('.hamburger').addEventListener('click', function() {
+            const sidebar = document.querySelector('.navbar-aside');
+            sidebar.classList.toggle('active');
+        });
+    </script>
 </body>
-    
+</html>

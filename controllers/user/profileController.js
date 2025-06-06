@@ -311,47 +311,52 @@ const getUserProfile = async (req, res) => {
     }
 };
 
-const getEditProfilePage= async (req, res) => {
+const getEditProfilePage = async (req, res) => {
     try {
-      const userId = req.session.user;
-      const user = await User.findById(userId);
-      if (!user) {
-        return res.redirect('/login'); // Redirect if no user found
-      }
-        res.render("edit-profile", { user: user });
-      
-      
-    } catch (error) {
-      console.error("Error loading edit profile page:", error);
-      res.status(HttpStatus.INTERNAL_SERVER_ERROR).render("/pageerror", { message: Messages.INTERNAL_SERVER_ERROR });
-    }
-  }
-
-
-const updateUserProfile=async(req,res)=>{
-    try {
-        const userId=req.session.user;
-        const {fullName,email,phone}=req.body
-
-        const updatedUser=await User.findByIdAndUpdate(
-            userId,
-            {name:fullName,email,phone},
-            {new:true}
-        );
-
-        if(!updatedUser){
-            return res.status(HttpStatus.NOT_FOUND).json({success:false,message:"no update found"})
+        const userId = req.session.user;
+        const user = await User.findById(userId);
+        if (!user) {
+            return res.redirect('/login');
         }
         
-        res.json({success:true,message:"Profile updated Successfully "})
-     
-    }catch(error){
-        console.error("error updating profile:",error);
-        res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({success:false,message:Messages.INTERNAL_SERVER_ERROR})
+        const isGoogleUser = user.googleId && !user.password;
         
-
+        res.render("edit-profile", { 
+            user: user,
+            isGoogleUser: isGoogleUser 
+        });
+        
+    } catch (error) {
+        console.error("Error loading edit profile page:", error);
+        res.status(HttpStatus.INTERNAL_SERVER_ERROR).render("/pageerror", { message: Messages.INTERNAL_SERVER_ERROR });
     }
 }
+
+
+
+const updateUserProfile = async (req, res) => {
+    try {
+        const userId = req.session.user;
+        const { fullName, phone } = req.body; 
+        
+        const updatedUser = await User.findByIdAndUpdate(
+            userId,
+            { name: fullName, phone: phone }, // Only update name and phone
+            { new: true }
+        );
+        
+        if (!updatedUser) {
+            return res.status(HttpStatus.NOT_FOUND).json({success: false, message: "No update found"});
+        }
+        
+        res.json({success: true, message: "Profile updated successfully"});
+        
+    } catch (error) {
+        console.error("Error updating profile:", error);
+        res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({success: false, message: Messages.INTERNAL_SERVER_ERROR});
+    }
+}
+
 
 const getPasswordResetPage = async (req, res) => {
     try {
@@ -359,11 +364,15 @@ const getPasswordResetPage = async (req, res) => {
         const user = await User.findById(userId);
         
         if (!user) { 
-            return res.redirect("/login"); // Ensure user is logged in
-        }        
-        console.log("user in the page", user);
-    
-        res.render("password-reset", { user: user }); // Pass user data if needed
+            return res.redirect("/login");
+        }
+        const isGoogleUser = user.googleId && !user.password;
+        
+        if (isGoogleUser) {
+            return res.redirect("/userProfile");
+        }
+        
+        res.render("password-reset", { user: user });
      
     } catch (error) {
         console.error("Error loading password reset page:", error);
@@ -380,22 +389,29 @@ const getupdatePassword = async (req, res) => {
         if (!user) {
             return res.status(HttpStatus.NOT_FOUND).json({ success: false, message: Messages.USER_NOT_FOUND});
         }
+        
+
+        const isGoogleUser = user.googleId && !user.password;//block the user from update password
+        
+        if (isGoogleUser) {
+            return res.status(HttpStatus.BAD_REQUEST).json({ 
+                success: false, 
+                message: 'Password reset is not available for Google OAuth users' 
+            });
+        }
        
         if (!user.password) {
             return res.status(HttpStatus.BAD_REQUEST).json({ success: false, message: 'Invalid user credentials' });
         }
         
-       
         const isMatch = await bcrypt.compare(currentPassword, user.password);
         if (!isMatch) {
             return res.status(HttpStatus.UNAUTHORIZED).json({ success: false, message: 'Current password is incorrect' });
         }
         
-       
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(newPassword, salt);
         
-       
         user.password = hashedPassword;
         await user.save();
         
@@ -426,40 +442,55 @@ const loadAddresses=async(req,res)=>{
 const addAddress = async (req, res) => {
     try {
         const userId = req.session.user;
+        if (!userId) {
+            if (req.xhr || req.headers['x-requested-with'] === 'XMLHttpRequest') {
+                return res.status(401).json({ success: false, message: 'Session expired. Please log in.' });
+            }
+            return res.redirect('/login');
+        }
+
         const userData = await User.findOne({ _id: userId });
         const userAddresses = await Address.findOne({ userId: userData._id });
 
         const addresses = userAddresses ? userAddresses.address : [];
-        
-       
-        const from = req.query.from || ''; 
+        const from = req.query.from || '';
 
-        res.render("add-address", { user: userData, addresses:addresses ,from:from});
-
+        res.render("add-address", { 
+            user: userData, 
+            addresses: addresses, 
+            from: from 
+        });
     } catch (error) {
         console.error("Error loading address list:", error);
+        if (req.xhr || req.headers['x-requested-with'] === 'XMLHttpRequest') {
+            return res.status(500).json({ success: false, message: 'Failed to load address page' });
+        }
         res.redirect("/pageNotFound");
     }
 };
 
-
-const postAddAddress = async(req, res) => {
+const postAddAddress = async (req, res) => {
     try {
         const userId = req.session.user;
-        const userData = await User.findOne({_id: userId});
-        
-       
-        let {addressType, name, city, landMark, state, pincode, phone, altPhone,from} = req.body;
-        
+        const userData = await User.findOne({ _id: userId });
+
+        if (!userId || !userData) {
+            if (req.xhr || req.headers['x-requested-with'] === 'XMLHttpRequest') {
+                return res.status(401).json({ success: false, message: 'User not authenticated. Please log in.' });
+            }
+            return res.redirect('/login');
+        }
+
+        let { addressType, name, city, landMark, state, pincode, phone, altPhone, from } = req.body;
 
         if (addressType) {
             addressType = addressType.toLowerCase();
         }
-        
+
         console.log(`Processing address with type: ${addressType} and state: ${state}`);
-        
-        const userAddress = await Address.findOne({userId: userData._id});
-        if(!userAddress) {
+
+        let userAddress = await Address.findOne({ userId: userData._id });
+        if (!userAddress) {
             const newAddress = new Address({
                 userId: userData._id,
                 address: [{
@@ -487,12 +518,24 @@ const postAddAddress = async(req, res) => {
             });
             await userAddress.save();
         }
-        if (from === 'checkout') {
-            res.redirect('/check-out');
-        } else {
-            res.redirect('/loadAddresses');
+
+        // Check if the request is an AJAX request
+        if (req.xhr || req.headers['x-requested-with'] === 'XMLHttpRequest') {
+            const redirectUrl = from === 'checkout' ? '/check-out' : '/loadAddresses';
+            return res.status(200).json({ 
+                success: true, 
+                message: 'Address added successfully', 
+                redirectUrl 
+            });
         }
-        
+
+        // For non-AJAX requests, redirect as before
+        if (from === 'checkout') {
+            return res.redirect('/check-out');
+        } else {
+            return res.redirect('/loadAddresses');
+        }
+
     } catch (error) {
         console.error('Error adding address:', error);
         if (error.errors) {
@@ -500,10 +543,12 @@ const postAddAddress = async(req, res) => {
                 console.error(`Field ${field}: ${error.errors[field].message}`);
             }
         }
-        res.redirect("/pageNotFound");
+        if (req.xhr || req.headers['x-requested-with'] === 'XMLHttpRequest') {
+            return res.status(500).json({ success: false, message: 'Failed to add address' });
+        }
+        return res.redirect("/pageNotFound");
     }
-}
-
+};
 const editAddress=async(req,res)=>{
     try {
         const addressId=req.query.id;
@@ -550,9 +595,9 @@ const postEditAddress=async(req,res)=>{
             return res.status(HttpStatus.NOT_FOUND).redirect("/pageNotFound");
         }
 
-        // Update the existing address instead of pushing a new one
+       
         userAddress.address[addressIndex] = {
-            _id: userAddress.address[addressIndex]._id, // Preserve the original _id
+            _id: userAddress.address[addressIndex]._id, 
             addressType,
             name,
             city,
@@ -563,7 +608,6 @@ const postEditAddress=async(req,res)=>{
             altPhone
         };
 
-        // Save the updated address
         await userAddress.save();
         
 
@@ -578,38 +622,80 @@ const postEditAddress=async(req,res)=>{
 const deleteAddress = async (req, res) => {
     try {
         const addressId = req.params.id;
+        const userId = req.session.user?.id || req.user?.id; 
+        
+        if (!mongoose.Types.ObjectId.isValid(addressId)) {
+            if (req.xhr || req.headers.accept.indexOf('json') > -1) {
+                return res.status(HttpStatus.BAD_REQUEST).json({ 
+                    success: false, 
+                    message: "Invalid address ID" 
+                });
+            } else {
+                return res.status(HttpStatus.BAD_REQUEST).send("Invalid address ID");
+            }
+        }
+
         const objectId = new mongoose.Types.ObjectId(addressId);
-        const findAddress = await Address.findOne({"address._id": objectId});
+        const findAddress = await Address.findOne({
+            userId: userId,
+            "address._id": objectId
+        });
         
         if (!findAddress) {
             if (req.xhr || req.headers.accept.indexOf('json') > -1) {
-                return res.status(HttpStatus.NOT_FOUND).json({ success: false, message: Messages.ADDRESS_NOT_FOUND });
+                return res.status(HttpStatus.NOT_FOUND).json({ 
+                    success: false, 
+                    message: Messages.ADDRESS_NOT_FOUND 
+                });
             } else {
                 return res.status(HttpStatus.NOT_FOUND).send(Messages.ADDRESS_NOT_FOUND);
             }
         }
         
-        await Address.updateOne(
-            { "address._id": objectId },
-            { $pull: { address: { _id: objectId } } }
+        const updateResult = await Address.updateOne(
+            { 
+                userId: userId,
+                "address._id": objectId 
+            },
+            { 
+                $pull: { 
+                    address: { _id: objectId } 
+                } 
+            }
         );
         
+    
+        if (updateResult.modifiedCount === 0) {
+            if (req.xhr || req.headers.accept.indexOf('json') > -1) {
+                return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({ 
+                    success: false, 
+                    message: "Failed to delete address" 
+                });
+            } else {
+                return res.status(HttpStatus.INTERNAL_SERVER_ERROR).send("Failed to delete address");
+            }
+        }
+        
         if (req.xhr || req.headers.accept.indexOf('json') > -1) {
-            res.status(HttpStatus.OK).json({ success: true, message: Messages.ADDRESS_DELETE });
+            res.status(HttpStatus.OK).json({ 
+                success: true, 
+                message: Messages.ADDRESS_DELETE || "Address deleted successfully" 
+            });
         } else {
             res.redirect("/profile"); 
         }
     } catch (error) {
         console.error("Error delete address", error);
         if (req.xhr || req.headers.accept.indexOf('json') > -1) {
-            res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({ success: false, message: Messages.INTERNAL_SERVER_ERROR });
+            res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({ 
+                success: false, 
+                message: Messages.INTERNAL_SERVER_ERROR || "Internal server error" 
+            });
         } else {
             res.status(HttpStatus.INTERNAL_SERVER_ERROR).redirect("/pageNotFound");
         }
     }
 };
-
-
 
 
 
