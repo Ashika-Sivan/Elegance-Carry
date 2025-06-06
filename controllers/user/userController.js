@@ -9,7 +9,9 @@ const Brand = require('../../models/brandSchema')
 const Wallet = require("../../models/walletSchema")
 const Wishlist = require("../../models/wishlistSchema")
 const { v4: uuidv4 } = require('uuid');
-
+const HttpStatus = require('../../enum/httpStatus');
+const OrderStatus = require('../../enum/orderStatus');
+const Messages = require('../../enum/messages');
 const pageNotFound = async (req, res, next) => {
   try {
     res.render("page-404");
@@ -19,13 +21,13 @@ const pageNotFound = async (req, res, next) => {
 };
 
 const loadSignup = async (req, res) => {
-  try {
-    return res.render('signup')
-
-  } catch (error) {
-    console.log('home not loading:', error);
-    res.status(500).send('server error')
-  }
+try {
+  return res.render("signup")
+  
+} catch (error) {
+  return res.status(500).json({message:Messages.INTERNAL_SERVER_ERROR})
+  
+}
 }
 
 
@@ -36,6 +38,7 @@ const loadHomePage = async (req, res) => {
    
     if (userId) {
       user = await User.findById(userId);
+      console.log(user)
       
       if (user && user.isBlocked) {
         req.session.destroy((err) => {
@@ -55,22 +58,18 @@ const loadHomePage = async (req, res) => {
       .sort({ soldCount: -1 }) 
       .limit(8);
 
-
+//produt wiyh some offers is shown as featured products
     const featuredProducts = await Product.find({
       isBlocked: false,
       isFeatured: true,
       $or: [
-        { 'productOffer': { $gt: 0 } },
+        { 'productOffer': { $gt: 0 } },          ///filtering produt that have offer greater than 0
         { 'category.categoryOffer': { $gt: 0 } }
       ]
     })
       .populate("category")
       .populate("brand")
       .limit(8);
-
-
-
-
 
     const processProducts = async (products) => {
       return await Promise.all(products.map(async (product) => {
@@ -87,6 +86,7 @@ const loadHomePage = async (req, res) => {
         
         const categoryOffer = product.category?.categoryOffer || 0;
         const productOfferPercentage = product.productOffer || 0;
+
 
         const offerPercentage = Math.max(productOfferPercentage, categoryOffer);
         const offerType = productOfferPercentage > categoryOffer ? "product" : "category";
@@ -111,12 +111,12 @@ const loadHomePage = async (req, res) => {
     });
   } catch (error) {
     console.error("Error loading home page:", error);
-    res.status(500).render("errorPage", { message: "Failed to load home page" });
+    res.status(500).render("errorPage", { message: Messages.INTERNAL_SERVER_ERROR });
   }
 };
 
 function generateOtp() {
-  return Math.floor(100000 + Math.random() * 900000).toString();
+  return Math.floor(100000 + Math.random() * 900000).toString();// numbers from 100000 to 900000
 }
 
 
@@ -128,8 +128,8 @@ async function sendVerificationEmail(email, otp) {
       secure: false,
       requireTLS: true,
       auth: {
-        user: process.env.NODEMAILER_EMAIL,
-        pass: process.env.NODEMAILER_PASSWORD
+        user: process.env.NODEMAILER_EMAIL,//user gmail address
+        pass: process.env.NODEMAILER_PASSWORD//app password from gmail
       }
     })
     const info = await transporter.sendMail({
@@ -139,7 +139,7 @@ async function sendVerificationEmail(email, otp) {
       text: `your otp is ${otp}`,
       html: `<b>your otp is ${otp}</b>`,
     })
-    return info.accepted.length > 0
+    return info.accepted.length > 0//if email accepted by gmail then return true
 
   } catch (error) {
     console.log("error sending email", error);
@@ -151,8 +151,6 @@ const securePassword = async (password) => {
   try {
     const passwordHash = await bcrypt.hash(password, 10)
     return passwordHash;
-
-
 
   } catch (error) {
 
@@ -169,23 +167,21 @@ const createReferralCode = () => {
 
 const signupBonus = 50;
 const referralBonus = 100;
-
 const signup = async (req, res) => {
   try {
     const { name, phone, email, password, cPassword, referalCode } = req.body;
 
     
     if (password !== cPassword) {
-      return res.render("signup", { message: "Passwords do not match" });
+      return res.render("signup", { message: Messages.PASSWORD_NOT_MATCH });
     }
 
     const findUser = await User.findOne({ email });
     if (findUser) {
-      return res.render("signup", { message: "User with this email already exists" });
+      return res.render("signup", { message: Messages.EMAIL_EXIST });
     }
 
     const userReferralCode = createReferralCode();
-
    
     let referredByUser = null;
     if (referalCode) {
@@ -201,16 +197,17 @@ const signup = async (req, res) => {
     const otp = generateOtp();
     const emailSent = await sendVerificationEmail(email, otp);
     if (!emailSent) {
-      return res.render("signup", { message: "Error sending email" });
+      // return res.render("signup", { message: "Error sending email" });
+      console.log('no recipient found .......................................')
     }
 
    
-    req.session.userOtp = otp;
+    req.session.userOtp = otp.toString();
     req.session.otpCreatedAt = Date.now(); 
     req.session.userData = {
-      name,
-      phone,
-      email,
+      name:name.trim(),
+      phone:phone.trim(),
+      email:email.trim().toLowerCase(),
       password,
       referalCode: referalCode || null,
       userReferralCode,
@@ -219,16 +216,29 @@ const signup = async (req, res) => {
     req.session.otpExpiry = Date.now() + 5 * 60 * 1000; 
 
     console.log("OTP Sent", otp);
-    res.render("verify-otp");
+      console.log("Session data stored:", {
+      email: req.session.userData.email,
+      name: req.session.userData.name,
+      otpExpiry: new Date(req.session.otpExpiry)
+    });
+    
+    res.render("verify-otp",{message:'null'});
+
   } catch (error) {
     console.log("Signup error:", error);
     res.redirect("/pageNotFound");
   }
-};
+};   
 
 const verifyOtp = async (req, res) => {
   try {
     const { otp } = req.body;
+    if(!otp||otp.toString().trim()===''){
+      return res.status(400).json({
+        success:false,
+        message:'please enter a valid otp'
+      })
+    }
 
     
     if (!req.session.userOtp || !req.session.userData || !req.session.otpExpiry) {
@@ -256,7 +266,7 @@ const verifyOtp = async (req, res) => {
     if (otp.toString() !== req.session.userOtp.toString()) {
       return res.status(400).json({
         success: false,
-        message: "Invalid OTP, please try again.",
+        message: Messages.INVALID_OTP
       });
     }
 
@@ -349,7 +359,7 @@ const verifyOtp = async (req, res) => {
     console.error("Error verifying OTP:", error);
     return res.status(500).json({
       success: false,
-      message: "An error occurred during verification.",
+      message: Messages.INTERNAL_SERVER_ERROR
     });
   }
 };
@@ -362,8 +372,6 @@ const verifyReferral = async (req, res) => {
     if (!referalCode || referalCode.length !== 6) {
       return res.json({ valid: false });
     }
-
-
     const referredByUser = await User.findOne({ referalCode: referalCode });
 
     if (referredByUser) {
@@ -376,7 +384,7 @@ const verifyReferral = async (req, res) => {
     }
   } catch (error) {
     console.error("Error verifying referral code:", error);
-    return res.status(500).json({ valid: false, error: "Server error" });
+    return res.status(500).json({ valid: false, error: Messages.INTERNAL_SERVER_ERROR });
   }
 };
 
@@ -416,23 +424,23 @@ const resendOtp = async (req, res) => {
     console.log("email-------------", email);
 
     if (!email) {
-      return res.status(400).json({ success: false, message: "email not found in session" })
+      return res.status(HttpStatus.BAD_REQUEST).json({ success: false, message: Messages.EMAIL_NOT_FOUND })
     }
     const otp = generateOtp();
     const emailSent = await sendVerificationEmail(email, otp);
 
     if (!emailSent) {
-      return res.status(400).json({ success: false, message: "Failed to send otp,please try again" })
+      return res.status(HttpStatus.BAD_REQUEST).json({ success: false, message: Messages.FAILED_OTP })
     }
     req.session.userOtp = otp;
     req.session.otpExpiry = Date.now() + 5 * 60 * 1000
 
     console.log('the resend otp is ', otp);
-    res.status(200).json({ success: true, message: "Otp Sent to the email Succesfullyy" })
+    res.status(HttpStatus.OK).json({ success: true, message: Messages.OTP_SUCCESS })
 
   } catch (error) {
     console.error("Error resending OTP ", error);
-    res.status(500).json({ success: false, message: "internal server Error.Please try again" })
+    res.status(500).json({ success: false, message: Messages.INTERNAL_SERVER_ERROR })
 
 
   }
@@ -444,7 +452,7 @@ const resendForgotOtp = async (req, res) => {
     if (!req.session.forgotPassEmail) {
       return res.status(400).json({
         success: false,
-        message: "Email not found in session"
+        message: Messages.EMAIL_NOT_FOUND
       });
     }
 
@@ -454,9 +462,9 @@ const resendForgotOtp = async (req, res) => {
     const emailSent = await sendVerificationEmail(email, otp);
 
     if (!emailSent) {
-      return res.status(400).json({
+      return res.status(HttpStatus. BAD_REQUEST).json({
         success: false,
-        message: "Failed to send OTP. Please try again."
+        message: Messages.FAILED_OTP
       });
     }
 
@@ -466,14 +474,14 @@ const resendForgotOtp = async (req, res) => {
 
     res.status(200).json({
       success: true,
-      message: "OTP sent successfully"
+      message:Messages.OTP_SUCCESS
     });
 
   } catch (error) {
     console.error("Error in resendForgotOtp:", error);
-    res.status(500).json({
+    res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
       success: false,
-      message: "Internal server error. Please try again."
+      message: Messages.INTERNAL_SERVER_ERROR
     });
   }
 };
@@ -497,11 +505,11 @@ const login = async (req, res) => {
     const { email, password } = req.body;
     const findUser = await User.findOne({ isAdmin: false, email })
     if (!findUser) {
-      return res.render("login", { message: "User not found" })
+      return res.render("login", { message:Messages.USER_NOT_FOUND })
 
     }
     if (findUser.isBlocked) {
-      return res.render("login", { message: "User is blocked by admin" })
+      return res.render("login", { message:Messages. USER_BLOCKED_BY_ADMIN })
     }
 
     const passwordMatch = await bcrypt.compare(password, findUser.password)
@@ -541,10 +549,11 @@ const logout = async (req, res) => {
 
   }
 }
-
+//this controller is or logged in users
 const loadShoppingPage = async (req, res) => {
   try {
     const user = req.session.user;
+    console.log(req.session.user)
     const userData = await User.findById(user);
     const categories = await Category.find({ isListed: true });
     const categoryIds = categories.map(category => category._id.toString());
@@ -568,21 +577,25 @@ const loadShoppingPage = async (req, res) => {
       isBlocked: false
     };
 
-   
+    // Category filter
     if (req.query.category) {
       query.category = req.query.category;
     } else {
       query.category = { $in: categoryIds };
     }
 
-    
+    // Brand filter
     if (req.query.brand) {
       query.brand = req.query.brand;
     }
 
-
-    if (req.query.search) {
-      query.productName = { $regex: new RegExp(req.query.search, 'i') };
+    // Search functionality - Fixed
+    if (req.query.search && req.query.search.trim()) {
+      const searchRegex = new RegExp(req.query.search.trim(), 'i');
+      query.$or = [
+        { productName: { $regex: searchRegex } },
+        { description: { $regex: searchRegex } }
+      ];
     }
 
     const products = await Product.find(query)
@@ -596,10 +609,8 @@ const loadShoppingPage = async (req, res) => {
     const totalPages = Math.ceil(totalProducts / limit);
     const brands = await Brand.find({ isBlocked: false });
 
-
     const processedProducts = await Promise.all(products.map(async (product) => {
       const productData = product.toObject();
-
       if (user) {
         const wishlist = await Wishlist.findOne({ userId: user });
         productData.inWishlist = wishlist ? wishlist.products.includes(product._id) : false;
@@ -617,7 +628,6 @@ const loadShoppingPage = async (req, res) => {
       return productData;
     }));
 
-
     const categoriesWithIds = categories.map(category => ({
       _id: category._id,
       name: category.name
@@ -632,15 +642,15 @@ const loadShoppingPage = async (req, res) => {
       nameDesc: "Z to A"
     };
 
-  
     const activeFilters = {
       category: req.query.category || null,
-      brand: req.query.brand || null
+      brand: req.query.brand || null,
+      search: req.query.search || null  // Added search to active filters
     };
 
     res.render("shop", {
       user: userData,
-      products: products,
+      products: processedProducts, // Use processedProducts instead of products
       category: categoriesWithIds,
       brand: brands,
       currentPage: page,
@@ -648,6 +658,7 @@ const loadShoppingPage = async (req, res) => {
       sortLabels: sortLabels,
       currentSort: currentSort,
       activeFilters: activeFilters,
+      searchQuery: search, // Pass search query to template
       query: req.query
     });
 

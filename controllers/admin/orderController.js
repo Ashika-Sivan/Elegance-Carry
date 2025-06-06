@@ -5,12 +5,14 @@ const User = require("../../models/userSchema")
 const Order=require("../../models/orderSchema")
 const Address=require("../../models/addressSchema")
 const { walletReturnRefund } = require('../user/orderController');
-
 const fs = require("fs")
 const path = require("path");
 const sharp = require("sharp");//to resize images
 const { log } = require("console");
 const mongoose=require('mongoose')
+const HttpStatus = require('../../enum/httpStatus');
+const OrderStatus = require('../../enum/orderStatus');
+const Messages = require("../../enum/messages");
 
 
 
@@ -18,13 +20,13 @@ const loadOrderListPage=async(req,res)=>{
     try {
         const status=req.query.status;
         const page=parseInt(req.query.page)||1
-        const limit=70
+        const limit=10
 
 
-        //to building query
+      
         let query={}
         if(status){
-            query.status=status
+            query["orderedItems.status"]=status
         }
 
         const totalOrders=await Order.countDocuments(query);
@@ -46,12 +48,13 @@ const loadOrderListPage=async(req,res)=>{
             .limit(limit)
 
         const totalRevenue=await Order.aggregate([
-            {$match:{status:"Delivered"}},
+            {$match:{"orderedItems.status":OrderStatus.DELIVERED}},
             {$group:{_id:null,total:{$sum:"$finalAmount"}}}
         ])
 
         const orderCounts=await Order.aggregate([
-            {$group:{_id:"$status",count:{$sum:1}}}
+            {$unwind:"$orderedItems"},
+            {$group:{_id:"$orderedItems.status",count:{$sum:1}}}
         ]);
 
         res.render("adminOrderList",{
@@ -69,8 +72,8 @@ const loadOrderListPage=async(req,res)=>{
         
     } catch (error) {
         console.error("Error loading admin order list:", error);
-        res.status(500).render("admin/error", { 
-            message: "Failed to load order list" 
+        res.status(HttpStatus.INTERNAL_SERVER_ERROR).render("admin/error", { 
+            message: Messages.INTERNAL_SERVER_ERROR
         });
         
     }
@@ -80,24 +83,21 @@ const loadViewDetails = async (req, res) => {
     try {
         const orderId = req.params.id;
 
-        // Validate if orderId is a valid MongoDB ObjectId
         if (!mongoose.Types.ObjectId.isValid(orderId)) {
             throw new Error('Invalid order ID');
         }
 
-        // Find the order and populate necessary fields
         const order = await Order.findById(orderId)
-            .populate('user', 'name email phone') // Populate user details
+            .populate('user', 'name email phone') 
             .populate({
                 path: 'orderedItems.product',
                 select: 'productName productImage price'
             });
 
         if (!order) {
-            throw new Error('Order not found');
+            throw new Error(Messages.ORDER_NOT_FOUND);
         }
 
-        // Log for debugging
         console.log('Order:', order);
         console.log('Order User:', order.user);
 
@@ -108,9 +108,9 @@ const loadViewDetails = async (req, res) => {
 
     } catch (error) {
         console.error('Error in loadViewDetails:', error);
-        res.status(500).render('admin/error', {
+        res.status(HttpStatus.INTERNAL_SERVER_ERROR).render('admin/error', {
             currentPage: 'error',
-            error: error.message || 'Error loading order details'
+            error: error.message || Messages.INTERNAL_SERVER_ERROR
         });
     }
 };
@@ -120,17 +120,17 @@ const updateOrderItemStatus = async (req, res) => {
         const { orderId, itemId, status } = req.body;
 
         if (!mongoose.Types.ObjectId.isValid(orderId)) {
-            return res.status(400).json({ 
+            return res.status(HttpStatus.BAD_REQUEST).json({ 
                 success: false, 
-                message: 'Invalid order ID' 
+                message:Messages.INVALID_ORDER_ID 
             });
         }
 
         const order = await Order.findById(orderId);
         if (!order) {
-            return res.status(404).json({ 
+            return res.status(HttpStatus.NOT_FOUND).json({ 
                 success: false, 
-                message: 'Order not found' 
+                message: Messages.ORDER_NOT_FOUND
             });
         }
 
@@ -138,7 +138,7 @@ const updateOrderItemStatus = async (req, res) => {
             item => item._id.toString() === itemId
         );
         if (itemIndex === -1) {
-            return res.status(404).json({ 
+            return res.status(HttpStatus.NOT_FOUND).json({ 
                 success: false, 
                 message: 'Item not found' 
             });
@@ -156,7 +156,7 @@ const updateOrderItemStatus = async (req, res) => {
 
         const currentStatus = order.orderedItems[itemIndex].status;
         if (!validTransitions[currentStatus].includes(status)) {
-            return res.status(400).json({ 
+            return res.status(HttpStatus.BAD_REQUEST).json({ 
                 success: false, 
                 message: `Cannot change status from ${currentStatus} to ${status}` 
             });
@@ -172,7 +172,7 @@ const updateOrderItemStatus = async (req, res) => {
         });
     } catch (error) {
         console.error('Error updating item status:', error);
-        res.status(500).json({ 
+        res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({ 
             success: false, 
             message: 'Failed to update item status' 
         });
@@ -183,37 +183,28 @@ const approveReturn = async (req, res) => {
     try {
         const { orderId } = req.body;
 
-        console.log(`Starting return approval process for Order: ${orderId}`);
-
         if (!mongoose.Types.ObjectId.isValid(orderId)) {
-            console.log("Invalid order ID:", orderId);
-            return res.status(400).json({
+            // console.log("Invalid order ID:", orderId);
+            return res.status(HttpStatus.BAD_REQUEST).json({
                 success: false,
-                message: 'Invalid order ID'
+                message: Messages.INVALID_ORDER_ID
             });
         }
 
         const order = await Order.findById(orderId).populate('orderedItems.product');
         if (!order) {
             console.log("Order not found:", orderId);
-            return res.status(404).json({
+            return res.status(HttpStatus.NOT_FOUND).json({
                 success: false,
-                message: 'Order not found'
+                message: Messages.ORDER_NOT_FOUND
             });
         }
 
-        console.log("Order details:", {
-            orderId: order.orderId,
-            user: order.user,
-            finalAmount: order.finalAmount,
-            paymentMethod: order.paymentMethod,
-            paymentStatus: order.paymentStatus
-        });
-
-        const returnRequestedItems = order.orderedItems.filter(item => item.status === 'Return Request');
+//find the product with the statys returned
+        const returnRequestedItems = order.orderedItems.filter(item => item.status === OrderStatus.RETURN_REQUEST);
         if (returnRequestedItems.length === 0) {
             console.log("No return requested items found in order:", order.orderId);
-            return res.status(400).json({
+            return res.status(HttpStatus.BAD_REQUEST).json({
                 success: false,
                 message: 'No items with return request found in this order'
             });
@@ -231,11 +222,11 @@ const approveReturn = async (req, res) => {
                 quantity: item.quantity
             });
 
-            // Update item status to "Returned"
-            order.orderedItems[itemIndex].status = 'Returned';
+       
+            order.orderedItems[itemIndex].status = OrderStatus.RETURNED;
             order.orderedItems[itemIndex].returnApprovalDate = new Date();
 
-            // Restock the product
+          //if the product return then the product stocke is restocked
             if (item.product) {
                 await Product.updateOne(
                     { _id: item.product._id },
@@ -244,24 +235,20 @@ const approveReturn = async (req, res) => {
                 console.log(`Restocked ${item.quantity} units of product ${item.product._id}`);
             }
 
-            // Calculate refund amount for this item
             const returnedItemAmount = item.price * item.quantity;
             totalRefundAmount += returnedItemAmount;
             console.log(`Refund amount for item ${item._id}: ₹${returnedItemAmount}`);
 
-            // Process refund if payment was made
             if (
                 (order.paymentMethod === "Razorpay" && (order.paymentStatus === "Completed" || order.paymentStatus === "Paid")) ||
                 order.paymentMethod === "Wallet"
             ) {
                 console.log(`Processing refund of ₹${returnedItemAmount} to wallet for user ${order.user}`);
                 try {
-                    const userId = order.user.toString(); // Ensure userId is a string
+                    const userId = order.user.toString(); 
                     const refundResult = await walletReturnRefund(userId, returnedItemAmount, order.orderId);
-                    console.log(`Refund successful for item ${item._id}:`, refundResult);
                 } catch (refundError) {
-                    console.error(`Refund failed for item ${item._id}:`, refundError);
-                    return res.status(500).json({
+                    return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
                         success: false,
                         message: `Failed to process refund for item ${item._id}`,
                         error: refundError.message
@@ -273,10 +260,9 @@ const approveReturn = async (req, res) => {
                 console.log(`No refund processed - Payment method: ${order.paymentMethod}, Status: ${order.paymentStatus}`);
             }
         }
-
-        // Update order's finalAmount and status
+ 
         const remainingActiveItems = order.orderedItems.filter(
-            item => !["Cancelled", "Returned"].includes(item.status)
+            item => ![OrderStatus.CANCELLED, OrderStatus.RETURNED].includes(item.status)
         ).length;
 
         console.log(`Remaining active items after return approval: ${remainingActiveItems}`);
@@ -285,8 +271,8 @@ const approveReturn = async (req, res) => {
             order.finalAmount = Math.max(originalFinalAmount - totalRefundAmount, 0);
             console.log(`Partial return - New finalAmount: ${order.finalAmount}`);
         } else {
-            order.finalAmount = 0; // Full return, set to 0
-            order.status = 'Returned';
+            order.finalAmount = 0; 
+            order.status = OrderStatus.RETURNED;
             console.log(`Full return - New finalAmount: ${order.finalAmount}`);
         }
 
@@ -305,13 +291,18 @@ const approveReturn = async (req, res) => {
         });
     } catch (error) {
         console.error('Error approving return:', error);
-        res.status(500).json({
+        res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
             success: false,
             message: 'Failed to approve return',
             error: error.message
         });
     }
 };
+
+
+
+
+
 module.exports={
     loadOrderListPage,
     loadViewDetails,
@@ -319,3 +310,4 @@ module.exports={
     approveReturn
   
 }
+

@@ -124,8 +124,8 @@
             <label for="addressType">Address Type</label>
             <select class="form-input" id="addressType" name="addressType" required>
                 <option value="" disabled>Select Address Type</option>
-                <option value="Home" <%= address.addressType === 'home' ? 'selected' : '' %>>Home</option>
-                <option value="Office" <%= address.addressType === 'Office' ? 'selected' : '' %>>Office</option>
+                <option value="home" <%= address.addressType === 'home' ? 'selected' : '' %>>Home</option>
+                <option value="office" <%= address.addressType === 'office' ? 'selected' : '' %>>Office</option>
                 <option value="Other" <%= address.addressType === 'Other' ? 'selected' : '' %>>Other</option>
             </select>
         </div>
@@ -247,22 +247,21 @@ function isValidName(name) {
 
 // Phone number validation
 function isValidPhoneNumber(phone) {
-    // Check if it's exactly 10 digits
+    
     if (!/^\d{10}$/.test(phone)) {
         return { valid: false, message: "Please enter a 10-digit phone number" };
     }
 
-    // Check if first digit is 6 or above
     if (parseInt(phone[0]) < 6) {
         return { valid: false, message: "Phone number must start with 6, 7, 8, or 9" };
     }
 
-    // Check for continuous zeros or ones
+    
     if (phone.includes('000') || phone.includes('111')) {
         return { valid: false, message: "Phone number cannot have 3 zeros or ones in a row" };
     }
 
-    // Check for repeated numbers (e.g., 9999999999)
+   
     if (/^(\d)\1{9}$/.test(phone)) {
         return { valid: false, message: "Phone number cannot be 10 repeated digits" };
     }
@@ -272,7 +271,7 @@ function isValidPhoneNumber(phone) {
 
 // Pincode validation
 function isValidPincode(pincode) {
-    // Check if it's exactly 6 digits and starts with 6
+
     if (!/^\d{6}$/.test(pincode)) {
         return { valid: false, message: "Pincode must be exactly 6 digits" };
     }
@@ -284,7 +283,7 @@ function isValidPincode(pincode) {
     return { valid: true };
 }
 
-// Set up input restrictions for phone numbers and pincode
+
 function setupInputRestrictions() {
     const phoneInputs = document.querySelectorAll('input[type="number"]');
     phoneInputs.forEach(input => {
@@ -296,14 +295,13 @@ function setupInputRestrictions() {
             }
         });
 
-        // Prevent typing non-numeric characters
         input.addEventListener('keypress', function(e) {
             if (!/^\d$/.test(e.key)) {
                 e.preventDefault();
             }
         });
 
-        // Prevent paste of invalid content
+   
         input.addEventListener('paste', function(e) {
             e.preventDefault();
             const pastedText = (e.clipboardData || window.clipboardData).getData('text');
@@ -318,11 +316,11 @@ function setupInputRestrictions() {
     });
 }
 
-// Main form validation
+
 function validateForm() {
     const requiredFields = ["addressType", "name", "city", "landMark", "state", "pincode", "phone", "altPhone"];
     
-    // Check required fields
+
     for (const field of requiredFields) {
         const input = document.getElementById(field);
         if (!input.value.trim()) {
@@ -335,7 +333,7 @@ function validateForm() {
         }
     }
 
-    // Validate name
+  
     const name = document.getElementById('name').value;
     const nameValidation = isValidName(name);
     if (!nameValidation.valid) {
@@ -347,7 +345,7 @@ function validateForm() {
         return false;
     }
 
-    // Validate pincode
+
     const pincode = document.getElementById('pincode').value;
     const pincodeValidation = isValidPincode(pincode);
     if (!pincodeValidation.valid) {
@@ -359,7 +357,7 @@ function validateForm() {
         return false;
     }
 
-    // Validate phone number
+  
     const phoneNumber = document.getElementById('phone').value;
     const phoneValidation = isValidPhoneNumber(phoneNumber);
     if (!phoneValidation.valid) {
@@ -371,7 +369,7 @@ function validateForm() {
         return false;
     }
 
-    // Validate alternate phone number
+ 
     const altPhoneNumber = document.getElementById('altPhone').value;
     const altPhoneValidation = isValidPhoneNumber(altPhoneNumber);
     if (!altPhoneValidation.valid) {
@@ -383,7 +381,7 @@ function validateForm() {
         return false;
     }
 
-    // Check if phone numbers are different
+
     if (phoneNumber === altPhoneNumber) {
         Swal.fire({
             title: 'Phone Number Error',
@@ -396,20 +394,21 @@ function validateForm() {
     return true;
 }
 
-// Initialize form validation
+
 document.addEventListener('DOMContentLoaded', function() {
-    // Set up input restrictions
+   
     setupInputRestrictions();
 
-    // Set up form submission handling
+    
     const form = document.getElementById('addressForm');
     form.addEventListener('submit', function(event) {
-        event.preventDefault(); // Always prevent default first
+        event.preventDefault();
         if (validateForm()) {
-            this.submit(); // Only submit if validation passes
+            this.submit(); 
         }
     });
 });
+
 </script>
 
 <%- include("../../views/layouts/user/footer") %>

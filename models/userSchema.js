@@ -38,7 +38,7 @@ const userSchema=new mongoose.Schema({
         default:false
     },
     cart:[{
-        type:Schema.Types.ObjectId,//type object id is a refferenece to another collection
+        type:Schema.Types.ObjectId,
         ref:'Cart'
     }],
     wallet:{
@@ -89,5 +89,5 @@ const userSchema=new mongoose.Schema({
 
 
 
-// const User=mongoose.model("User",userSchema);
+
 module.exports=mongoose.model("User",userSchema) ;

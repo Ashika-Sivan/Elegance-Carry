@@ -1,6 +1,9 @@
 const { unblock } = require("sharp");
 const Brand=require("../../models/brandSchema")
 const product=require("../../models/productSchema")
+const HttpStatus = require('../../enum/httpStatus');
+const OrderStatus = require('../../enum/orderStatus');
+const Messages = require("../../enum/messages");
 
 
 const getBrandPage=async(req,res)=>{
@@ -21,58 +24,60 @@ const getBrandPage=async(req,res)=>{
         })
         
     } catch (error) {
-        res.redirect("/pageerror")
+        res.status(HttpStatus.INTERNAL_SERVER_ERROR).redirect("/pageerror")
         
     }
 };
 
 const addBrand = async (req, res) => {
     try {
-        const brandName = req.body.name; // Ensure this matches the schema
+        const brandName = req.body.name.trim()
         const existingBrand = await Brand.findOne({ name: brandName });
+
+        if(!brandName){
+            return res.status(HttpStatus.BAD_REQUEST).send('brand name required')
+        }
         
+    const validPattern = /^[A-Za-z0-9\s&().,-]+$/;
+    if (!validPattern.test(brandName)) {
+        return res.status(400).send("Brand name contains invalid characters.");
+     }
+
+     
         if (!existingBrand) {
-
-            // const image = req.file ? req.file.filename : null; // Ensure file upload is handled
-            
-            // if (!image) {
-            //     return res.status(400).send("Brand image is required.");
-            // }
-
             const newBrand = new Brand({
                 name: brandName,
-                // brandImage: [image], // Ensure this matches the schema type
             });
 
             await newBrand.save();
             res.redirect("/admin/brands");
         } else {
-            res.status(400).send("Brand already exists.");
+            res.status(HttpStatus.BAD_REQUEST).send("Brand already exists.");
         }
     } catch (error) {
         console.error("Error adding brand:", error);
-        res.redirect("/pageerror");
+        res.status(HttpStatus.INTERNAL_SERVER_ERROR).redirect("/pageerror");
     }
 };
 
 
 const blockBrand = async (req, res) => {
     try {
-        const id = req.body.id; // Changed from req.query to req.body
+        const id = req.body.id; 
         await Brand.updateOne({ _id: id }, { $set: { isBlocked: true } });
-        res.status(200).json({ success: true });
+        res.status(HttpStatus.OK).json({ success: true });
     } catch (error) {
-        res.status(500).json({ error: 'Server error' });
+        res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({ error: Messages.INTERNAL_SERVER_ERROR });
     }
 };
 
 const unBlockBrand = async (req, res) => {
     try {
-        const id = req.body.id; // Changed from req.query to req.body
+        const id = req.body.id; 
         await Brand.updateOne({ _id: id }, { $set: { isBlocked: false } });
-        res.status(200).json({ success: true });
+        res.status(HttpStatus.OK).json({ success: true });
     } catch (error) {
-        res.status(500).json({ error: 'Server error' });
+        res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({ error: Messages.INTERNAL_SERVER_ERROR });
     }
 };
 

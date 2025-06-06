@@ -1,5 +1,4 @@
 <%- include("../layouts/user/header.ejs") %>
-<%- include("../layouts/user/sidebar.ejs")%>
 
 <style>
     body {
@@ -8,19 +7,29 @@
         margin: 0;
         padding: 0;
     }
-    .cart-container {
-        max-width: 900px;
+
+    .container {
+        display: flex;
+        max-width: 1200px;
         margin: 20px auto;
+        gap: 20px;
+        padding: 0 10px;
+    }
+
+    .cart-container {
+        flex: 1;
         background: white;
         padding: 20px;
         border-radius: 10px;
         box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
     }
+
     .cart-header {
         font-size: 24px;
         font-weight: bold;
         margin-bottom: 20px;
     }
+
     .cart-item {
         display: flex;
         align-items: center;
@@ -28,31 +37,37 @@
         border-bottom: 1px solid #ddd;
         padding: 15px 0;
     }
+
     .cart-item img {
         width: 80px;
         height: 80px;
         border-radius: 5px;
     }
+
     .cart-item-details {
         flex: 1;
         margin-left: 15px;
     }
+
     .cart-item-title {
         font-size: 16px;
         font-weight: bold;
     }
+
     .cart-item-price {
         color: #ff3f6c;
         font-size: 16px;
     }
+
     .cart-summary {
         text-align: right;
         margin-top: 20px;
         font-size: 18px;
         font-weight: bold;
     }
+
     .checkout-btn {
-        background: #ff3f6c;
+        background-color: #28a745;
         color: white;
         padding: 10px 15px;
         border: none;
@@ -65,150 +80,215 @@
         text-decoration: none;
         font-size: 16px;
     }
+
+    .checkout-btn:hover {
+        background-color: #218838;
+        color: white;
+        text-decoration: none;
+    }
+
     .quantity-selector {
         display: flex;
         align-items: center;
         gap: 5px;
     }
+
     .quantity-selector button {
         border: none;
         background-color: #ddd;
         padding: 5px;
         cursor: pointer;
     }
-    .checkout-btn {
-  background-color: #28a745;
-  color: white;
-  text-decoration: none;
-  margin-left: 10px;
-}
 
-.checkout-btn:hover {
-  background-color: #218838;
-  color: white;
-  text-decoration: none;
-}
+    /* Responsive Styles for Cart Page */
+    @media (max-width: 1024px) {
+        .container {
+            flex-direction: column;
+        }
+
+        .cart-container {
+            width: 100%;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .cart-item {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 10px;
+        }
+
+        .cart-item img {
+            width: 60px;
+            height: 60px;
+        }
+
+        .cart-item-details {
+            margin-left: 0;
+        }
+
+        .cart-item-title {
+            font-size: 14px;
+        }
+
+        .cart-item-price {
+            font-size: 14px;
+        }
+
+        .cart-summary {
+            font-size: 16px;
+        }
+
+        .checkout-btn {
+            font-size: 14px;
+            padding: 8px;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .cart-item img {
+            width: 50px;
+            height: 50px;
+        }
+
+        .cart-item-title {
+            font-size: 12px;
+        }
+
+        .cart-item-price {
+            font-size: 12px;
+        }
+
+        .quantity-selector button {
+            padding: 3px;
+        }
+
+        .cart-summary {
+            font-size: 14px;
+        }
+
+        .checkout-btn {
+            font-size: 12px;
+            padding: 6px;
+        }
+
+        .cart-header {
+            font-size: 20px;
+        }
+    }
 </style>
 
 <body>
-    <div class="cart-container">
-        <div class="cart-header">My Shopping Cart</div>
+    <div class="container">
+        <%- include("../layouts/user/sidebar.ejs", { currentPage: 'cart' }) %>
 
-        <% if (cart && cart.items.length > 0) { %>
-            <% cart.items.forEach(item => { %>
-                <div class="cart-item" id="cart-item-<%= item.productId._id %>">
-                    <img src="/img/<%= item.productId.productImage[0] %>" alt="<%=item.productId.productName%>">
-                    <div class="cart-item-details">
-                        <div class="cart-item-title"><%= item.productId.productName %></div>
-                        <div class="cart-item-price">₹<%= item.productId.salePrice %></div>
+        <div class="cart-container">
+            <div class="cart-header">My Shopping Cart</div>
 
-                        <div class="quantity-selector">
-                            <button onclick="updateQuantity('<%= item.productId._id %>', -1)">-</button>
-                            <span id="qty-<%= item.productId._id %>"><%= item.quantity %></span>
-                            <button onclick="updateQuantity('<%= item.productId._id %>', 1)">+</button>
+            <% if (cart && cart.items.length > 0) { %>
+                <% cart.items.forEach(item => { %>
+                    <div class="cart-item" id="cart-item-<%= item.productId._id %>">
+                        <img src="/img/<%= item.productId.productImage[0] %>" alt="<%=item.productId.productName%>">
+                        <div class="cart-item-details">
+                            <div class="cart-item-title"><%= item.productId.productName %></div>
+                            <div class="cart-item-price">₹<%= item.productId.salePrice %></div>
+                            <div class="quantity-selector">
+                                <button onclick="updateQuantity('<%= item.productId._id %>', -1)">-</button>
+                                <span id="qty-<%= item.productId._id %>"><%= item.quantity %></span>
+                                <button onclick="updateQuantity('<%= item.productId._id %>', 1)">+</button>
+                            </div>
                         </div>
+                        <i class="fa fa-trash" style="cursor:pointer; color: #ff3f6c;" onclick="removeItem('<%= item.productId._id %>')"></i>
                     </div>
-                    <i class="fa fa-trash" style="cursor:pointer; color: #ff3f6c;" onclick="removeItem('<%= item.productId._id %>')"></i>
-                </div>
-            <% }); %>
-        <% } else { %>
-            <p>Your cart is empty!</p>
-        <% } %>
+                <% }); %>
+            <% } else { %>
+                <p>Your cart is empty!</p>
+            <% } %>
 
-        <div class="cart-summary">Total: ₹<%= totalAmount %></div>
-        <a href="/check-out" class="btn btn-primary checkout-btn">Proceed to Checkout</a>
-     
+            <div class="cart-summary">Total: ₹<%= totalAmount %></div>
+            <a 
+                href="<%= totalAmount > 0 ? '/check-out' : '#' %>" 
+                class="btn btn-primary checkout-btn <%= totalAmount === 0 ? 'disabled' : '' %>">
+                Proceed to Checkout
+            </a>
+        </div>
     </div>
 </body>
 
 <script>
-
-
-
-
-function updateQuantity(productId, change) {
-    fetch('/update-cart', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ productId, change })
-    })
-    .then(res => res.json())
-    .then(data => {
-        if (data.success) {
-            // Update quantity
-            const qtyElement = document.getElementById('qty-' + productId);
-            if (qtyElement) {
-                qtyElement.innerText = data.newQuantity;
+    function updateQuantity(productId, change) {
+        fetch('/update-cart', {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ productId, change })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                const qtyElement = document.getElementById('qty-' + productId);
+                if (qtyElement) {
+                    qtyElement.innerText = data.newQuantity;
+                }
+                
+                const summaryElement = document.querySelector('.cart-summary');
+                if (summaryElement) {
+                    summaryElement.innerText = 'Total: ₹' + data.totalAmount.toFixed(2);
+                }
+            } else {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Oops...',
+                    text: data.message || 'Something went wrong'
+                });
             }
-            
-            // Update total amount
-            const summaryElement = document.querySelector('.cart-summary');
-            if (summaryElement) {
-                summaryElement.innerText = 'Total: ₹' + data.totalAmount.toFixed(2);
-            }
-        } else {
+        })
+        .catch(error => {
+            console.error('Error:', error);
             Swal.fire({
                 icon: 'error',
-                title: 'Oops...',
-                text: data.message || 'Something went wrong'
+                title: 'Error!',
+                text: 'Failed to update quantity'
             });
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        Swal.fire({
-            icon: 'error',
-            title: 'Error!',
-            text: 'Failed to update quantity'
         });
-    });
-}
+    }
 
-
-function removeItem(productId) {
-    Swal.fire({
-        title: "Are you sure?",
-        text: "Do you want to remove this item from your cart?",
-        icon: "warning",
-        showCancelButton: true,
-        confirmButtonColor: "#ff3f6c",
-        cancelButtonColor: "#6c757d",
-        confirmButtonText: "Yes, remove it!"
-    }).then((result) => {
-        if (result.isConfirmed) {
-            fetch('/remove-from-cart', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ productId })
-            })
-            .then(res => res.json())
-            .then(data => {
-                if (data.success) {
-                    document.getElementById('cart-item-' + productId).remove();
-                    document.querySelector('.cart-summary').innerText = 'Total: ₹' + data.newTotal.toFixed(2);
-
-                    Swal.fire("Removed!", "The item has been removed from your cart.", "success");
-                } else {
-                    Swal.fire("Error!", data.message, "error");
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                Swal.fire("Error!", "Failed to remove item from cart.", "error");
-            });
-        }
-    });
-}
-
-
-
-
-
-
+    function removeItem(productId) {
+        Swal.fire({
+            title: "Are you sure?",
+            text: "Do you want to remove this item from your cart?",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonColor: "#ff3f6c",
+            cancelButtonColor: "#6c757d",
+            confirmButtonText: "Yes, remove it!"
+        }).then((result) => {
+            if (result.isConfirmed) {
+                fetch('/remove-from-cart', {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ productId })
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        document.getElementById('cart-item-' + productId).remove();
+                        document.querySelector('.cart-summary').innerText = 'Total: ₹' + data.newTotal.toFixed(2);
+                        Swal.fire("Removed!", "The item has been removed from your cart.", "success");
+                    } else {
+                        Swal.fire("Error!", data.message, "error");
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    Swal.fire("Error!", "Failed to remove item from cart.", "error");
+                });
+            }
+        });
+    }
 </script>
 
 <%- include("../layouts/user/footer.ejs") %>

@@ -1,15 +1,203 @@
-
-<%- include("../../views/layouts/admin/header",{currentPage:'users'}) %>
+<!DOCTYPE html>
+<html lang="en">
 <head>
-    <link rel="stylesheet" href="/css/dashboard.css"> <!-- Add your CSS file if available -->
+    <meta charset="utf-8">
+    <title>Elegance Carry - Admin Dashboard</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="shortcut icon" type="image/x-icon" href="#">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
     <!-- Include Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="/css/dashboard.css">
+    <style>
+        .dashboard-container {
+            margin-left: 250px;
+            padding: 20px;
+            font-family: Arial, sans-serif;
+            background-color: #ffffff;
+            min-height: 100vh;
+            transition: margin-left 0.3s ease;
+        }
 
+        .filter-section, .chart-section, .overview-section, .best-selling-products, .best-selling-categories, .best-selling-brands {
+            margin-bottom: 30px;
+        }
 
+        .filter-section form {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .filter-section select, .filter-section input {
+            padding: 5px;
+            font-size: 14px;
+        }
+
+        .date-range {
+            margin-top: 10px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .chart-section {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .overview-stats {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        .stat-box {
+            flex: 1 1 200px;
+            margin: 10px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            text-align: center;
+            min-width: 150px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+            font-size: 14px;
+        }
+
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #f2f2f2;
+        }
+
+        .logout-btn {
+            text-decoration: none;
+            padding: 8px 16px;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-weight: bold;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            transition: background-color 0.3s ease;
+        }
+
+        .logout-btn:hover {
+            background-color: #0056b3;
+        }
+
+        /* Responsive Styles */
+        @media (max-width: 1024px) {
+            .dashboard-container {
+                margin-left: 0;
+            }
+
+            .chart-section {
+                max-width: 100%;
+                padding: 0 10px;
+            }
+
+            .filter-section form {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .date-range {
+                flex-direction: column;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .filter-section h2 {
+                font-size: 20px;
+            }
+
+            .chart-section h3, .overview-section h3, .best-selling-products h3, .best-selling-categories h3, .best-selling-brands h3 {
+                font-size: 18px;
+            }
+
+            .stat-box {
+                flex: 1 1 100%;
+                margin: 5px;
+                padding: 8px;
+            }
+
+            table {
+                font-size: 12px;
+            }
+
+            th, td {
+                padding: 6px;
+            }
+
+            .logout-btn {
+                padding: 6px 12px;
+                font-size: 14px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .filter-section h2 {
+                font-size: 18px;
+            }
+
+            .chart-section h3, .overview-section h3, .best-selling-products h3, .best-selling-categories h3, .best-selling-brands h3 {
+                font-size: 16px;
+            }
+
+            .filter-section select, .filter-section input {
+                width: 100%;
+                font-size: 12px;
+            }
+
+            .date-range {
+                gap: 5px;
+            }
+
+            .stat-box {
+                padding: 6px;
+                font-size: 12px;
+            }
+
+            table {
+                display: block;
+                overflow-x: auto;
+                white-space: nowrap;
+            }
+
+            th, td {
+                padding: 4px;
+                font-size: 10px;
+            }
+
+            .logout-btn {
+                padding: 5px 10px;
+                font-size: 12px;
+            }
+
+            .best-selling-products img {
+                width: 40px;
+                height: 40px;
+            }
+        }
+    </style>
 </head>
-    
 <body>
-    <div class="dashboard-container" style="margin-left: 250px;">
+    <!-- Include header.ejs -->
+    <%- include('../../views/layouts/admin/header', { currentPage: 'dashboard' }) %>
+
+    <div class="dashboard-container">
         <!-- Filter Section -->
         <div class="filter-section">
             <h2>Admin Dashboard - Analytics</h2>
@@ -32,6 +220,9 @@
                     <input type="date" name="endDate" id="endDate" value="<%= endDate %>" onchange="this.form.submit()">
                 </div>
             </form>
+        </div>
+        <div style="display: flex; justify-content: flex-end; margin-right: 20px;">
+            <a href="/admin/logout" class="logout-btn">Logout</a>
         </div>
 
         <!-- Chart Section -->
@@ -172,7 +363,7 @@
             }
         });
 
-        // Fetch chart data dynamically (you can pass this from the server)
+        // Fetch chart data dynamically
         const chartData = {
             labels: <%- JSON.stringify(chartLabels) %>,
             data: <%- JSON.stringify(chartData) %>
@@ -181,12 +372,12 @@
         // Render Chart.js Line Chart for Revenue Trend
         const ctx = document.getElementById('revenueChart').getContext('2d');
         new Chart(ctx, {
-            type: 'line', // Can change to 'bar', 'pie', etc.
+            type: 'line',
             data: {
-                labels: chartData.labels, // e.g., ["Jan", "Feb", ...] or ["Day 1", "Day 2", ...]
+                labels: chartData.labels,
                 datasets: [{
                     label: 'Revenue ($)',
-                    data: chartData.data, // e.g., [1000, 2000, ...]
+                    data: chartData.data,
                     borderColor: 'rgba(75, 192, 192, 1)',
                     backgroundColor: 'rgba(75, 192, 192, 0.2)',
                     fill: true,
@@ -213,48 +404,5 @@
             }
         });
     </script>
-    <style>
-        .dashboard-container {
-    padding: 20px;
-    font-family: Arial, sans-serif;
-}
-
-.filter-section, .chart-section, .overview-section, .best-selling-products, .best-selling-categories, .best-selling-brands {
-    margin-bottom: 30px;
-}
-
-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 10px;
-}
-
-th, td {
-    border: 1px solid #ddd;
-    padding: 8px;
-    text-align: left;
-}
-
-th {
-    background-color: #f2f2f2;
-}
-
-.stat-box {
-    display: inline-block;
-    margin: 10px;
-    padding: 10px;
-    border: 1px solid #ccc;
-    text-align: center;
-}
-
-.date-range {
-    margin-top: 10px;
-}
-
-.chart-section {
-    max-width: 800px;
-    margin: 0 auto;
-}
-    </style>
 </body>
 </html>

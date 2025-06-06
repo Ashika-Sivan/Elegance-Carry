@@ -1,164 +1,243 @@
+<%- include("../layouts/user/header.ejs") %>
 
 <style>
-  /* Myntra-inspired Profile Styles */
-.profile-container {
-  margin-left: 270px;
-  margin-top: 30px;
-  padding: 20px;
-  font-family: 'Assistant', -apple-system, BlinkMacSystemFont, sans-serif;
-}
+    /* Container for Sidebar and Profile */
+    .container {
+        display: flex;
+        max-width: 1200px;
+        margin: 20px auto;
+        gap: 20px;
+        padding: 0 15px;
+    }
 
-.profile-box {
-  background-color: #fff;
-  border-radius: 4px;
-  padding: 30px;
-  box-shadow: 2px 1px 1px 2px  #6F4E37;
-  max-width: 800px;
-  margin: auto;
-}
+    /* Profile Container */
+    .profile-container {
+        flex: 1;
+        padding: 20px;
+        font-family: 'Assistant', -apple-system, BlinkMacSystemFont, sans-serif;
+    }
 
-.profile-box h1 {
-  text-align: left;
-  margin-bottom: 30px;
-  color: #282c3f;
-  font-size: 24px;
-  font-weight: 600;
-  border-bottom: 1px solid #eaeaec;
-  padding-bottom: 15px;
-}
+    .profile-box {
+        background-color: #fff;
+        border-radius: 12px;
+        padding: 30px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+        max-width: 800px;
+        margin: auto;
+        transition: all 0.3s ease;
+    }
 
-.profile-info {
-  list-style: none;
-  padding: 0;
-  margin: 30px 0;
-}
+    .profile-box h1 {
+        text-align: left;
+        margin-bottom: 30px;
+        color: #282c3f;
+        font-size: 1.8rem;
+        font-weight: 600;
+        border-bottom: 1px solid #eaeaec;
+        padding-bottom: 15px;
+        position: relative;
+    }
 
-.profile-info li {
-  display: flex;
-  align-items: center;
-  margin-bottom: 25px;
-  font-size: 14px;
-  padding: 0 15px;
-}
+    .profile-box h1::after {
+        content: '';
+        width: 50px;
+        height: 3px;
+        background: #ff3f6c;
+        position: absolute;
+        bottom: -1px;
+        left: 0;
+        border-radius: 2px;
+    }
 
-.profile-info label {
-  font-weight: 500;
-  color: #7e818c;
-  width: 150px;
-  text-transform: uppercase;
-  font-size: 12px;
-}
+    .profile-info {
+        list-style: none;
+        padding: 0;
+        margin: 30px 0;
+    }
 
-.profile-info span {
-  color: #282c3f;
-  flex: 1;
-  padding-left: 20px;
-}
+    .profile-info li {
+        display: flex;
+        align-items: center;
+        margin-bottom: 25px;
+        font-size: 14px;
+        padding: 0 15px;
+        transition: all 0.3s ease;
+    }
 
-.save-changes {
-  display: flex;
-  gap: 15px;
-  padding: 20px 15px;
-  border-top: 1px solid #eaeaec;
-  margin-top: 20px;
-}
+    .profile-info li:hover {
+        background: #f9f9f9;
+        border-radius: 8px;
+    }
 
-.save-changes button {
-  padding: 12px 45px;
-  font-size: 14px;
-  font-weight: 600;
-  border-radius: 4px;
-  cursor: pointer;
-  text-transform: uppercase;
-  transition: all 0.3s ease;
-}
+    .profile-info label {
+        font-weight: 500;
+        color: #7e818c;
+        width: 150px;
+        text-transform: uppercase;
+        font-size: 12px;
+    }
 
-.save-changes button:first-child {
-  background-color: #ff3f6c;
-  color: #fff;
-  border: none;
-}
+    .profile-info span {
+        color: #282c3f;
+        flex: 1;
+        padding-left: 20px;
+        font-weight: 500;
+    }
 
-.save-changes button:last-child {
-  background-color: #fff;
-  color: #282c3f;
-  border: 1px solid #d4d5d9;
-}
+    .save-changes {
+        display: flex;
+        gap: 15px;
+        padding: 20px 15px;
+        border-top: 1px solid #eaeaec;
+        margin-top: 20px;
+    }
 
-.save-changes button:hover {
-  opacity: 0.8;
-}
+    .save-changes button {
+        padding: 12px 45px;
+        font-size: 14px;
+        font-weight: 600;
+        border-radius: 8px;
+        cursor: pointer;
+        text-transform: uppercase;
+        transition: all 0.3s ease;
+    }
 
-/* Responsive design */
-@media screen and (max-width: 768px) {
-  .profile-container {
-    margin-left: 0;
-    padding: 15px;
-  }
-  
-  .profile-box {
-    padding: 20px;
-  }
-  
-  .profile-info li {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 8px;
-  }
-  
-  .profile-info label {
-    width: 100%;
-  }
-  
-  .profile-info span {
-    padding-left: 0;
-  }
-  
-  .save-changes {
-    flex-direction: column;
-  }
-  
-  .save-changes button {
-    width: 100%;
-  }
-}
+    .save-changes button:first-child {
+        background: linear-gradient(90deg, #ff3f6c 0%, #ff5a82 100%);
+        color: #fff;
+        border: none;
+    }
+
+    .save-changes button:first-child:hover {
+        background: linear-gradient(90deg, #e6365d 0%, #e64e73 100%);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 10px rgba(255, 63, 108, 0.2);
+    }
+
+    .save-changes button:last-child {
+        background-color: #fff;
+        color: #282c3f;
+        border: 1px solid #d4d5d9;
+    }
+
+    .save-changes button:last-child:hover {
+        background-color: #f5f5f5;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Responsive Design */
+    @media (max-width: 1024px) {
+        .container {
+            flex-direction: column;
+        }
+
+        .profile-container {
+            margin-left: 0;
+            padding: 15px;
+        }
+
+        .profile-box {
+            padding: 20px;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .profile-box h1 {
+            font-size: 1.5rem;
+        }
+
+        .profile-info li {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 8px;
+        }
+
+        .profile-info label {
+            width: 100%;
+            font-size: 11px;
+        }
+
+        .profile-info span {
+            padding-left: 0;
+            font-size: 13px;
+        }
+
+        .save-changes {
+            flex-direction: column;
+        }
+
+        .save-changes button {
+            width: 100%;
+            padding: 10px;
+            font-size: 13px;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .profile-box h1 {
+            font-size: 1.3rem;
+        }
+
+        .profile-box h1::after {
+            width: 40px;
+        }
+
+        .profile-info li {
+            margin-bottom: 20px;
+            padding: 0 10px;
+        }
+
+        .profile-info label {
+            font-size: 10px;
+        }
+
+        .profile-info span {
+            font-size: 12px;
+        }
+
+        .save-changes button {
+            padding: 8px;
+            font-size: 12px;
+        }
+    }
 </style>
 
-<%- include("../layouts/user/header.ejs") %>
-<%- include("../layouts/user/sidebar.ejs")%>
+<div style="margin-bottom: 10rem;">
+    <div class="container">
+        <%- include("../layouts/user/sidebar.ejs") %>
 
-<div style="margin-bottom: 10rem; ">
-
-  
-  <!-- Profile Container -->
-  <div class="profile-container">
-    <div class="profile-box">
-      <h1>User Profile</h1>
-      <ul class="profile-info">
-        <li>
-          <label>Full Name:</label>
-          <span><%= user.name %></span>
-        </li>
-        <li>
-          <label>Email Address:</label>
-          <span><%= user.email %></span>
-        </li>
-        <li>
-          <label>Phone:</label>
-          <span><%= user.phone %></span>
-        </li>
-        <li>
-          <label>Referal code:</label>
-          <span><%= user.referalCode %></span>
-        </li>
-      </ul>
-      <div class="save-changes">
-        <button type="button" onclick="console.log('Edit button clicked'); window.location.href='/edit-profile';">Edit Profile</button>
-        <button type="button" onclick="window.location.href='/password-reset';">Reset Password</button>
-      </div>
-      
-      
+        <!-- Profile Container -->
+        <div class="profile-container">
+            <div class="profile-box">
+                <h1>User Profile</h1>
+                <ul class="profile-info">
+                    <li>
+                        <label>Full Name:</label>
+                        <span><%= user.name %></span>
+                    </li>
+                    <li>
+                        <label>Email Address:</label>
+                        <span><%= user.email %></span>
+                    </li>
+                    <li>
+                        <label>Phone:</label>
+                        <span><%= user.phone %></span>
+                    </li>
+                    <li>
+                        <label>Referral Code:</label>
+                        <span><%= user.referalCode %></span>
+                    </li>
+                </ul>
+                <div class="save-changes">
+                    <button type="button" onclick="console.log('Edit button clicked'); window.location.href='/edit-profile';">Edit Profile</button>
+                    <% if(!user.googleId || user.password) { %>
+                        <button type="button" onclick="window.location.href='/password-reset';">Reset Password</button>
+                    <% } %>
+                </div>
+            </div>
+        </div>
     </div>
-  </div>
 </div>
-  <%- include("../layouts/user/footer.ejs") %>
+
+<%- include("../layouts/user/footer.ejs") %>

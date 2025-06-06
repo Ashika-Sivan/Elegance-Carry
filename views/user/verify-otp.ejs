@@ -160,6 +160,49 @@
             color: #94969f;
             font-size: 14px;
         }
+
+        @media (max-width: 576px) {
+    .verification-box {
+        padding: 20px;
+    }
+
+    .verification-header h1 {
+        font-size: 20px;
+    }
+
+    .verification-header p,
+    .login-link,
+    .btn-resend {
+        font-size: 13px;
+    }
+
+    .form-control {
+        height: 45px;
+        font-size: 14px;
+        padding: 0 12px;
+    }
+
+    .otp-timer {
+        width: 50px;
+        height: 50px;
+        font-size: 16px;
+    }
+
+    .timer-container {
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .btn-verify {
+        font-size: 13px;
+        height: 45px;
+    }
+
+    .alert-danger {
+        font-size: 13px;
+    }
+}
+
     </style>
 </head>
 
@@ -240,41 +283,40 @@ startTimer()
             }
 
             $.ajax({
-                type: "POST",
-                url: "/verify-otp",
-                data: { otp: otpInput },
-                success: function(response) {
-                    if (response.success) {
-                        clearInterval(timerInterval);
-                        Swal.fire({
-                            icon: "success",
-                            title: "OTP Verified Successfully",
-                            text: response.message || "You will be redirected shortly.",
-                            showConfirmButton: false,
-                            timer: 1500,
-                        }).then(() => {
-                            window.location.href = response.redirectUrl;
-                        });
-                    } else {
-                        Swal.fire({
-                            title: "Error",
-                            text: response.message || "OTP verification failed.",
-                            icon: "error",
-                            confirmButtonText: "OK",
-                        });
-                    }
-                },
-                error: function(xhr, status, error) {
-                    Swal.fire({
-                        icon: "error",
-                        title: "Invalid OTP",
-                        text: "Please try again. Error: " + error,
-                    });
-                },
-            });
-            return false;
+  type: "POST",
+  url: "/verify-otp",
+  data: { otp: otpInput }
+})
+.done(function(response) {
+  if (response.success) {
+    clearInterval(timerInterval);
+    Swal.fire({
+      icon: "success",
+      title: "OTP Verified Successfully",
+      text: response.message || "You will be redirected shortly.",
+      showConfirmButton: false,
+      timer: 1500,
+    }).then(() => {
+      window.location.href = response.redirectUrl;
+    });
+  } else {
+    Swal.fire({
+      title: "Error",
+      text: response.message || "OTP verification failed.",
+      icon: "error",
+      confirmButtonText: "OK",
+    });
+  }
+})
+.fail(function(xhr) {
+  const response = xhr.responseJSON;
+  Swal.fire({
+    icon: "error",
+    title: "Error",
+    text: response?.message || "An unexpected error occurred. Please try again.",
+  });
+});
         }
-
       
 function resendOTP() {
     clearInterval(timerInterval);

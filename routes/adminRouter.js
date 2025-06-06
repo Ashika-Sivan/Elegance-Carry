@@ -26,8 +26,7 @@ router.get("/users",adminAuth,customerController.customerInfo)
 router.patch("/blockCustomer", adminAuth, customerController.customerBlocked);
 router.patch("/unblockCustomer", adminAuth, customerController.customerUnBlocked);
 
-// router.get("/blockCustomer",customerController.customerBlocked)
-// router.get("/unblockCustomer",customerController.customerunBlocked)
+
 //category management
 router.get("/category",adminAuth,categoryController.categoryInfo)
 router.post("/addCategory",adminAuth,categoryController.addCategory)
@@ -59,25 +58,24 @@ router.post("/removeProductOffer",adminAuth,productController.removeProductOffer
 
 router.post("/addBrand", adminAuth, upload.single("image"), handleMulterError, brandController.addBrand);
 router.post("/addProducts", adminAuth, upload.array("images", 4), handleMulterError, productController.addProducts);
-router.post("/editProduct/:id", adminAuth, upload.array("images", 4), handleMulterError, productController.editProduct);
-router.post("/deleteImage",adminAuth,productController.deleteSingleImage);
+router.post("/editProduct/:id", adminAuth, upload.array("images", 4), handleMulterError, productController.editProduct);//put
+router.delete("/deleteImage",adminAuth,productController.deleteSingleImage);//delete
 //order Management
 router.get("/adminOrderList",adminAuth,orderController.loadOrderListPage)
 router.get('/order/:id', adminAuth, orderController.loadViewDetails);
-router.post("/order/update-item-status",adminAuth,orderController.updateOrderItemStatus)
-router.post("/order/approve-return", adminAuth, orderController.approveReturn);
+router.patch("/order/update-item-status",adminAuth,orderController.updateOrderItemStatus)//put/patch
+router.patch("/order/approve-return", adminAuth, orderController.approveReturn);
 //coupen Management
+router.get('/couponList',adminAuth,couponController.getCouponList)
 router.get("/coupon",adminAuth,couponController.getCouponPage)
 router.post("/createCoupon",adminAuth,couponController.createCoupon)
-router.post("/deleteCoupon/:couponId", adminAuth, couponController.deleteCoupon);
+router.delete("/deleteCoupon/:couponId", adminAuth, couponController.deleteCoupon);//delete
 
 
 
 
 router.get("/salesReport",adminAuth,adminController.getSalesReport)
-// router.post('/admin/order/approve-return',adminAuth, adminController.approveReturnRequest);
-// router.get("/admin/salesReport/filter",adminAuth,adminController. getFilteredSalesReport);
-// router.get("/AdminDashboard",adminAuth,adminController.getAdminDashboard)
+
 
 router.all("*", (req, res) => {
     const errorMessage = "The page you are looking for doesn't exist.";

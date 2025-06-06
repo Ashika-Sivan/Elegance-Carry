@@ -1,209 +1,441 @@
-<%- include("../../views/layouts/admin/header",{currentPage:'users'}) %>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Elegance Carry - Customers</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="shortcut icon" type="image/x-icon" href="#">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
     <style>
         .customers-container {
-            margin-left: 260px;
-
+            margin-left: 250px;
+            padding: 20px;
+            background-color: #ffffff;
+            min-height: 100vh;
+            transition: margin-left 0.3s ease;
         }
 
         .dashboard-wrapper {
             margin-top: 50px;
+            max-width: 1200px;
+            margin-left: auto;
+            margin-right: auto;
         }
 
-        /* .dashboard-wrapper {
-        position: absolute;
-        top: 70px;
-        left: 240px;
-        width: calc(100% - 240px);
-        padding: 2rem;
-        margin-left: 250px;
-    } */
-    </style>
+        .search-container {
+            position: relative;
+            margin: 20px 0;
+        }
 
-<div class="customers-container">
-    <div class="content-header row">
-        <div class="d-flex justify-content-between align-items-center">
-            <h2 class="content-title card-title">Customers</h2>
-        </div>
-    </div>
-    <div class="dashboard-wrapper">
-        <header class="card-header text-center mb-20">
-            <form action="/admin/users" method="get" class="d-inline">
-                <div class="input-group input-group-sm border border-1 border-grey rounded-pill"
-                    style="width: 500px; margin-left: 230px;">
-                    <input type="text" class="form-control border-0 rounded-pill" placeholder="Search customers..."
-                        name="search">
-                    <button class="btn border-0" type="submit">Search</button>
-                </div>
-            </form>
-        </header>
-        <div class="right mt-5">
-            <table class="table table-striped">
-                <thead>
-                    <tr>
-                        <th scope="col"><b>Name</b></th>
-                        <th scope="col"><b>Email</b></th>
-                        <th scope="col"><b>Phone No</b></th>
-                        <th scope="col"><b>Action</b></th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <% for(let i=0; i < data.length; i++) { %>
-                        <tr>
-                            <td><%= data[i].name %></td>
-                            <td><%= data[i].email %></td>
-                            <td><%= data[i].phone %></td>
-                            <td>
-                                <% if(data[i].isBlocked === false) { %>
-                                    <button class="btn btn-danger" style="width: 80px;"
-                                        onclick="confirmBlock('<%= data[i]._id %>', 'block')">
-                                        Block
-                                    </button>
-                                <% } else { %>
-                                    <button class="btn btn-success" style="width: 80px;"
-                                        onclick="confirmBlock('<%= data[i]._id %>', 'unblock')">
-                                        Unblock
-                                    </button>
-                                <% } %>
-                            </td>
-                        </tr>
-                    <% } %>
-                </tbody>
-            </table>
-        </div>
-        <div class="container mt-3">
-            <nav aria-label="Page navigation">
-                <ul class="pagination justify-content-center mb-20" style="margin-right: 200px;">
-                    <% for(let i=1; i <= totalPages; i++) { %>
-                        <li class="page-item <%= (i === currentPage) ? 'active' : '' %>">
-                            <a class="page-link" href="?page=<%= i %>"><%= i %></a>
-                        </li>
-                    <% } %>
-                </ul>
-            </nav>
-        </div>
-    </div>
-</div>
+        .search-input {
+            transition: all 0.3s ease;
+        }
 
-<!-- Add SweetAlert2 and custom script at the bottom -->
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-<script>
-async function confirmBlock(customerId, action) {
-    const url = action === 'block' ? '/admin/blockCustomer' : '/admin/unblockCustomer';
-    const actionText = action === 'block' ? 'block' : 'unblock';
+        .search-input:focus {
+            box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+        }
 
-    Swal.fire({
-        title: `Are you sure?`,
-        text: `Do you want to ${actionText} this customer?`,
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#3085d6',
-        cancelButtonColor: '#d33',
-        confirmButtonText: `Yes, ${actionText} it!`
-    }).then(async (result) => {
-        if (result.isConfirmed) {
-            try {
-                const response = await fetch(url, {
-                    method: 'PATCH',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ id: customerId })
-                });
+        .clear-search-btn {
+            position: absolute;
+            right: 50px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            font-size: 18px;
+            color: #6c757d;
+            cursor: pointer;
+            padding: 5px;
+        }
 
-                if (response.ok) {
-                    Swal.fire(
-                        `${actionText.charAt(0).toUpperCase() + actionText.slice(1)}ed!`,
-                        `The customer has been ${actionText}ed.`,
-                        'success'
-                    ).then(() => {
-                        location.reload(); // Refresh to show updated status
-                    });
-                } else {
-                    throw new Error('Request failed');
-                }
-            } catch (error) {
-                Swal.fire(
-                    'Error!',
-                    'There was a problem processing your request.',
-                    'error'
-                );
+        .clear-search-btn:hover {
+            color: #dc3545;
+        }
+
+        .active-search-info {
+            background-color: #e3f2fd;
+            border: 1px solid #2196f3;
+            border-radius: 5px;
+            padding: 10px;
+            margin-bottom: 15px;
+            color: #1976d2;
+        }
+
+        .pagination-container {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+        }
+
+        .no-results {
+            text-align: center;
+            padding: 40px;
+            color: #6c757d;
+        }
+
+        .table {
+            font-size: 14px;
+        }
+
+        .table th, .table td {
+            padding: 8px;
+        }
+
+        .btn-danger, .btn-success {
+            font-size: 14px;
+            padding: 5px 10px;
+        }
+
+        /* Responsive Styles */
+        @media (max-width: 1024px) {
+            .customers-container {
+                margin-left: 0;
+            }
+
+            .search-container .input-group {
+                width: 100% !important;
+                margin-left: 0 !important;
+            }
+
+            .dashboard-wrapper {
+                margin-top: 20px;
             }
         }
-    });
-}
-</script>
 
-    <!-- <div class="customers-container">
+        @media (max-width: 768px) {
+            .content-title {
+                font-size: 20px;
+            }
+
+            .search-container .input-group {
+                width: 100%;
+            }
+
+            .table {
+                font-size: 12px;
+            }
+
+            .table th, .table td {
+                padding: 6px;
+            }
+
+            .btn-danger, .btn-success {
+                width: 60px !important;
+                font-size: 12px;
+                padding: 4px 8px;
+            }
+
+            .active-search-info {
+                font-size: 14px;
+                padding: 8px;
+            }
+
+            .no-results h4 {
+                font-size: 18px;
+            }
+
+            .no-results p {
+                font-size: 14px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .content-title {
+                font-size: 18px;
+            }
+
+            .search-container .input-group {
+                width: 100%;
+            }
+
+            .search-input {
+                font-size: 12px;
+            }
+
+            .clear-search-btn {
+                right: 40px;
+                font-size: 16px;
+            }
+
+            .table {
+                display: block;
+                overflow-x: auto;
+                white-space: nowrap;
+            }
+
+            .table th, .table td {
+                padding: 4px;
+                font-size: 10px;
+            }
+
+            .btn-danger, .btn-success {
+                width: 50px !important;
+                font-size: 10px;
+                padding: 3px 6px;
+            }
+
+            .active-search-info {
+                font-size: 12px;
+                padding: 6px;
+            }
+
+            .no-results {
+                padding: 20px;
+            }
+
+            .no-results h4 {
+                font-size: 16px;
+            }
+
+            .no-results p {
+                font-size: 12px;
+            }
+
+            .pagination .page-link {
+                font-size: 12px;
+                padding: 4px 8px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Include header.ejs -->
+    <%- include('../../views/layouts/admin/header', { currentPage: 'users' }) %>
+
+    <div class="customers-container">
         <div class="content-header row">
             <div class="d-flex justify-content-between align-items-center">
                 <h2 class="content-title card-title">Customers</h2>
-
             </div>
         </div>
         <div class="dashboard-wrapper">
+            <!-- Search Section -->
             <header class="card-header text-center mb-20">
-                <form action="/admin/users" method="get" class="d-inline">
-                    <div class="input-group input-group-sm border border-1 border-grey rounded-pill"
-                        style="width: 500px; margin-left: 230px;">
-                        <input type="text" class="form-control border-0 rounded-pill" placeholder="Search customers..."
-                            name="search">
-                        <button class="btn  border-0" type="submit">Search</button>
-                    </div>
-                </form>
+                <div class="search-container">
+                    <form action="/admin/users" method="get" class="d-inline" id="searchForm">
+                        <div class="input-group input-group-sm border border-1 border-grey rounded-pill"
+                            style="width: 500px; margin-left: 230px; position: relative;">
+                            <input type="text" 
+                                   class="form-control border-0 rounded-pill search-input" 
+                                   placeholder="Search customers by name, email, or phone..." 
+                                   name="search" 
+                                   id="searchInput"
+                                   value="<%= searchQuery || '' %>">
+                            <% if (searchQuery && searchQuery.trim()) { %>
+                                <button type="button" class="clear-search-btn" onclick="clearSearch()" title="Clear search">
+                                    ×
+                                </button>
+                            <% } %>
+                            <button class="btn border-0" type="submit">Search</button>
+                        </div>
+                    </form>
+                </div>
             </header>
+
+            <!-- Active Search Info -->
+            <% if (searchQuery && searchQuery.trim()) { %>
+                <div class="active-search-info">
+                    <strong>Search Results for:</strong> "<%= searchQuery %>" 
+                    (<%= data.length %> customer<%= data.length !== 1 ? 's' : '' %> found)
+                    <button type="button" class="btn btn-sm btn-outline-primary ms-2" onclick="clearSearch()">
+                        Clear Search
+                    </button>
+                </div>
+            <% } %>
+
             <div class="right mt-5">
-                <table class="table table-striped">
-                    <thead>
-                        <tr>
-                            <th scope="col"><b>Name</b></th>
-                            <th scope="col"><b>Email</b></th>
-                            <th scope="col"><b>Phone No</b></th>
-                            <th scope="col"><b>Action</b></th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <%for(let i=0;i<data.length;i++){%>
+                <% if (data.length > 0) { %>
+                    <table class="table table-striped">
+                        <thead>
                             <tr>
-                                <td>
-                                    <%=data[i].name%>
-                                </td>
-                                <td>
-                                    <%=data[i].email%>
-                                </td>
-                                <td>
-                                    <%=data[i].phone%>
-                                </td>
-                                <td>
-                                    <%if(data[i].isBlocked===false){%>
-                                        <button class="btn btn-danger" style="width: 80px;">
-                                            <a href="/admin/blockCustomer?id=<%=data[i]._id%>" class="text-white"
-                                                style="text-decoration: none;">Block</a>
-                                        </button>
-                                        <%}else{%>
-                                            <button class="btn btn-success" style="width: 80px;">
-                                                <a href="/admin/unblockCustomer?id=<%=data[i]._id%>" class="text-white"
-                                                    style="text-decoration: none;">Unblock</a>
-                                            </button>
-                                            <%}%>
-                                </td>
+                                <th scope="col"><b>Name</b></th>
+                                <th scope="col"><b>Email</b></th>
+                                <th scope="col"><b>Phone No</b></th>
+                                <th scope="col"><b>Action</b></th>
                             </tr>
-                            <%}%>
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody>
+                            <% for(let i=0; i < data.length; i++) { %>
+                                <tr>
+                                    <td><%= data[i].name %></td>
+                                    <td><%= data[i].email %></td>
+                                    <td><%= data[i].phone %></td>
+                                    <td>
+                                        <% if(data[i].isBlocked === false) { %>
+                                            <button class="btn btn-danger" style="width: 80px;"
+                                                onclick="confirmBlock('<%= data[i]._id %>', 'block')">
+                                                Block
+                                            </button>
+                                        <% } else { %>
+                                            <button class="btn btn-success" style="width: 80px;"
+                                                onclick="confirmBlock('<%= data[i]._id %>', 'unblock')">
+                                                Unblock
+                                            </button>
+                                        <% } %>
+                                    </td>
+                                </tr>
+                            <% } %>
+                        </tbody>
+                    </table>
+                <% } else { %>
+                    <div class="no-results">
+                        <h4>No customers found</h4>
+                        <% if (searchQuery && searchQuery.trim()) { %>
+                            <p>No customers match your search for "<%= searchQuery %>"</p>
+                            <button class="btn btn-primary" onclick="clearSearch()">Show All Customers</button>
+                        <% } else { %>
+                            <p>No customers are currently registered.</p>
+                        <% } %>
+                    </div>
+                <% } %>
             </div>
-            <div class="container mt-3">
-                <nav aria-label="Page navigation">
-                    <ul class="pagination justify-content-center mb-20" style="margin-right: 200px;">
-                        <%for(let i=1;i<=totalPages;i++){%>
-                            <li class="page-item <%=(i===currentPage) ? 'active' : '' %>">
-                                <a class="page-link" href="?page=<%= i %>">
-                                    <%= i %>
-                                </a>
-                            </li>
-                            <%}%>
-                    </ul>
-                </nav>
-            </div>
+
+            <!-- Pagination -->
+            <% if (totalPages > 1) { %>
+                <div class="pagination-container">
+                    <nav aria-label="Page navigation">
+                        <ul class="pagination justify-content-center mb-20">
+                            <!-- Previous Button -->
+                            <% if (currentPage > 1) { %>
+                                <li class="page-item">
+                                    <a class="page-link" 
+                                       href="?page=<%= currentPage - 1 %><%= searchQuery ? '&search=' + encodeURIComponent(searchQuery) : '' %>">
+                                       Previous
+                                    </a>
+                                </li>
+                            <% } %>
+
+                            <!-- Page Numbers -->
+                            <% for(let i = 1; i <= totalPages; i++) { %>
+                                <li class="page-item <%= (i === currentPage) ? 'active' : '' %>">
+                                    <a class="page-link" 
+                                       href="?page=<%= i %><%= searchQuery ? '&search=' + encodeURIComponent(searchQuery) : '' %>">
+                                       <%= i %>
+                                    </a>
+                                </li>
+                            <% } %>
+
+                            <!-- Next Button -->
+                            <% if (currentPage < totalPages) { %>
+                                <li class="page-item">
+                                    <a class="page-link" 
+                                       href="?page=<%= currentPage + 1 %><%= searchQuery ? '&search=' + encodeURIComponent(searchQuery) : '' %>">
+                                       Next
+                                    </a>
+                                </li>
+                            <% } %>
+                        </ul>
+                    </nav>
+                </div>
+            <% } %>
         </div>
-    </div> -->
+    </div>
+
+    <!-- Add SweetAlert2 and custom script -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        // Real-time search functionality
+        let searchTimeout;
+        const searchInput = document.getElementById('searchInput');
+
+        // Add real-time search as user types
+        searchInput.addEventListener('input', function() {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => {
+                const query = this.value.trim();
+                if (query.length >= 2) { // Start searching after 2 characters
+                    performSearch(query);
+                } else if (query.length === 0) {
+                    // Clear search if input is empty
+                    clearSearch();
+                }
+            }, 500); // Wait 500ms after user stops typing
+        });
+
+        // Handle Enter key press
+        searchInput.addEventListener('keyup', function(event) {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                const query = this.value.trim();
+                if (query) {
+                    performSearch(query);
+                }
+            }
+        });
+
+        function performSearch(searchQuery = null) {
+            const query = searchQuery || document.getElementById('searchInput').value.trim();
+            
+            if (query) {
+                const url = new URL(window.location.href);
+                const params = new URLSearchParams();
+                
+                params.set('search', query);
+                params.set('page', '1'); // Reset to first page when searching
+                
+                window.location.href = `${url.pathname}?${params.toString()}`;
+            }
+        }
+
+        function clearSearch() {
+            // Clear the search input
+            document.getElementById('searchInput').value = '';
+            
+            // Navigate to page without search parameter
+            const url = new URL(window.location.href);
+            const params = new URLSearchParams();
+            params.set('page', '1');
+            
+            window.location.href = `${url.pathname}`;
+        }
+
+        async function confirmBlock(customerId, action) {
+            const url = action === 'block' ? '/admin/blockCustomer' : '/admin/unblockCustomer';
+            const actionText = action === 'block' ? 'block' : 'unblock';
+
+            Swal.fire({
+                title: `Are you sure?`,
+                text: `Do you want to ${actionText} this customer?`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: `Yes, ${actionText} it!`
+            }).then(async (result) => {
+                if (result.isConfirmed) {
+                    try {
+                        const response = await fetch(url, {
+                            method: 'PATCH',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({ id: customerId })
+                        });
+
+                        if (response.ok) {
+                            Swal.fire(
+                                `${actionText.charAt(0).toUpperCase() + actionText.slice(1)}ed!`,
+                                `The customer has been ${actionText}ed.`,
+                                'success'
+                            ).then(() => {
+                                location.reload(); // Refresh to show updated status
+                            });
+                        } else {
+                            throw new Error('Request failed');
+                        }
+                    } catch (error) {
+                        Swal.fire(
+                            'Error!',
+                            'There was a problem processing your request.',
+                            'error'
+                        );
+                    }
+                }
+            });
+        }
+    </script>
+
     <%- include("../../views/layouts/admin/footer") %>
+</body>
+</html>

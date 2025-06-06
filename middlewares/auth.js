@@ -1,19 +1,19 @@
 const User = require("../models/userSchema");
 
 
-// User Authentication Middleware
+//USEER AUTH.......................................
 const userAuth = async (req, res, next) => {
     try {
-        
-        // Add this before database query
-     if (!req.session.user||!req.session.user.match(/^[0-9a-fA-F]{24}$/)) {
-      return res.redirect("/login");
-}
+
+
+        if (!req.session.user || !req.session.user.match(/^[0-9a-fA-F]{24}$/)) {
+            return res.redirect("/login");
+        }
 
         const user = await User.findById(req.session.user);
         if (!user || user.isBlocked) {
             console.log("User is blocked or not found.");
-          return  req.session.destroy((err) => {
+            return req.session.destroy((err) => {
                 if (err) {
                     console.error("Error destroying session:", err);
                     return res.status(500).send("Session Error");
@@ -21,7 +21,7 @@ const userAuth = async (req, res, next) => {
                 return res.redirect("/login");
             });
         } else {
-           return next();
+            return next();
         }
     } catch (error) {
         console.error("Error in userAuth middleware:", error);
@@ -33,12 +33,12 @@ const userAuth = async (req, res, next) => {
 
 
 
-
+//ADMIN AUTH......................................
 
 const adminAuth = async (req, res, next) => {
     try {
-        console.log("Admin session value:", req.session.admin);
-        
+        // console.log("Admin session value:", req.session.admin);
+
         if (!req.session.admin) {
             console.log("No admin session found.");
             if (req.xhr || req.headers.accept.includes('application/json')) {
@@ -50,7 +50,6 @@ const adminAuth = async (req, res, next) => {
             return res.redirect("/admin/login");
         }
 
-        // If admin is storing as boolean true, convert it to find admin user
         if (typeof req.session.admin === 'boolean') {
             const adminUser = await User.findOne({ isAdmin: true });
             if (adminUser) {

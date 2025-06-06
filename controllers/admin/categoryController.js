@@ -1,10 +1,9 @@
 const Category=require("../../models/categorySchema")
 const Product=require("../../models/productSchema")
 const Brand=require('../../models/brandSchema')
-
-
-
-
+const HttpStatus = require('../../enum/httpStatus');
+const OrderStatus = require('../../enum/orderStatus');
+const Messages = require("../../enum/messages");
 
 
 
@@ -15,7 +14,7 @@ const categoryInfo = async (req, res) => {
         const limit = 4;
         const skip = (page - 1) * limit;
         
-        // Add search functionality
+       
         const searchQuery = req.query.search ? {
             name: { $regex: new RegExp(req.query.search, 'i') }
         } : {};
@@ -33,7 +32,7 @@ const categoryInfo = async (req, res) => {
             currentPage: page,
             totalPages: totalPages,
             totalcategories: totalCategories,
-            searchQuery: req.query.search || '' // Pass search query back to view
+            searchQuery: req.query.search || '' 
         });
     } catch (error) {
         console.error(error);
@@ -50,7 +49,7 @@ const addCategory = async (req, res) => {
         });
         
         if (existingCategory) {
-            return res.status(400).json({ error: "Category already exists" });
+            return res.status(HttpStatus.BAD_REQUEST).json({ error: "Category already exists" });
         }
 
         const newCategory = new Category({
@@ -62,7 +61,7 @@ const addCategory = async (req, res) => {
         return res.json({ message: "Category added successfully", newCategory });
     } catch (error) {
         console.error('Error adding category:', error);
-        return res.status(500).json({ error: "Internal server error" });
+        return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({ error:Messages.INTERNAL_SERVER_ERROR });
     }
 };
 
@@ -70,9 +69,9 @@ const getListCategory = async (req, res) => {
     try {
         let id = req.body.id; 
         await Category.updateOne({ _id: id }, { $set: { isListed: false } });
-        res.status(200).json({ success: true });
+        res.status(HttpStatus.OK).json({ success: true });
     } catch (error) {
-        res.status(500).json({ error: 'Server error' });
+        res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({ error: Messages.INTERNAL_SERVER_ERROR });
     }
 };
 
@@ -80,31 +79,12 @@ const getUnlistCategory = async (req, res) => {
     try {
         let id = req.body.id; 
         await Category.updateOne({ _id: id }, { $set: { isListed: true } });
-        res.status(200).json({ success: true });
+        res.status(HttpStatus.OK).json({ success: true });
     } catch (error) {
-        res.status(500).json({ error: 'Server error' });
+        res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({ error: Messages.INTERNAL_SERVER_ERROR });
     }
 };
 
-// const getListCategory = async (req, res) => {
-//     try {
-//         let id = req.query.id;
-//         await Category.updateOne({ _id: id }, { $set: { isListed: false } });
-//         res.redirect("/admin/category");
-//     } catch (error) {
-//         res.redirect("/pageerror");
-//     }
-// };
-
-// const getUnlistCategory = async (req, res) => {
-//     try {
-//         let id = req.query.id;
-//         await Category.updateOne({ _id: id }, { $set: { isListed: true } });
-//         res.redirect("/admin/category");
-//     } catch (error) {
-//         res.redirect("/pageerror");
-//     }
-// };
 
 const getEditCategory = async (req, res) => {
     try {
@@ -127,7 +107,7 @@ const editCategory = async (req, res) => {
         });
 
         if (existingCategory) {
-            return res.status(400).json({ 
+            return res.status(HttpStatus.BAD_REQUEST).json({ 
                 error: "Category exists, please choose another name" 
             });
         }
@@ -142,37 +122,33 @@ const editCategory = async (req, res) => {
         );
 
         if (updatedCategory) {
-            res.redirect("/admin/category");
+              return res.status(200).json({ success:true,message: "Category updated successfully" });
         } else {
-            res.status(404).json({ error: "Category not found" });
+            res.status(HttpStatus.NOT_FOUND).json({ error: Messages.CATEGORY_NOT_FOUND });
         }
     } catch (error) {
         console.error('Error updating category:', error);
-        res.status(500).json({ error: "Internal Server Error" });
+        res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({ error:Messages.INTERNAL_SERVER_ERROR });
     }
 };
 
-
-// Modified addCategoryOffer function
 const addCategoryOffer = async(req, res) => {
     try {
         const percentage = parseInt(req.body.percentage);
         const categoryId = req.body.categoryId;
-        
-        // Validate percentage
+       
         if (isNaN(percentage) || percentage <= 0 || percentage > 100) {
-            return res.status(400).json({status: false, message: 'Invalid percentage value'});
+            return res.status(HttpStatus.BAD_REQUEST).json({status: false, message: 'Invalid percentage value'});
         }
         
         const category = await Category.findById(categoryId);
         if (!category) {
-            return res.status(404).json({status: false, message: 'Category not found'});
+            return res.status(HttpStatus.NOT_FOUND).json({status: false, message:Messages.CATEGORY_NOT_FOUND});
         }
         
-        // Find products in this category
-        const products = await Product.find({category: category._id});
+      
+        const products = await Product.find({category: category._id});//here we are finding out the categories by uisng the categoryId(selected categ)
         
-        // Check if any product has a higher offer
         const hasHigherProductOffer = products.some((product) => product.productOffer > percentage);
         if (hasHigherProductOffer) {
             return res.json({
@@ -181,17 +157,12 @@ const addCategoryOffer = async(req, res) => {
             });
         }
         
-        // Update category with the offer
         await Category.updateOne({_id: categoryId}, {$set: {categoryOffer: percentage}});
         
-        // Update all product prices in this category
+      
         for (const product of products) {
-            // Only apply category offer if it's better than product offer
             if (product.productOffer < percentage) {
-                // Reset product offer since category offer is better
                 product.productOffer = 0;
-                
-                // Calculate discounted price (apply category offer)
                 const discountAmount = Math.floor(product.regularPrice * (percentage / 100));
                 product.salePrice = product.regularPrice - discountAmount;
                 
@@ -199,21 +170,20 @@ const addCategoryOffer = async(req, res) => {
             }
         }
         
-        res.json({status: true, message: 'Category offer added successfully'});
+        res.json({status: true, message:`category ${Messages.OFFER_ADD}`});
     } catch (error) {
         console.error('Error adding category offer:', error);
-        res.status(500).json({status: false, message: "Internal server error"});
+        res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({status: false, message: Messages.INTERNAL_SERVER_ERROR});
     }
 }
 
-// Modified removeCategoryOffer function
 const removeCategoryOffer = async(req, res) => {
     try {
         const categoryId = req.body.categoryId;
         const category = await Category.findById(categoryId);
         
         if (!category) {
-            return res.status(404).json({status: false, message: "Category not found"});
+            return res.status(HttpStatus.NOT_FOUND).json({status: false, message: Messages.CATEGORY_NOT_FOUND});
         }
         
         const percentage = category.categoryOffer;
@@ -223,12 +193,8 @@ const removeCategoryOffer = async(req, res) => {
         
         const products = await Product.find({category: category._id});
         
-        // Update product prices to remove category offer
         for (const product of products) {
-            // Reset sale price to regular price (removing category offer effect)
             product.salePrice = product.regularPrice;
-            
-            // If the product had its own offer, reapply it
             if (product.productOffer > 0) {
                 const discountAmount = Math.floor(product.regularPrice * (product.productOffer / 100));
                 product.salePrice = product.regularPrice - discountAmount;
@@ -237,14 +203,14 @@ const removeCategoryOffer = async(req, res) => {
             await product.save();
         }
         
-        // Reset category offer
+      
         category.categoryOffer = 0;
         await category.save();
         
-        res.json({status: true, message: "Offer removed successfully"});
+        res.json({status: true, message: Messages.OFFER_REMOVE});
     } catch (error) {
         console.error('Error removing category offer:', error);
-        res.status(500).json({status: false, message: "Internal server error"});
+        res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({status: false, message: Messages.INTERNAL_SERVER_ERROR});
     }
 }
 

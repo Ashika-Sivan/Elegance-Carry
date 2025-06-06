@@ -27,7 +27,6 @@ const couponSchema=new mongoose.Schema({
         type: Number,
         required: true
     },
-    
     isList:{
         type:Boolean,
         default:true
@@ -39,8 +38,7 @@ const couponSchema=new mongoose.Schema({
     userId:[{
         type:mongoose.Schema.Types.ObjectId,
         ref:'User'
-    }]
-
+    }]    
 })
 const Coupon=mongoose.model("Coupon",couponSchema)
 module.exports=Coupon

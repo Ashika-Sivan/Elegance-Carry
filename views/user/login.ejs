@@ -13,83 +13,138 @@
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css"
     />
-    <style>
-      .fa-google {
-        font-size: 30px;
-        color: #e63258;
-      }
-      body {
-        background: #f5f5f5;
-        font-family: "Nunito Sans", sans-serif;
-      }
-      .login-container {
-        display: flex;
-        max-width: 900px;
-        margin: auto;
-        background: white;
-        border-radius: 10px;
-        overflow: hidden;
-        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-      }
-      .login-form-section {
-        flex: 1;
-        padding: 40px;
-      }
-      .login-image-section {
-        flex: 1;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        background: linear-gradient(135deg #a777e3);
-      }
-      .login-image-section img {
-        max-width: 80%;
-      }
-      .form-control {
-        border-radius: 5px;
-      }
-      .btn-primary {
-        background: #ff3f6c;
-        border: none;
-        font-weight: 600;
-      }
-      .btn-primary:hover {
-        background: #e63258;
-      }
-      .social-login {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 10px;
-      }
-      .social-login img {
-        width: 40px;
-        height: 40px;
-      }
-      .forgot-password-link {
-        font-size: 0.875rem;
-        color:#e63258ff;
-        text-decoration: none;
-      }
-      .forgot-password-link:hover {
-        text-decoration: underline;
-      }
-      .sign-up-link {
-        text-align: center;
-        margin-top: 10px;
-      }
-      .password-wrapper {
-        position: relative;
-      }
-      .toggle-password {
-        position: absolute;
-        right: 10px;
-        top: 75%;
-        transform: translateY(-50%);
-        cursor: pointer;
-      }
-    
-    </style>
+   <style>
+  .fa-google {
+    font-size: 30px;
+    color: #e63258;
+  }
+
+  body {
+    background: #f5f5f5;
+    font-family: "Nunito Sans", sans-serif;
+  }
+
+  .login-container {
+    display: flex;
+    max-width: 900px;
+    margin: auto;
+    background: white;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    flex-direction: row;
+  }
+
+  .login-form-section {
+    flex: 1;
+    padding: 40px;
+  }
+
+  .login-image-section {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #ffff, #ffff);
+  }
+
+  .login-image-section img {
+    max-width: 80%;
+    height: auto;
+  }
+
+  .form-control {
+    border-radius: 5px;
+  }
+
+  .btn-primary {
+    background: #ff3f6c;
+    border: none;
+    font-weight: 600;
+  }
+
+  .btn-primary:hover {
+    background: #e63258;
+  }
+
+  .social-login {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+  }
+
+  .social-login img {
+    width: 40px;
+    height: 40px;
+  }
+
+  .forgot-password-link {
+    font-size: 0.875rem;
+    color: #e63258ff;
+    text-decoration: none;
+  }
+
+  .forgot-password-link:hover {
+    text-decoration: underline;
+  }
+
+  .sign-up-link {
+    text-align: center;
+    margin-top: 10px;
+  }
+
+  .password-wrapper {
+    position: relative;
+  }
+
+  .toggle-password {
+    position: absolute;
+    right: 10px;
+    top: 75%;
+    transform: translateY(-50%);
+    cursor: pointer;
+  }
+
+  /* ✅ Responsive Design */
+  @media (max-width: 768px) {
+    .login-container {
+      flex-direction: column;
+    }
+
+    .login-image-section {
+      order: -1;
+      padding: 20px;
+    }
+
+    .login-form-section {
+      padding: 30px 20px;
+    }
+
+    .login-image-section img {
+      max-width: 60%;
+    }
+
+    .toggle-password {
+      top: 70%;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .login-form-section {
+      padding: 20px 15px;
+    }
+
+    .login-image-section img {
+      max-width: 70%;
+    }
+
+    .fa-google {
+      font-size: 24px;
+    }
+  }
+</style>
+
   </head>
   <body>
     <div class="container py-5">
@@ -149,7 +204,7 @@
       function emailValidateChecking(e) {
         const emailval = emailid.value;
         const emailpattern =
-          /^[a-zA-Z0-9._-]+@([a-zA-Z0-9.-]+)\.([a-zA-Z]{2,4})$/;
+          /^[a-zA-Z0-9._-]+@([a-zA-Z0-9.-]+)\.([a-zA-Z]{2,4})$/;//^start of a string,[a-zA-Z0-9._-]:-allow digits leters underscores and hyphene/domain name/"/.":-between domain and  extension/"$":-end of the string
 
         if (!emailpattern.test(emailval)) {
           error1.style.display = "block";
