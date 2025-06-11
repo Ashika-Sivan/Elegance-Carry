@@ -24,6 +24,7 @@ router.post("/signup",userController.signup)
 router.post("/verify-otp",userController.verifyOtp);
 router.post("/resend-otp",userController.resendOtp);
 router.patch("/creditWallet",userAuth,userController.creditWallet)
+router.get('/about',userController.loadAboutPage)
 
 
 router.get('/auth/google',passport.authenticate('google',{scope:['profile','email']}))

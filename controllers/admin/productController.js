@@ -204,7 +204,7 @@ const getEditProduct = async (req, res) => {
         const category = await Category.find({});
         const brand = await Brand.find({});
 
-        res.render("edit-product", {
+        res.render("edit-Product", {
             product: product,
             cat: category,
             brand: brand,

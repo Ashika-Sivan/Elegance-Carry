@@ -1,357 +1,385 @@
 <%- include("../layouts/user/header.ejs") %>
 
-<body>
-<style>
-    :root {
-        --primary-pink: #ff3f6c;
-        --primary-text: #282c3f;
-        --secondary-text: #535766;
-        --border-color: #eaeaec;
-        --success-green: #03a685;
-        --background-grey: #f5f5f6;
-    }
-    
-    .account-wrapper {
-        display: flex;
-        align-items: flex-start;
-        gap: 20px;
-        padding: 20px;
-    }
+    <body>
+        <style>
+            :root {
+                --primary-pink: #ff3f6c;
+                --primary-text: #282c3f;
+                --secondary-text: #535766;
+                --border-color: #eaeaec;
+                --success-green: #03a685;
+                --background-grey: #f5f5f6;
+            }
 
-    .order-details-container {
-        flex: 1;
-        margin: 0;
-        padding: 24px;
-        background: white;
-        border-radius: 4px;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.08);
-    }
+            .account-wrapper {
+                display: flex;
+                align-items: flex-start;
+                gap: 20px;
+                padding: 20px;
+            }
 
-    @media (max-width: 768px) {
-        .account-wrapper {
-            flex-direction: column;
-            padding: 10px;
-        }
-    }
+            .order-details-container {
+                flex: 1;
+                margin: 0;
+                padding: 24px;
+                background: white;
+                border-radius: 4px;
+                box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+            }
+
+            @media (max-width: 768px) {
+                .account-wrapper {
+                    flex-direction: column;
+                    padding: 10px;
+                }
+            }
 
 
 
-    body {
-        background: var(--background-grey);
-        color: var(--primary-text);
-        font-family: -apple-system, "Helvetica Neue", sans-serif;
-    }
+            body {
+                background: var(--background-grey);
+                color: var(--primary-text);
+                font-family: -apple-system, "Helvetica Neue", sans-serif;
+            }
 
-    .order-details-container {
-        max-width: 1000px;
-        margin: 30px auto;
-        padding: 24px;
-        background: white;
-        border-radius: 4px;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.08);
-    }
+            .order-details-container {
+                max-width: 1000px;
+                margin: 30px auto;
+                padding: 24px;
+                background: white;
+                border-radius: 4px;
+                box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+            }
 
-    .order-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding-bottom: 20px;
-        border-bottom: 1px solid var(--border-color);
-        margin-bottom: 24px;
-        flex-wrap: wrap;
-    }
+            .order-header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                padding-bottom: 20px;
+                border-bottom: 1px solid var(--border-color);
+                margin-bottom: 24px;
+                flex-wrap: wrap;
+            }
 
-    .order-info h2 {
-        font-size: 24px;
-        font-weight: 600;
-        margin-bottom: 8px;
-        color: var(--primary-text);
-    }
+            .order-info h2 {
+                font-size: 24px;
+                font-weight: 600;
+                margin-bottom: 8px;
+                color: var(--primary-text);
+            }
 
-    .order-info p {
-        color: var(--secondary-text);
-        font-size: 14px;
-        margin: 4px 0;
-    }
+            .order-info p {
+                color: var(--secondary-text);
+                font-size: 14px;
+                margin: 4px 0;
+            }
 
-    .section-title {
-        font-size: 18px;
-        font-weight: 600;
-        margin: 30px 0 20px;
-        color: var(--primary-text);
-    }
+            .section-title {
+                font-size: 18px;
+                font-weight: 600;
+                margin: 30px 0 20px;
+                color: var(--primary-text);
+            }
 
-    .order-items {
-        display: flex;
-        flex-direction: column;
-        gap: 16px;
-    }
+            .order-items {
+                display: flex;
+                flex-direction: column;
+                gap: 16px;
+            }
 
-    .item-card {
-        display: flex;
-        padding: 20px;
-        border: 1px solid var(--border-color);
-        border-radius: 4px;
-        gap: 20px;
-        transition: box-shadow 0.3s ease;
-        align-items: center;
-    }
+            .item-card {
+                display: flex;
+                padding: 20px;
+                border: 1px solid var(--border-color);
+                border-radius: 4px;
+                gap: 20px;
+                transition: box-shadow 0.3s ease;
+                align-items: center;
+            }
 
-    .item-card:hover {
-        box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-    }
+            .item-card:hover {
+                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+            }
 
-    .item-image img {
-        width: 100%;
-        height: 150px;
-        object-fit: cover;
-        border-radius: 4px;
-    }
+            .item-image img {
+                width: 100%;
+                height: 150px;
+                object-fit: cover;
+                border-radius: 4px;
+            }
 
-    .item-image {
-        width: 120px;
-        flex-shrink: 0;
-    }
+            .item-image {
+                width: 120px;
+                flex-shrink: 0;
+            }
 
-    .item-details {
-        flex: 1;
-    }
+            .item-details {
+                flex: 1;
+            }
 
-    .item-name {
-        font-size: 16px;
-        font-weight: 500;
-        margin-bottom: 8px;
-        color: var(--primary-text);
-    }
+            .item-name {
+                font-size: 16px;
+                font-weight: 500;
+                margin-bottom: 8px;
+                color: var(--primary-text);
+            }
 
-    .item-price {
-        font-size: 14px;
-        color: var(--secondary-text);
-        margin-bottom: 8px;
-    }
+            .item-price {
+                font-size: 14px;
+                color: var(--secondary-text);
+                margin-bottom: 8px;
+            }
 
-    .delivery-address, .price-breakdown, .payment-info {
-        background: var(--background-grey);
-        padding: 20px;
-        border-radius: 4px;
-        margin-top: 16px;
-    }
+            .delivery-address,
+            .price-breakdown,
+            .payment-info {
+                background: var(--background-grey);
+                padding: 20px;
+                border-radius: 4px;
+                margin-top: 16px;
+            }
 
-    .delivery-address p, .payment-info p {
-        margin: 8px 0;
-        font-size: 14px;
-        color: var(--secondary-text);
-    }
+            .delivery-address p,
+            .payment-info p {
+                margin: 8px 0;
+                font-size: 14px;
+                color: var(--secondary-text);
+            }
 
-    .delivery-address strong, .payment-info strong {
-        color: var(--primary-text);
-    }
+            .delivery-address strong,
+            .payment-info strong {
+                color: var(--primary-text);
+            }
 
-    .price-row {
-        display: flex;
-        justify-content: space-between;
-        padding: 8px 0;
-        font-size: 14px;
-        color: var(--secondary-text);
-    }
+            .price-row {
+                display: flex;
+                justify-content: space-between;
+                padding: 8px 0;
+                font-size: 14px;
+                color: var(--secondary-text);
+            }
 
-    .price-row.total {
-        border-top: 1px solid #d4d5d9;
-        margin-top: 10px;
-        padding-top: 15px;
-        font-weight: 600;
-        font-size: 16px;
-        color: var(--primary-text);
-    }
+            .price-row.total {
+                border-top: 1px solid #d4d5d9;
+                margin-top: 10px;
+                padding-top: 15px;
+                font-weight: 600;
+                font-size: 16px;
+                color: var(--primary-text);
+            }
 
-    .action-buttons {
-        margin-top: 24px;
-        display: flex;
-        gap: 12px;
-        flex-wrap: wrap;
-    }
+            .action-buttons {
+                margin-top: 24px;
+                display: flex;
+                gap: 12px;
+                flex-wrap: wrap;
+            }
 
-    .download-btn, .cancel-btn {
-        padding: 10px 20px;
-        border-radius: 5px;
-        font-size: 14px;
-        font-weight: 600;
-        text-decoration: none;
-        border: none;
-        cursor: pointer;
-        transition: all 0.3s ease;
-        display: inline-block;
-        text-align: center;
-    }
+            .download-btn,
+            .cancel-btn {
+                padding: 10px 20px;
+                border-radius: 5px;
+                font-size: 14px;
+                font-weight: 600;
+                text-decoration: none;
+                border: none;
+                cursor: pointer;
+                transition: all 0.3s ease;
+                display: inline-block;
+                text-align: center;
+            }
 
-    .download-btn {
-        background-color: #28a745;
-        color: white;
-    }
+            .download-btn {
+                background-color: #28a745;
+                color: white;
+            }
 
-    .download-btn:hover {
-        background-color: #218838;
-    }
+            .download-btn:hover {
+                background-color: #218838;
+            }
 
-    .cancel-btn {
-        background-color: #dc3545;
-        color: white;
-    }
+            .cancel-btn {
+                background-color: #dc3545;
+                color: white;
+            }
 
-    .cancel-btn:hover {
-        background-color: #c82333;
-    }
+            .cancel-btn:hover {
+                background-color: #c82333;
+            }
 
-    .cancel-btn:disabled {
-        background-color: #d4d5d9;
-        cursor: not-allowed;
-    }
+            .cancel-btn:disabled {
+                background-color: #d4d5d9;
+                cursor: not-allowed;
+            }
 
-    /* Responsive Styles */
-    @media (max-width: 768px) {
-        .order-details-container {
-            padding: 15px;
-            margin: 15px;
-        }
+            /* Responsive Styles */
+            @media (max-width: 768px) {
+                .order-details-container {
+                    padding: 15px;
+                    margin: 15px;
+                }
 
-        .item-card {
-            flex-direction: column;
-            align-items: flex-start;
-        }
+                .item-card {
+                    flex-direction: column;
+                    align-items: flex-start;
+                }
 
-        .item-image {
-            width: 100%;
-        }
+                .item-image {
+                    width: 100%;
+                }
 
-        .item-image img {
-            height: auto;
-        }
+                .item-image img {
+                    height: auto;
+                }
 
-        .item-details {
-            width: 100%;
-        }
+                .item-details {
+                    width: 100%;
+                }
 
-        .order-header {
-            flex-direction: column;
-            align-items: flex-start;
-        }
+                .order-header {
+                    flex-direction: column;
+                    align-items: flex-start;
+                }
 
-        .action-buttons {
-            flex-direction: column;
-            gap: 10px;
-        }
+                .action-buttons {
+                    flex-direction: column;
+                    gap: 10px;
+                }
 
-        .download-btn, .cancel-btn {
-            width: 100%;
-            padding: 12px;
-        }
-    }
+                .download-btn,
+                .cancel-btn {
+                    width: 100%;
+                    padding: 12px;
+                }
+            }
 
-    @media (max-width: 480px) {
-        .order-info h2 {
-            font-size: 20px;
-        }
+            @media (max-width: 480px) {
+                .order-info h2 {
+                    font-size: 20px;
+                }
 
-        .section-title {
-            font-size: 16px;
-        }
+                .section-title {
+                    font-size: 16px;
+                }
 
-        .price-row.total {
-            font-size: 15px;
-        }
-    }
-</style>
+                .price-row.total {
+                    font-size: 15px;
+                }
+            }
+        </style>
 
-<div class="account-wrapper">
-    <%- include("../layouts/user/sidebar.ejs") %>
+        <div class="account-wrapper">
+            <%- include("../layouts/user/sidebar.ejs") %>
 
-    <div class="order-details-container">
-        <!-- Order content goes here -->
-    <div class="order-header">
-        <div class="order-info">
-            <h2>Order Details</h2>
-            <p>Order ID: <%= order.orderId %></p>
-            <p>Ordered on: <%= new Date(order.createdAt).toLocaleDateString() %></p>
+                <div class="order-details-container">
+                    <!-- Order content goes here -->
+                    <div class="order-header">
+                        <div class="order-info">
+                            <h2>Order Details</h2>
+                            <p>Order ID: <%= order.orderId %>
+                            </p>
+                            <p>Ordered on: <%= new Date(order.createdAt).toLocaleDateString() %>
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="section-title">Items Ordered</div>
+                    <div class="order-items">
+                        <% order.orderedItems.forEach(item=> { %>
+                            <div class="item-card">
+                                <div class="item-image">
+                                    <img src="/img/<%= item.product.productImage ? item.product.productImage[0] : 'default.png' %>"
+                                        alt="<%= item.product.productName %>">
+                                </div>
+                                <div class="item-details">
+                                    <div class="item-name">
+                                        <%= item.product.productName %>
+                                    </div>
+                                    <div class="item-price">Total Price: ₹<%= item.price %> × <%= item.quantity %>
+                                    </div>
+                                </div>
+                            </div>
+                            <% }) %>
+                    </div>
+
+                    <div class="section-title">Delivery Address</div>
+                    <div class="delivery-address">
+                        <p><strong>
+                                <%= order.address.name %>
+                            </strong></p>
+                        <p>
+                            <%= order.address.landMark %>
+                        </p>
+                        <p>
+                            <%= order.address.city %>, <%= order.address.state %> - <%= order.address.pincode %>
+                        </p>
+                        <p>Phone: <%= order.address.phone %>
+                        </p>
+                        <p>Alternative Phone: <%= order.address.altPhone %>
+                        </p>
+                    </div>
+
+                    <div class="section-title">Price Details</div>
+                    <div class="price-breakdown">
+                        <div class="price-row"><span>Subtotal</span><span>₹<%= order.subTotal %></span></div>
+                        <% if (order.deliveryCharge) { %>
+                            <div class="price-row"><span>Delivery Charge</span><span>+₹<%= order.deliveryCharge %>
+                                        </span></div>
+                            <% } %>
+                                <% if (order.discount> 0) { %>
+                                    <div class="price-row"><span>Discount</span><span>-₹<%= order.discount %></span>
+                                    </div>
+                                    <% } %>
+                                        <% if (order.couponDiscount> 0) { %>
+                                            <div class="price-row"><span>Coupon Discount (<%= order.couponCode %>
+                                                        )</span><span>-₹<%= order.couponDiscount %></span></div>
+                                            <% } %>
+                                                <div class="price-row total"><span>Total Amount</span><span>₹<%=
+                                                            order.finalAmount %></span></div>
+                    </div>
+
+                    <div class="payment-info">
+                        <p><strong>Payment Method:</strong>
+                            <%= order.paymentMethod %>
+                        </p>
+                        <p><strong>Payment Status:</strong>
+                            <%= order.paymentStatus %>
+                        </p>
+                    </div>
+
+                    <div class="action-buttons">
+                        <a href="/download-invoice/<%= order._id %>" class="download-btn">Download Invoice</a>
+                    </div>
+                </div>
         </div>
-    </div>
-
-    <div class="section-title">Items Ordered</div>
-    <div class="order-items">
-        <% order.orderedItems.forEach(item => { %>
-            <div class="item-card">
-                <div class="item-image">
-                    <img src="/img/<%= item.product.productImage ? item.product.productImage[0] : 'default.png' %>" alt="<%= item.product.productName %>">
-                </div>
-                <div class="item-details">
-                    <div class="item-name"><%= item.product.productName %></div>
-                    <div class="item-price">Total Price: ₹<%= item.price %> × <%= item.quantity %></div>
-                </div>
-            </div>
-        <% }) %>
-    </div>
-
-    <div class="section-title">Delivery Address</div>
-    <div class="delivery-address">
-        <p><strong><%= order.address.name %></strong></p>
-        <p><%= order.address.landMark %></p>
-        <p><%= order.address.city %>, <%= order.address.state %> - <%= order.address.pincode %></p>
-        <p>Phone: <%= order.address.phone %></p>
-        <p>Alternative Phone: <%= order.address.altPhone %></p>
-    </div>
-
-    <div class="section-title">Price Details</div>
-    <div class="price-breakdown">
-        <div class="price-row"><span>Subtotal</span><span>₹<%= order.subTotal %></span></div>
-        <% if (order.deliveryCharge) { %>
-            <div class="price-row"><span>Delivery Charge</span><span>₹<%= order.deliveryCharge %></span></div>
-        <% } %>
-        <% if (order.discount > 0) { %>
-            <div class="price-row"><span>Discount</span><span>-₹<%= order.discount %></span></div>
-        <% } %>
-        <% if (order.couponDiscount > 0) { %>
-            <div class="price-row"><span>Coupon Discount (<%= order.couponCode %>)</span><span>-₹<%= order.couponDiscount %></span></div>
-        <% } %>
-        <div class="price-row total"><span>Total Amount</span><span>₹<%= order.finalAmount %></span></div>
-    </div>
-
-    <div class="payment-info">
-        <p><strong>Payment Method:</strong> <%= order.paymentMethod %></p>
-        <p><strong>Payment Status:</strong> <%= order.paymentStatus %></p>
-    </div>
-
-    <div class="action-buttons">
-        <a href="/download-invoice/<%= order._id %>" class="download-btn">Download Invoice</a>
-    </div>
-      </div>
-</div>
 
 
-<script>
-    function cancelOrder(orderId) {
-        if (confirm('Are you sure you want to cancel this order?')) {
-            fetch(`/cancel-order/${orderId}`, {
-                method: 'POST',
-                headers: {
-                    'Accept': 'application/json',
-                    'Content-Type': 'application/json'
+        <script>
+            function cancelOrder(orderId) {
+                if (confirm('Are you sure you want to cancel this order?')) {
+                    fetch(`/cancel-order/${orderId}`, {
+                        method: 'POST',
+                        headers: {
+                            'Accept': 'application/json',
+                            'Content-Type': 'application/json'
+                        }
+                    })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                alert(data.message);
+                                window.location.reload();
+                            } else {
+                                alert(data.message || 'Failed to cancel order');
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error:', error);
+                            alert('An error occurred while cancelling the order');
+                        });
                 }
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    alert(data.message);
-                    window.location.reload();
-                } else {
-                    alert(data.message || 'Failed to cancel order');
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('An error occurred while cancelling the order');
-            });
-        }
-    }
-</script>
+            }
+        </script>
 
-</body>
-<%- include("../layouts/user/footer.ejs") %>
+    </body>
+    <%- include("../layouts/user/footer.ejs") %>

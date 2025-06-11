@@ -382,6 +382,18 @@
 </section>
 
 <script>
+
+
+
+ document.querySelector('.hamburger')?.addEventListener('click', function() {
+      const sidebar = document.querySelector('.navbar-aside');
+      if (sidebar) {
+        sidebar.classList.toggle('active');
+        const contentMain = document.querySelector('.content-main');
+        contentMain.style.marginLeft = sidebar.classList.contains('active') ? '250px' : '0';
+      }
+    });
+
   async function checkResponse(response) {
     if (response.status === 401) {
       await Swal.fire({

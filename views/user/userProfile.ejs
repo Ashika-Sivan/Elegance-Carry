@@ -84,6 +84,18 @@
         font-weight: 500;
     }
 
+    .google-badge {
+        background: linear-gradient(45deg, #4285f4, #34a853);
+        color: white;
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 10px;
+        font-weight: 600;
+        text-transform: uppercase;
+        margin-left: 10px;
+        letter-spacing: 0.5px;
+    }
+
     .save-changes {
         display: flex;
         gap: 15px;
@@ -200,6 +212,11 @@
             padding: 8px;
             font-size: 12px;
         }
+
+        .google-badge {
+            font-size: 9px;
+            padding: 3px 6px;
+        }
     }
 </style>
 
@@ -214,7 +231,12 @@
                 <ul class="profile-info">
                     <li>
                         <label>Full Name:</label>
-                        <span><%= user.name %></span>
+                        <span>
+                            <%= user.name %>
+                            <% if(user.googleId) { %>
+                                <span class="google-badge">Google</span>
+                            <% } %>
+                        </span>
                     </li>
                     <li>
                         <label>Email Address:</label>
@@ -231,7 +253,8 @@
                 </ul>
                 <div class="save-changes">
                     <button type="button" onclick="console.log('Edit button clicked'); window.location.href='/edit-profile';">Edit Profile</button>
-                    <% if(!user.googleId || user.password) { %>
+                    
+                    <% if(!user.googleId) { %>
                         <button type="button" onclick="window.location.href='/password-reset';">Reset Password</button>
                     <% } %>
                 </div>

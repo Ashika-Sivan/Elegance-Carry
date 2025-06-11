@@ -28,6 +28,14 @@ try {
   
 }
 }
+const loadAboutPage=async(req,res)=>{
+  try{
+    res.render('about')
+  }catch(error){
+    res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({sucess:false,message:Messages.INTERNAL_SERVER_ERROR})
+
+  }
+}
 
 
 const loadHomePage = async (req, res) => {
@@ -703,6 +711,7 @@ module.exports = {
   loadShoppingPage,
   resendForgotOtp,
   creditWallet,
-  verifyReferral
+  verifyReferral,
+  loadAboutPage
 }
 

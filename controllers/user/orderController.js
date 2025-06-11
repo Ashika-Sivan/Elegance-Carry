@@ -556,6 +556,8 @@ const loadViewDetailsPage = async (req, res) => {
                 message:Messages.ORDER_NOT_FOUND
             });
         }
+        order. deliveryCharge=100
+        order.couponDiscount=order.couponDiscount||0
 
         if (order.user.toString() !== req.session.user) {
             return res.status(HttpStatus.FORBIDDEN).render('errorPage', {
@@ -564,7 +566,9 @@ const loadViewDetailsPage = async (req, res) => {
         }
 
         res.render('viewDetails', {
-            order: order
+            order: order,
+            
+            // totalAmount:order.finalAmount+de
         });
 
     } catch (error) {
