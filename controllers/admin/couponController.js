@@ -9,14 +9,13 @@ const Messages = require("../../enum/messages")
 
 
 
-// Option 2: Show only active coupons with proper date handling
 const getCouponPage = async (req, res) => {
     try {
         const page = parseInt(req.query.page) || 1;
         const limit = 5;
         const skip = (page - 1) * limit;
         
-        // Set time to end of today to include coupons expiring today
+
         const today = new Date();
         today.setHours(23, 59, 59, 999);
         
@@ -48,8 +47,6 @@ const getCouponList = async (req, res) => {
         const page = parseInt(req.query.page) || 1;
         const limit = 5;
         const skip = (page - 1) * limit;
-        
-        // Set time to end of today to include coupons expiring today
         const today = new Date();
         today.setHours(23, 59, 59, 999);
         
@@ -186,8 +183,6 @@ const deleteCoupon = async (req, res) => {
                 message: "Invalid coupon ID"
             });
         }
-
-      
         const coupon = await Coupon.findById(couponId);
         if (!coupon) {
             const coupons = await Coupon.find({ expiryOn: { $gte: new Date() } });

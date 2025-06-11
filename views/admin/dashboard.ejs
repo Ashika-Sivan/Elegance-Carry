@@ -213,7 +213,7 @@
                 </select>
 
                 <!-- Custom Date Range -->
-                <div class="date-range" style="display: <%= selectedFilter === 'custom' ? 'block' : 'none' %>;">
+                <div class="date-range" style="display: <%= selectedFilter === 'custom' ? 'block' : 'none' %>">
                     <label for="startDate">Start Date:</label>
                     <input type="date" name="startDate" id="startDate" value="<%= startDate %>" onchange="this.form.submit()">
                     <label for="endDate">End Date:</label>
@@ -221,9 +221,9 @@
                 </div>
             </form>
         </div>
-        <div style="display: flex; justify-content: flex-end; margin-right: 20px;">
+        <!-- <div style="display: flex; justify-content: flex-end; margin-right: 20px;">
             <a href="/admin/logout" class="logout-btn">Logout</a>
-        </div>
+        </div> -->
 
         <!-- Chart Section -->
         <div class="chart-section">

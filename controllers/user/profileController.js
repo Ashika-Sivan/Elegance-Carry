@@ -197,7 +197,7 @@ const resendOtp = async (req, res) => {
         
         const otp = generateOtp();
         req.session.userOtp = otp;
-        console.log("Generated OTP:", otp); // <--- ADD THIS LINE
+        console.log("Generated OTP:", otp); 
         
         const email = req.session.email;
         if (!email) {
@@ -519,7 +519,6 @@ const postAddAddress = async (req, res) => {
             await userAddress.save();
         }
 
-        // Check if the request is an AJAX request
         if (req.xhr || req.headers['x-requested-with'] === 'XMLHttpRequest') {
             const redirectUrl = from === 'checkout' ? '/check-out' : '/loadAddresses';
             return res.status(200).json({ 
@@ -529,7 +528,6 @@ const postAddAddress = async (req, res) => {
             });
         }
 
-        // For non-AJAX requests, redirect as before
         if (from === 'checkout') {
             return res.redirect('/check-out');
         } else {
@@ -549,6 +547,8 @@ const postAddAddress = async (req, res) => {
         return res.redirect("/pageNotFound");
     }
 };
+
+
 const editAddress=async(req,res)=>{
     try {
         const addressId=req.query.id;
@@ -576,17 +576,20 @@ const editAddress=async(req,res)=>{
     }
 }
 
-const postEditAddress=async(req,res)=>{
-    try {
-        const userId=req.session.user
-        const addressId=req.query.id
-        const {addressType,name,city,landMark,state,pincode,phone,altPhone}=req.body
 
-        const userAddress=await Address.findOne({userId:userId})
+
+const postEditAddress = async (req, res) => {
+    try {
+        const userId = req.session.user;
+        const addressId = req.params.id; // Use req.params.id instead of req.query.id
+        const { addressType, name, city, landMark, state, pincode, phone, altPhone } = req.body;
+
+        const userAddress = await Address.findOne({ userId: userId });
 
         if (!userAddress) {
             return res.status(HttpStatus.NOT_FOUND).redirect("/pageNotFound");
         }
+
         const addressIndex = userAddress.address.findIndex(
             addr => addr._id.toString() === addressId
         );
@@ -595,9 +598,8 @@ const postEditAddress=async(req,res)=>{
             return res.status(HttpStatus.NOT_FOUND).redirect("/pageNotFound");
         }
 
-       
         userAddress.address[addressIndex] = {
-            _id: userAddress.address[addressIndex]._id, 
+            _id: userAddress.address[addressIndex]._id,
             addressType,
             name,
             city,
@@ -609,7 +611,6 @@ const postEditAddress=async(req,res)=>{
         };
 
         await userAddress.save();
-        
 
         res.redirect("/loadAddresses");
 
@@ -618,82 +619,58 @@ const postEditAddress=async(req,res)=>{
         res.status(HttpStatus.INTERNAL_SERVER_ERROR).redirect("/pageNotFound");
     }
 };
-    
 const deleteAddress = async (req, res) => {
     try {
-        const addressId = req.params.id;
-        const userId = req.session.user?.id || req.user?.id; 
-        
-        if (!mongoose.Types.ObjectId.isValid(addressId)) {
-            if (req.xhr || req.headers.accept.indexOf('json') > -1) {
-                return res.status(HttpStatus.BAD_REQUEST).json({ 
-                    success: false, 
-                    message: "Invalid address ID" 
-                });
-            } else {
-                return res.status(HttpStatus.BAD_REQUEST).send("Invalid address ID");
-            }
+        const { id: addressId } = req.params;
+        const userId = req.session.user; // req.session.user contains the user ID directly
+
+        // Check authentication
+        if (!userId) {
+            return res.status(401).json({
+                success: false,
+                message: "User not authenticated"
+            });
         }
 
-        const objectId = new mongoose.Types.ObjectId(addressId);
-        const findAddress = await Address.findOne({
-            userId: userId,
-            "address._id": objectId
-        });
-        
-        if (!findAddress) {
-            if (req.xhr || req.headers.accept.indexOf('json') > -1) {
-                return res.status(HttpStatus.NOT_FOUND).json({ 
-                    success: false, 
-                    message: Messages.ADDRESS_NOT_FOUND 
-                });
-            } else {
-                return res.status(HttpStatus.NOT_FOUND).send(Messages.ADDRESS_NOT_FOUND);
-            }
+        // Validate address ID
+        if (!mongoose.Types.ObjectId.isValid(addressId)) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid address ID"
+            });
         }
-        
-        const updateResult = await Address.updateOne(
+
+        // Delete the address
+        const result = await Address.updateOne(
             { 
                 userId: userId,
-                "address._id": objectId 
+                "address._id": addressId 
             },
             { 
                 $pull: { 
-                    address: { _id: objectId } 
+                    address: { _id: addressId } 
                 } 
             }
         );
-        
-    
-        if (updateResult.modifiedCount === 0) {
-            if (req.xhr || req.headers.accept.indexOf('json') > -1) {
-                return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({ 
-                    success: false, 
-                    message: "Failed to delete address" 
-                });
-            } else {
-                return res.status(HttpStatus.INTERNAL_SERVER_ERROR).send("Failed to delete address");
-            }
-        }
-        
-        if (req.xhr || req.headers.accept.indexOf('json') > -1) {
-            res.status(HttpStatus.OK).json({ 
-                success: true, 
-                message: Messages.ADDRESS_DELETE || "Address deleted successfully" 
+
+        if (result.modifiedCount === 0) {
+            return res.status(404).json({
+                success: false,
+                message: "Address not found or already deleted"
             });
-        } else {
-            res.redirect("/profile"); 
         }
+
+        return res.status(200).json({
+            success: true,
+            message: "Address deleted successfully"
+        });
+
     } catch (error) {
-        console.error("Error delete address", error);
-        if (req.xhr || req.headers.accept.indexOf('json') > -1) {
-            res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({ 
-                success: false, 
-                message: Messages.INTERNAL_SERVER_ERROR || "Internal server error" 
-            });
-        } else {
-            res.status(HttpStatus.INTERNAL_SERVER_ERROR).redirect("/pageNotFound");
-        }
+        console.error("Error deleting address:", error);
+        return res.status(500).json({
+            success: false,
+            message: "Internal server error"
+        });
     }
 };
 

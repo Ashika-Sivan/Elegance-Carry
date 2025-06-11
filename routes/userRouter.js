@@ -62,7 +62,7 @@ router.get('/loadAddresses',userAuth,profileController.loadAddresses)
 router.get("/addAddress",userAuth,profileController.addAddress);
 router.post("/addAddress",userAuth,profileController.postAddAddress);
 router.get("/editAddress", userAuth, profileController.editAddress);
-router.post("/editAddress",userAuth,profileController.postEditAddress)///PENDING
+router.post("/editAddress/:id",userAuth,profileController.postEditAddress)///PENDING
 router.delete("/deleteAddress/:id", userAuth, profileController.deleteAddress);
 
 //cart management

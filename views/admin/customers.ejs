@@ -1,10 +1,5 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="utf-8">
-    <title>Elegance Carry - Customers</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="shortcut icon" type="image/x-icon" href="#">
+
+    <%- include("../../views/layouts/admin/header") %>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
     <style>
@@ -198,10 +193,8 @@
             }
         }
     </style>
-</head>
 <body>
-    <!-- Include header.ejs -->
-    <%- include('../../views/layouts/admin/header', { currentPage: 'users' }) %>
+
 
     <div class="customers-container">
         <div class="content-header row">
@@ -332,28 +325,24 @@
         </div>
     </div>
 
-    <!-- Add SweetAlert2 and custom script -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
-        // Real-time search functionality
+   
         let searchTimeout;
         const searchInput = document.getElementById('searchInput');
 
-        // Add real-time search as user types
         searchInput.addEventListener('input', function() {
             clearTimeout(searchTimeout);
             searchTimeout = setTimeout(() => {
                 const query = this.value.trim();
-                if (query.length >= 2) { // Start searching after 2 characters
+                if (query.length >= 2) { 
                     performSearch(query);
                 } else if (query.length === 0) {
-                    // Clear search if input is empty
                     clearSearch();
                 }
-            }, 500); // Wait 500ms after user stops typing
+            }, 500);
         });
 
-        // Handle Enter key press
         searchInput.addEventListener('keyup', function(event) {
             if (event.key === 'Enter') {
                 event.preventDefault();
@@ -372,17 +361,16 @@
                 const params = new URLSearchParams();
                 
                 params.set('search', query);
-                params.set('page', '1'); // Reset to first page when searching
+                params.set('page', '1'); 
                 
                 window.location.href = `${url.pathname}?${params.toString()}`;
             }
         }
 
         function clearSearch() {
-            // Clear the search input
             document.getElementById('searchInput').value = '';
             
-            // Navigate to page without search parameter
+      
             const url = new URL(window.location.href);
             const params = new URLSearchParams();
             params.set('page', '1');
@@ -419,7 +407,7 @@
                                 `The customer has been ${actionText}ed.`,
                                 'success'
                             ).then(() => {
-                                location.reload(); // Refresh to show updated status
+                                location.reload(); 
                             });
                         } else {
                             throw new Error('Request failed');
@@ -438,4 +426,3 @@
 
     <%- include("../../views/layouts/admin/footer") %>
 </body>
-</html>

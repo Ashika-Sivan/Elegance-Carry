@@ -1,4 +1,3 @@
-
 const User = require("../../models/userSchema")
 const nodemailer = require("nodemailer")
 const env = require('dotenv').config();
@@ -122,27 +121,34 @@ function generateOtp() {
 
 async function sendVerificationEmail(email, otp) {
   try {
+    if (!email) {
+      console.error("No email provided for verification");
+      return false;
+    }
+
     const transporter = nodemailer.createTransport({
       service: 'gmail',
       port: 587,
       secure: false,
       requireTLS: true,
       auth: {
-        user: process.env.NODEMAILER_EMAIL,//user gmail address
-        pass: process.env.NODEMAILER_PASSWORD//app password from gmail
+        user: process.env.NODEMAILER_EMAIL,
+        pass: process.env.NODEMAILER_PASSWORD
       }
-    })
+    });
+
     const info = await transporter.sendMail({
       from: process.env.NODEMAILER_EMAIL,
       to: email,
-      subject: "verify your account",
-      text: `your otp is ${otp}`,
-      html: `<b>your otp is ${otp}</b>`,
-    })
-    return info.accepted.length > 0//if email accepted by gmail then return true
+      subject: "Verify your account",
+      text: `Your OTP is ${otp}`,
+      html: `<b>Your OTP is ${otp}</b>`,
+    });
+
+    return info.accepted.length > 0;
 
   } catch (error) {
-    console.log("error sending email", error);
+    console.error("Error sending verification email:", error);
     return false;
   }
 }
@@ -170,8 +176,11 @@ const referralBonus = 100;
 const signup = async (req, res) => {
   try {
     const { name, phone, email, password, cPassword, referalCode } = req.body;
-
     
+    if (!email || !name) {
+      return res.render("signup", { message: "Email and name are required" });
+    }
+
     if (password !== cPassword) {
       return res.render("signup", { message: Messages.PASSWORD_NOT_MATCH });
     }
@@ -182,8 +191,8 @@ const signup = async (req, res) => {
     }
 
     const userReferralCode = createReferralCode();
-   
     let referredByUser = null;
+    
     if (referalCode) {
       referredByUser = await User.findOne({ referalCode });
       if (!referredByUser) {
@@ -193,51 +202,63 @@ const signup = async (req, res) => {
       }
     }
 
-  
     const otp = generateOtp();
     const emailSent = await sendVerificationEmail(email, otp);
+
     if (!emailSent) {
-      // return res.render("signup", { message: "Error sending email" });
-      console.log('no recipient found .......................................')
+      return res.render("signup", { 
+        message: "Failed to send verification email. Please try again." 
+      });
     }
 
-   
-    req.session.userOtp = otp.toString();
-    req.session.otpCreatedAt = Date.now(); 
+    // Store user data in session
     req.session.userData = {
-      name:name.trim(),
-      phone:phone.trim(),
-      email:email.trim().toLowerCase(),
+      name,
+      phone,
+      email,
       password,
       referalCode: referalCode || null,
       userReferralCode,
       referredBy: referredByUser ? referredByUser._id : null,
     };
-    req.session.otpExpiry = Date.now() + 5 * 60 * 1000; 
+    
+    req.session.userOtp = otp;
+    req.session.otpExpiry = Date.now() + 5 * 60 * 1000;
 
     console.log("OTP Sent", otp);
-      console.log("Session data stored:", {
+    console.log("Session data stored:", {
       email: req.session.userData.email,
       name: req.session.userData.name,
       otpExpiry: new Date(req.session.otpExpiry)
     });
-    
-    res.render("verify-otp",{message:'null'});
+
+   
+    req.session.save((err) => {
+      if (err) {
+        console.error("Session save error:", err);
+        return res.render("signup", { 
+          message: "Error creating account. Please try again." 
+        });
+      }
+      res.render("verify-otp", { message: null });
+    });
 
   } catch (error) {
-    console.log("Signup error:", error);
-    res.redirect("/pageNotFound");
+    console.error("Signup error:", error);
+    res.render("signup", { 
+      message: "Error creating account. Please try again." 
+    });
   }
 };   
 
 const verifyOtp = async (req, res) => {
   try {
     const { otp } = req.body;
-    if(!otp||otp.toString().trim()===''){
+    if(!otp || otp.toString().trim() === '') {
       return res.status(400).json({
-        success:false,
-        message:'please enter a valid otp'
-      })
+        success: false,
+        message: 'Please enter a valid OTP'
+      });
     }
 
     
@@ -347,10 +368,10 @@ const verifyOtp = async (req, res) => {
     delete req.session.otpExpiry;
     delete req.session.otpCreatedAt;
 
-
     req.session.user = saveUserData._id;
+    req.session.isAuthenticated = true;
 
-    return res.json({
+    return res.status(200).json({
       success: true,
       message: "Registration successful",
       redirectUrl: "/"
@@ -359,7 +380,7 @@ const verifyOtp = async (req, res) => {
     console.error("Error verifying OTP:", error);
     return res.status(500).json({
       success: false,
-      message: Messages.INTERNAL_SERVER_ERROR
+      message: "Internal server error"
     });
   }
 };

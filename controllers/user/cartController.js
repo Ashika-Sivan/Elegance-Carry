@@ -73,7 +73,7 @@ const postAddToCart = async (req, res) => {
         const userId = req.session.user;
 
         if (!userId) {
-            return res.status(HttpStatus.UNAUTHORISED).json({ success: false, message: Messages.USER_NOT_LOGEDIN });
+            return res.status(HttpStatus.UNAUTHORIZED).json({ success: false, message: Messages.USER_NOT_LOGEDIN });
         }
 
         const product = await Product.findById(productId);
@@ -104,7 +104,7 @@ const postAddToCart = async (req, res) => {
             });
         } else {
             const existingItem = cart.items.find(item => 
-                item.productId.toString() === productId
+                item.productId.toString() === productId.toString()
             );
 
             if (existingItem) {
@@ -166,7 +166,7 @@ const updateCartQuantity = async (req, res) => {
         if (!cartItem) {
             return res.status(HttpStatus.NOT_FOUND).json({
                 success: false,
-                message: Messages.PRODUCT_NOT_FOUND
+                message: 'item not found'
             });
         }
 
@@ -230,7 +230,7 @@ const removeFromCart = async (req, res) => {
             const userId = req.session.user;
     
             if (!userId) {
-                return res.status(HttpStatus.UNAUTHORISED).json({
+                return res.status(HttpStatus.UNAUTHORIZED).json({
                     success: false,
                     message: Messages.USER_NOT_LOGEDIN
                 });
@@ -266,8 +266,6 @@ const removeFromCart = async (req, res) => {
             });
         }
     };
-
-
 
 
 const loadCheckOutPage = async (req, res) => {
