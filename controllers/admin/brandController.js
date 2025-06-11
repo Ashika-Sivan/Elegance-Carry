@@ -31,35 +31,47 @@ const getBrandPage=async(req,res)=>{
 
 const addBrand = async (req, res) => {
     try {
-        const brandName = req.body.name.trim()
-        const existingBrand = await Brand.findOne({ name: brandName });
+        const brandName = req.body.name.trim();
 
-        if(!brandName){
-            return res.status(HttpStatus.BAD_REQUEST).send('brand name required')
-        }
-        
-    const validPattern = /^[A-Za-z0-9\s&().,-]+$/;
-    if (!validPattern.test(brandName)) {
-        return res.status(400).send("Brand name contains invalid characters.");
-     }
-
-     
-        if (!existingBrand) {
-            const newBrand = new Brand({
-                name: brandName,
+        // Validate brand name
+        if (!brandName) {
+            return res.status(HttpStatus.BAD_REQUEST).json({
+                success: false,
+                message: 'Brand name is required'
             });
-
-            await newBrand.save();
-            res.redirect("/admin/brands");
-        } else {
-            res.status(HttpStatus.BAD_REQUEST).send("Brand already exists.");
         }
+
+        const validPattern = /^[A-Za-z0-9\s&().,-]+$/;
+        if (!validPattern.test(brandName)) {
+            return res.status(HttpStatus.BAD_REQUEST).json({
+                success: false,
+                message: 'Brand name contains invalid characters'
+            });
+        }
+
+        const existingBrand = await Brand.findOne({ name: brandName });
+        if (existingBrand) {
+            return res.status(HttpStatus.BAD_REQUEST).json({
+                success: false,
+                message: 'Brand already exists'
+            });
+        }
+
+        const newBrand = new Brand({ name: brandName });
+        await newBrand.save();
+
+        return res.status(HttpStatus.OK).json({
+            success: true,
+            message: 'Brand added successfully'
+        });
     } catch (error) {
         console.error("Error adding brand:", error);
-        res.status(HttpStatus.INTERNAL_SERVER_ERROR).redirect("/pageerror");
+        return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
+            success: false,
+            message: 'Internal server error'
+        });
     }
 };
-
 
 const blockBrand = async (req, res) => {
     try {

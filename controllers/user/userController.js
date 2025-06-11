@@ -671,7 +671,7 @@ const loadShoppingPage = async (req, res) => {
 
     res.render("shop", {
       user: userData,
-      products: processedProducts, // Use processedProducts instead of products
+      products: processedProducts, 
       category: categoriesWithIds,
       brand: brands,
       currentPage: page,
@@ -679,7 +679,7 @@ const loadShoppingPage = async (req, res) => {
       sortLabels: sortLabels,
       currentSort: currentSort,
       activeFilters: activeFilters,
-      searchQuery: search, // Pass search query to template
+      searchQuery: search, 
       query: req.query
     });
 

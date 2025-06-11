@@ -424,7 +424,7 @@ function addToCart(productId) {
     })
     .catch(error => {
         console.error('Error:', error);
-        Swal.fire('Error!', 'An error occurred while adding the item to your cart.', 'error');
+        Swal.fire('Error!', 'please login to continue',error);
     });
 }
 
@@ -549,7 +549,7 @@ function addToCart(productId) {
       Swal.fire({
         icon: 'error',
         title: 'Error!',
-        text: 'An error occurred while updating your wishlist.'
+        text: 'please login to continue'
       });
     });
   }

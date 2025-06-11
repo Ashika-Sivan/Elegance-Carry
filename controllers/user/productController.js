@@ -55,10 +55,10 @@ const productDetails = async (req, res) => {
 
 
 
-//this controller is for guest users
 const loadShopPage = async (req, res) => {
     try {
         const userId=req.session.user
+     
         const page = parseInt(req.query.page) || 1;
         const limit = 12;
         const skip = (page - 1) * limit;
@@ -92,7 +92,7 @@ const loadShopPage = async (req, res) => {
       
         const filterQuery = {};
 
-        if (searchTerm) {//can search the product name or description
+        if (searchTerm) {
             filterQuery.$or = [
                 { productName: { $regex: searchTerm, $options: 'i' } },
                 // { description: { $regex: searchTerm, $options: 'i' } }
@@ -117,9 +117,9 @@ const loadShopPage = async (req, res) => {
             };
         }
 
-        filterQuery.isBlocked = false;//product with is blocked false
+        filterQuery.isBlocked = false;
 
-        const products = await Product.find(filterQuery)//fetching the producuct
+        const products = await Product.find(filterQuery)
             .sort(sortOption)
             .skip(skip)
             .limit(limit)

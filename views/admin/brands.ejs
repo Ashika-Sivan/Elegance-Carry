@@ -27,7 +27,6 @@
     }
   </style>
 
-
 <section class="content-main" style="margin-left: 300px;">
   <div class="content-header">
       <div>
@@ -38,17 +37,17 @@
       <div class="card-body">
           <div class="row">
               <div class="col-md-3">
-             <form id="addBrandForm" method="post" action="/admin/addBrand" enctype="multipart/form-data" onsubmit="return validateBrandForm()">
-  <div class="mb-4">
-    <label for="brandName" class="form-label">Brand Name</label>
-    <input type="text" id="brandName" name="name" placeholder="Type here" class="form-control" />
-    <div id="brandNameError" class="error-message"></div>
-  </div>
-  <div class="d-grid">
-    <button class="btn btn-primary mt-20" type="submit">Add Brand</button>
-  </div>
-</form>
 
+                <form id="addBrandForm" method="post" action="#" enctype="multipart/form-data">
+                  <div class="mb-4">
+                    <label for="brandName" class="form-label">Brand Name</label>
+                    <input type="text" id="brandName" name="name" placeholder="Type here" class="form-control" />
+                    <div id="brandNameError" class="error-message"></div>
+                  </div>
+                  <div class="d-grid">
+                    <button class="btn btn-primary mt-20" type="submit">Add Brand</button>
+                  </div>
+                </form>
               </div>
               <div class="col-md-7 ml-105">
                   <div class="table-responsive">
@@ -114,6 +113,10 @@
   </div>
 </section>
 
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@10/dist/sweetalert2.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+
 <script>
 async function confirmBlock(brandId, action) {
   const url = action === 'block' ? '/admin/blockBrand' : '/admin/unBlockBrand';
@@ -159,15 +162,14 @@ async function confirmBlock(brandId, action) {
       }
   });
 }
-</script>
-  <script>
-    function confirmDelete() {
-      return confirm("Are You Sure You Want to Delete this Brand")
-    }
-  </script>
 
 
-<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('addBrandForm');
+    form.addEventListener('submit', handleFormSubmit);
+});
+
+
 function validateBrandForm() {
   const brandInput = document.getElementById("brandName");
   const errorDiv = document.getElementById("brandNameError");
@@ -188,8 +190,59 @@ function validateBrandForm() {
 
   return true; 
 }
+
+
+async function handleFormSubmit(event) {
+  event.preventDefault(); 
+
+  // Validate form on client side
+  if (!validateBrandForm()) return;
+
+  const form = document.getElementById('addBrandForm');
+  const formData = new FormData(form);
+  const brandName = formData.get('name').trim();
+
+  try {
+    const response = await fetch('/admin/addBrand', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      },
+      body: JSON.stringify({ name: brandName })
+    });
+
+    const data = await response.json();
+
+    if (response.ok && data.success) {
+      Swal.fire({
+        icon: 'success',
+        title: 'Success',
+        text: data.message || 'Brand added successfully',
+        confirmButtonColor: '#3085d6'
+      }).then(() => {
+        form.reset(); 
+        document.getElementById("brandNameError").textContent = ""; 
+        location.reload(); 
+      });
+    } else {
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: data.message || 'Failed to add brand',
+        confirmButtonColor: '#d33'
+      });
+    }
+  } catch (error) {
+    console.error('Error:', error);
+    Swal.fire({
+      icon: 'error',
+      title: 'Error',
+      text: 'An error occurred while adding the brand',
+      confirmButtonColor: '#d33'
+    });
+  }
+}
 </script>
 
-
-
-  <%- include("../../views/layouts/admin/footer") %>
+<%- include("../../views/layouts/admin/footer") %>
