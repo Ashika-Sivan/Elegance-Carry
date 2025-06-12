@@ -1,7 +1,7 @@
 <%- include("../../views/layouts/admin/header.ejs") %>
 
    <style>
-        /* Reset and Base Styles */
+        
         * {
             margin: 0;
             padding: 0;
@@ -12,13 +12,22 @@
         body {
             background-color: #f4f7fa;
             color: #333;
-            /* padding: 20px; */
+           
         }
 
-        /* Container */
+        input[type="date"]:invalid {
+        border: 1px solid red;
+    }
+
+        input[type="date"]::-webkit-calendar-picker-indicator {
+        filter: grayscale(1); /* to indicate restricted future dates */
+    }
+
+
+       
         .sales-report-container {
             max-width: 1200px;
-            /* margin: 0 auto; */
+         
         }
 
         /* Header */
@@ -444,32 +453,47 @@
             }
         });
 
- 
-        function applyCustomDateRange() {
-            const startDate = document.getElementById("start-date").value;
-            const endDate = document.getElementById("end-date").value;
+function applyCustomDateRange() {
+    const startDateInput = document.getElementById("start-date");
+    const endDateInput = document.getElementById("end-date");
+    const startDate = startDateInput.value;
+    const endDate = endDateInput.value;
 
-            if (!startDate || !endDate) {
-                alert("Please select both start and end dates.");
-                return;
-            }
+    if (!startDate || !endDate) {
+        Swal.fire({
+            icon: 'warning',
+            title: 'Missing Dates',
+            text: 'Please select both start and end dates.'
+        });
+        return;
+    }
 
-            const start = new Date(startDate);
-            const end = new Date(endDate);
-            const now = new Date();
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); // Ignore time when comparing
 
-            if (start > end) {
-                alert("Start date cannot be after end date.");
-                return;
-            }
+    if (start > end) {
+        Swal.fire({
+            icon: 'error',
+            title: 'Invalid Range',
+            text: 'Start date cannot be after end date.'
+        });
+        return;
+    }
 
-            if (start > now || end > now) {
-                alert("Dates cannot be in the future.");
-                return;
-            }
+    if (start > today || end > today) {
+        Swal.fire({
+            icon: 'error',
+            title: 'Invalid Dates',
+            text: 'Selected dates cannot be in the future.'
+        });
+        return;
+    }
 
-            window.location.href = `/admin/salesReport?dateRange=custom&startDate=${startDate}&endDate=${endDate}&page=1`;
-        }
+    // If valid, redirect with selected range
+    window.location.href = `/admin/salesReport?dateRange=custom&startDate=${startDate}&endDate=${endDate}&page=1`;
+}
 
         function downloadReport(format) {
             const dateRange = document.getElementById("date-range").value;

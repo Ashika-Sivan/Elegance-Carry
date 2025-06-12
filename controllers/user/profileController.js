@@ -577,17 +577,19 @@ const editAddress=async(req,res)=>{
 }
 
 
-
 const postEditAddress = async (req, res) => {
     try {
         const userId = req.session.user;
-        const addressId = req.params.id; // Use req.params.id instead of req.query.id
+        const addressId = req.params.id;
         const { addressType, name, city, landMark, state, pincode, phone, altPhone } = req.body;
 
-        const userAddress = await Address.findOne({ userId: userId });
+        const userAddress = await Address.findOne({ userId });
 
         if (!userAddress) {
-            return res.status(HttpStatus.NOT_FOUND).redirect("/pageNotFound");
+            if (req.xhr || req.headers.accept.includes('json')) {
+                return res.status(404).json({ success: false, message: "Address not found." });
+            }
+            return res.status(404).redirect("/pageNotFound");
         }
 
         const addressIndex = userAddress.address.findIndex(
@@ -595,11 +597,14 @@ const postEditAddress = async (req, res) => {
         );
 
         if (addressIndex === -1) {
-            return res.status(HttpStatus.NOT_FOUND).redirect("/pageNotFound");
+            if (req.xhr || req.headers.accept.includes('json')) {
+                return res.status(404).json({ success: false, message: "Address ID not found." });
+            }
+            return res.status(404).redirect("/pageNotFound");
         }
 
         userAddress.address[addressIndex] = {
-            _id: userAddress.address[addressIndex]._id,
+            _id: userAddress.address[addressIndex]._id, 
             addressType,
             name,
             city,
@@ -612,19 +617,29 @@ const postEditAddress = async (req, res) => {
 
         await userAddress.save();
 
+        if (req.xhr || req.headers.accept.includes('json')) {
+            return res.status(200).json({ success: true, redirectUrl: "/loadAddresses" });
+        }
+
         res.redirect("/loadAddresses");
 
     } catch (error) {
         console.error("Error updating address:", error);
-        res.status(HttpStatus.INTERNAL_SERVER_ERROR).redirect("/pageNotFound");
+
+        if (req.xhr || req.headers.accept.includes('json')) {
+            return res.status(500).json({ success: false, message: "Server error." });
+        }
+
+        res.status(500).redirect("/pageNotFound");
     }
 };
+
 const deleteAddress = async (req, res) => {
     try {
         const { id: addressId } = req.params;
-        const userId = req.session.user; // req.session.user contains the user ID directly
+        const userId = req.session.user; 
 
-        // Check authentication
+      
         if (!userId) {
             return res.status(401).json({
                 success: false,
@@ -632,7 +647,7 @@ const deleteAddress = async (req, res) => {
             });
         }
 
-        // Validate address ID
+
         if (!mongoose.Types.ObjectId.isValid(addressId)) {
             return res.status(400).json({
                 success: false,
@@ -640,7 +655,7 @@ const deleteAddress = async (req, res) => {
             });
         }
 
-        // Delete the address
+        
         const result = await Address.updateOne(
             { 
                 userId: userId,

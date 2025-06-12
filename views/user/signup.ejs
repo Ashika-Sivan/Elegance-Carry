@@ -7,6 +7,9 @@
     <link href="https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <!-- SweetAlert2 CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/sweetalert2/11.10.1/sweetalert2.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/sweetalert2/11.10.1/sweetalert2.min.css">
    
     <style>
         .fa-google {
@@ -169,7 +172,7 @@
                 <div class="text-center mt-3">
                     <p>or sign up with</p>
                     <div class="social-signup">
-                        <a href="/auth/google">
+                        <a href="/auth/google" id="googleSignup">
                             <i class="fa-brands fa-google" ></i>
                             <!-- <img src="/img/googlesign.webp" alt="Google Login" /> -->
                           </a>
@@ -187,7 +190,36 @@
 
 
     <script>
+        // Check for Google signup success on page load
         document.addEventListener("DOMContentLoaded", function () {
+            // Check URL parameters for Google signup success
+            const urlParams = new URLSearchParams(window.location.search);
+            const googleSignup = urlParams.get('googleSignup');
+            
+            if (googleSignup === 'success') {
+                Swal.fire({
+                    title: 'Welcome!',
+                    text: 'Your account has been created successfully with Google!',
+                    icon: 'success',
+                    confirmButtonText: 'Get Started',
+                    confirmButtonColor: '#ff3f6c',
+                    allowOutsideClick: false,
+                    customClass: {
+                        popup: 'swal-custom-popup'
+                    }
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        // Clean up URL parameters
+                        const url = new URL(window.location);
+                        url.searchParams.delete('googleSignup');
+                        window.history.replaceState({}, document.title, url);
+                        
+                        // Optionally redirect to dashboard or home page
+                        // window.location.href = '/dashboard';
+                    }
+                });
+            }
+
             const signform = document.getElementById("signform");
             const nameid = document.getElementById("fullName");
             const emailid = document.getElementById("email");
@@ -257,9 +289,6 @@
             });
         });
 
-
-
-
         function togglePassword(inputId, iconId) {
         const passwordField = document.getElementById(inputId);
         const icon = document.getElementById(iconId);
@@ -273,26 +302,25 @@
             icon.classList.add("fa-eye");
         }
     }
-//refferalcode
+
 
 document.addEventListener('DOMContentLoaded', function() {
   const referralCodeInput = document.getElementById('referralCode');
   let validationTimeout;
   
   if (referralCodeInput) {
-    // Create status elements
     const statusContainer = document.createElement('div');
     statusContainer.style.marginTop = '5px';
     referralCodeInput.parentNode.appendChild(statusContainer);
     
     const loadingSpinner = document.createElement('span');
-    loadingSpinner.innerHTML = '⟳'; // Simple loading indicator
+    loadingSpinner.innerHTML = '⟳';
     loadingSpinner.style.display = 'none';
     loadingSpinner.style.marginRight = '5px';
     loadingSpinner.className = 'loading-spinner';
     statusContainer.appendChild(loadingSpinner);
     
-    // Add some CSS for the spinner animation
+
     const style = document.createElement('style');
     style.innerHTML = `
       .loading-spinner {
@@ -310,6 +338,9 @@ document.addEventListener('DOMContentLoaded', function() {
       .invalid-code {
         color: red;
       }
+      .swal-custom-popup {
+        font-family: "Nunito Sans", sans-serif !important;
+      }
     `;
     document.head.appendChild(style);
     
@@ -317,16 +348,16 @@ document.addEventListener('DOMContentLoaded', function() {
     statusMessage.style.fontSize = '12px';
     statusContainer.appendChild(statusMessage);
     
-    // Function to verify referral code with the server
+ 
     function verifyReferralCode(code) {
       if (code.length !== 6) return;
       
-      // Show loading indicator
+
       loadingSpinner.style.display = 'inline-block';
       statusMessage.textContent = 'Checking...';
       statusMessage.style.color = 'gray';
       
-      // Make AJAX request to verify code
+     
       fetch('/verify-referral', {
         method: 'POST',
         headers: {
@@ -339,12 +370,10 @@ document.addEventListener('DOMContentLoaded', function() {
         loadingSpinner.style.display = 'none';
         
         if (data.valid) {
-          // Valid referral code
           statusMessage.textContent = `Valid code! You and ${data.referrerName || 'your friend'} will receive bonus credits.`;
           statusMessage.className = 'valid-code';
           referralCodeInput.style.borderColor = 'green';
         } else {
-          // Invalid referral code
           statusMessage.textContent = 'Invalid referral code.';
           statusMessage.className = 'invalid-code';
           referralCodeInput.style.borderColor = 'red';
@@ -358,17 +387,15 @@ document.addEventListener('DOMContentLoaded', function() {
       });
     }
     
-    // Add input event with debounce to avoid too many requests
+   
     referralCodeInput.addEventListener('input', function() {
-      // Convert to uppercase automatically
       this.value = this.value.toUpperCase();
       
-      // Clear previous timeout
+ 
       clearTimeout(validationTimeout);
       
       const code = this.value.trim();
-      
-      // Reset status if empty
+   
       if (code === '') {
         loadingSpinner.style.display = 'none';
         statusMessage.textContent = '';
@@ -377,14 +404,14 @@ document.addEventListener('DOMContentLoaded', function() {
         return;
       }
       
-      // Basic format validation
+    
       if (!/^[A-Z0-9]*$/.test(code)) {
         statusMessage.textContent = 'Only letters and numbers allowed';
         statusMessage.className = 'invalid-code';
         return;
       }
       
-      // If code is 6 characters, verify after a short delay (debounce)
+     
       if (code.length === 6) {
         validationTimeout = setTimeout(() => {
           verifyReferralCode(code);

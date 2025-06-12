@@ -173,6 +173,7 @@
 </div>
 
 <%- include("../layouts/user/footer.ejs") %>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <script>
     // Name validation
@@ -332,6 +333,76 @@
             }
         });
     });
+document.getElementById('addressForm').addEventListener('submit', async function (event) {
+    event.preventDefault();
+
+    if (!validateForm()) {
+        return;
+    }
+
+    const addressId = "<%= address._id %>"; // Make sure this line is inside EJS or replace dynamically
+    const formData = {
+        addressType: document.getElementById('addressType').value,
+        name: document.getElementById('name').value.trim(),
+        city: document.getElementById('city').value.trim(),
+        landMark: document.getElementById('landMark').value.trim(),
+        state: document.getElementById('state').value,
+        pincode: document.getElementById('pincode').value,
+        phone: document.getElementById('phone').value,
+        altPhone: document.getElementById('altPhone').value
+    };
+
+    try {
+        const response = await fetch(`/editAddress/${addressId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify(formData)
+        });
+
+        if (!response.ok) {
+            const text = await response.text();
+            throw new Error(`HTTP error! Status: ${response.status}, Response: ${text}`);
+        }
+
+        const result = await response.json();
+
+        if (result.success) {
+            Swal.fire({
+                title: 'Success!',
+                text: 'Address updated successfully!',
+                icon: 'success',
+                timer: 1500,
+                showConfirmButton: false
+            }).then(() => {
+                window.location.href = result.redirectUrl || '/loadAddresses';
+            });
+        } else {
+            Swal.fire({
+                title: 'Error!',
+                text: result.message || 'Failed to update address.',
+                icon: 'error',
+                confirmButtonText: 'OK'
+            });
+        }
+    } catch (error) {
+        console.error("Error editing address:", error);
+        Swal.fire({
+            title: 'Error!',
+            text: error.message.includes('HTTP error')
+                ? `Server error: ${error.message}`
+                : 'Something went wrong while updating the address.',
+            icon: 'error',
+            confirmButtonText: 'OK'
+        });
+    }
+});
+
+
 </script>
 
-<%- include("../../views/layouts/user/footer") %>
+
+

@@ -74,12 +74,12 @@
             <span class="text-danger">Out Of Stock</span>
           <%}%>
 
-          <!-- <div class="product-actions">
+          <div class="product-actions">
             <div class="quantity-controls">
               <button onclick="decreaseQuantity()">-</button>
               <input id="quantity" type="number" value="1" min="1" max="3">
               <button onclick="increaseQuantity()">+</button>
-            </div> -->
+            </div>
 
             <button id="add-to-cart" class="btn btn-primary" onclick="addToCart('<%=product._id%>')">Add to Cart</button>
             <button class="btn btn-rounded-pill" onclick="addToFavorites()">wish List❤️</button>
@@ -201,7 +201,7 @@ function increaseQuantity() {
       text: 'Product is out of stock!',
       confirmButtonColor: '#ff3f6c'
     });
-    return; // Prevent incrementing
+    return; 
   }
 
   if (currentQuantity < maxQuantity) {
