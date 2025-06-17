@@ -41,7 +41,7 @@ const loadCartPage = async (req, res) => {
                 totalQuantity += item.quantity;
             });
         }
-        //to check the total stock 
+
         const products = await Product.find();
         const productsWithStock = products.map(product => ({
             ...product.toObject(),
@@ -90,8 +90,7 @@ const postAddToCart = async (req, res) => {
         }
 
         const price = product.salePrice || product.price;
-        let cart = await Cart.findOne({ userId });//check the user has cart
-
+        let cart = await Cart.findOne({ userId });
         if (!cart) {
             cart = new Cart({
                 userId,

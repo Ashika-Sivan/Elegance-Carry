@@ -243,7 +243,7 @@
 
     <div class="card">
         <div class="card-body">
-            <form method="post" action="/admin/editProduct/<%=product._id %>" enctype="multipart/form-data" onsubmit="return validateForm()">
+            <form id='updateProduct'method="post" action="/admin/editProduct/<%=product._id %>" enctype="multipart/form-data" onsubmit="return validateForm()">
                 <div class="row">
                     <div class="col-lg-6 mb-4">
                         <label for="product_name" class="form-label">Product Name</label>
@@ -372,6 +372,13 @@
     </div>
 </section>
 
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+
+
+
+
+
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/cropperjs@1.5.13/dist/cropper.min.js" onerror="loadLocalCropper()"></script>
@@ -433,6 +440,8 @@ function validateForm() {
 
     return isValid;
 }
+
+
 
 function displayErrorMessage(elementId, message) {
     const element = document.getElementById(elementId);
@@ -550,22 +559,18 @@ function initializeImageHandling(index) {
                     return;
                 }
 
-                // Set display to block and force a reflow
+             
                 imgView.style.display = 'block';
-                // Force reflow by accessing offsetWidth
                 void imgView.offsetWidth;
-
-                // Retry mechanism to ensure image is visible
                 let attempts = 0;
                 const maxAttempts = 5;
-                const retryInterval = 100; // 100ms between attempts
+                const retryInterval = 100; 
 
                 function tryInitializeCropper() {
                     const visibility = `Image ${index} visibility: ${imgView.offsetWidth}x${imgView.offsetHeight}`;
                     console.log(visibility);
 
                     if (imgView.offsetWidth > 0 && imgView.offsetHeight > 0) {
-                        // Image is visible, proceed with cropper initialization
                         try {
                             cropperContainer.style.display = 'block';
                             croppedPreview.style.display = 'none';
@@ -602,7 +607,7 @@ function initializeImageHandling(index) {
                     }
                 }
 
-                // Start the retry mechanism
+            
                 tryInitializeCropper();
             };
 
@@ -745,7 +750,6 @@ function deleteSingleImage(imageId, productId) {
 }
 
 
-
 document.addEventListener('DOMContentLoaded', function() {
     if (typeof Cropper === 'undefined') {
         console.error('Cropper.js is not loaded. Please check your script import.');
@@ -760,6 +764,55 @@ document.addEventListener('DOMContentLoaded', function() {
         console.log(`Initialized handling for image ${i}`);
     }
 
+   
+    const form = document.getElementById('updateProduct');
+    form.addEventListener('submit', async function(event) {
+        event.preventDefault(); 
+
+        if (!validateForm()) {
+            return;
+        }
+
+        const formData = new FormData(form);
+
+        try {
+            const response = await fetch(form.action, {
+                method: 'POST',
+                body: formData,
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Success',
+                    text: data.message || 'Product updated successfully',
+                    timer: 2000,
+                    showConfirmButton: false,
+                }).then(() => {
+
+                    window.location.href = '/admin/products';
+                });
+            } else {
+
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: data.message || 'Failed to update product',
+                });
+            }
+        } catch (error) {
+            console.error('Error updating product:', error);
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'An error occurred while updating the product',
+            });
+        }
+    });
+
+   
     const sidebar = document.getElementById('sidebar');
     const hamburger = document.getElementById('hamburger');
     if (sidebar && hamburger) {
@@ -778,6 +831,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 });
+
 </script>
 
 <%- include("../../views/layouts/admin/footer") %>

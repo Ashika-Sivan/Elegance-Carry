@@ -56,6 +56,7 @@ router.post("/removeProductOffer",adminAuth,productController.removeProductOffer
 
 
 
+
 router.post("/addBrand", adminAuth, upload.single("image"), handleMulterError, brandController.addBrand);
 router.post("/addProducts", adminAuth, upload.array("images", 4), handleMulterError, productController.addProducts);
 router.post("/editProduct/:id", adminAuth, upload.array("images", 4), handleMulterError, productController.editProduct);//put

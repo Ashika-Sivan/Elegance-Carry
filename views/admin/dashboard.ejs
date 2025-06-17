@@ -97,6 +97,36 @@
             background-color: #0056b3;
         }
 
+        /* Date validation styles */
+        .date-error {
+            border: 2px solid #dc3545 !important;
+            background-color: #fff5f5;
+        }
+
+        .error-message {
+            color: #dc3545;
+            font-size: 12px;
+            margin-top: 5px;
+            display: none;
+        }
+
+        .error-message.show {
+            display: block;
+        }
+
+        .date-input-group {
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        .date-range-container {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            align-items: flex-start;
+        }
+
         /* Responsive Styles */
         @media (max-width: 1024px) {
             .dashboard-container {
@@ -144,6 +174,11 @@
             .logout-btn {
                 padding: 6px 12px;
                 font-size: 14px;
+            }
+
+            .date-range-container {
+                flex-direction: column;
+                gap: 10px;
             }
         }
 
@@ -201,9 +236,9 @@
         <!-- Filter Section -->
         <div class="filter-section">
             <h2>Admin Dashboard - Analytics</h2>
-            <form method="GET" action="/admin/dashboard">
+            <form method="GET" action="/admin/dashboard" id="dashboardForm">
                 <label for="filterValue">Filter By:</label>
-                <select name="filterValue" id="filterValue" onchange="this.form.submit()">
+                <select name="filterValue" id="filterValue">
                     <option value="all" <%= selectedFilter === 'all' ? 'selected' : '' %>>All Time</option>
                     <option value="daily" <%= selectedFilter === 'daily' ? 'selected' : '' %>>Daily</option>
                     <option value="weekly" <%= selectedFilter === 'weekly' ? 'selected' : '' %>>Weekly</option>
@@ -213,17 +248,25 @@
                 </select>
 
                 <!-- Custom Date Range -->
-                <div class="date-range" style="display: <%= selectedFilter === 'custom' ? 'block' : 'none' %>">
-                    <label for="startDate">Start Date:</label>
-                    <input type="date" name="startDate" id="startDate" value="<%= startDate %>" onchange="this.form.submit()">
-                    <label for="endDate">End Date:</label>
-                    <input type="date" name="endDate" id="endDate" value="<%= endDate %>" onchange="this.form.submit()">
+                <div class="date-range" id="dateRange" style="display: <%= selectedFilter === 'custom' ? 'block' : 'none' %>">
+                    <div class="date-range-container">
+                        <div class="date-input-group">
+                            <label for="startDate">Start Date:</label>
+                            <input type="date" name="startDate" id="startDate" value="<%= startDate %>">
+                            <div class="error-message" id="startDateError">Please select a valid start date</div>
+                        </div>
+                        <div class="date-input-group">
+                            <label for="endDate">End Date:</label>
+                            <input type="date" name="endDate" id="endDate" value="<%= endDate %>">
+                            <div class="error-message" id="endDateError">Please select a valid end date</div>
+                        </div>
+                    </div>
+                    <div class="error-message" id="dateRangeError">End date must be after start date</div>
+                    <div class="error-message" id="futureDateError">Dates cannot be in the future</div>
+                    <button type="submit" class="btn btn-primary mt-2" style="display: none;" id="applyDatesBtn">Apply Dates</button>
                 </div>
             </form>
         </div>
-        <!-- <div style="display: flex; justify-content: flex-end; margin-right: 20px;">
-            <a href="/admin/logout" class="logout-btn">Logout</a>
-        </div> -->
 
         <!-- Chart Section -->
         <div class="chart-section">
@@ -353,13 +396,128 @@
     </div>
 
     <script>
+        // Get current date for validation
+        const today = new Date().toISOString().split('T')[0];
+        
+        // Set max date for both inputs to today
+        document.getElementById('startDate').setAttribute('max', today);
+        document.getElementById('endDate').setAttribute('max', today);
+
         // Show/hide date range inputs based on filter selection
         document.getElementById('filterValue').addEventListener('change', function() {
-            const dateRange = document.querySelector('.date-range');
+            const dateRange = document.getElementById('dateRange');
+            const applyBtn = document.getElementById('applyDatesBtn');
+            
             if (this.value === 'custom') {
                 dateRange.style.display = 'block';
+                applyBtn.style.display = 'inline-block';
             } else {
                 dateRange.style.display = 'none';
+                applyBtn.style.display = 'none';
+              
+                clearValidationErrors();
+               
+                document.getElementById('dashboardForm').submit();
+            }
+        });
+
+     
+        function validateDates() {
+            const startDate = document.getElementById('startDate').value;
+            const endDate = document.getElementById('endDate').value;
+            const startDateInput = document.getElementById('startDate');
+            const endDateInput = document.getElementById('endDate');
+            
+            let isValid = true;
+      
+            clearValidationErrors();
+      
+            if (!startDate) {
+                showError('startDateError', 'Please select a start date');
+                startDateInput.classList.add('date-error');
+                isValid = false;
+            }
+            
+            if (!endDate) {
+                showError('endDateError', 'Please select an end date');
+                endDateInput.classList.add('date-error');
+                isValid = false;
+            }
+           
+            if (startDate && endDate) {
+                const start = new Date(startDate);
+                const end = new Date(endDate);
+                const todayDate = new Date(today);
+                
+         
+                if (start > todayDate) {
+                    showError('futureDateError', 'Start date cannot be in the future');
+                    startDateInput.classList.add('date-error');
+                    isValid = false;
+                }
+                
+                if (end > todayDate) {
+                    showError('futureDateError', 'End date cannot be in the future');
+                    endDateInput.classList.add('date-error');
+                    isValid = false;
+                }
+                
+            
+                if (start >= end) {
+                    showError('dateRangeError', 'End date must be after start date');
+                    startDateInput.classList.add('date-error');
+                    endDateInput.classList.add('date-error');
+                    isValid = false;
+                }
+                
+              
+                const daysDifference = (end - start) / (1000 * 60 * 60 * 24);
+                if (daysDifference > 365) {
+                    showError('dateRangeError', 'Date range cannot exceed 365 days');
+                    startDateInput.classList.add('date-error');
+                    endDateInput.classList.add('date-error');
+                    isValid = false;
+                }
+            }
+            
+            return isValid;
+        }
+
+        // Show error message
+        function showError(errorId, message) {
+            const errorElement = document.getElementById(errorId);
+            errorElement.textContent = message;
+            errorElement.classList.add('show');
+        }
+
+        // Clear all validation errors
+        function clearValidationErrors() {
+            const errorMessages = document.querySelectorAll('.error-message');
+            const dateInputs = document.querySelectorAll('input[type="date"]');
+            
+            errorMessages.forEach(error => {
+                error.classList.remove('show');
+                error.textContent = '';
+            });
+            
+            dateInputs.forEach(input => {
+                input.classList.remove('date-error');
+            });
+        }
+
+        // Add event listeners for real-time validation
+        document.getElementById('startDate').addEventListener('change', validateDates);
+        document.getElementById('endDate').addEventListener('change', validateDates);
+
+        // Form submission validation
+        document.getElementById('dashboardForm').addEventListener('submit', function(e) {
+            const filterValue = document.getElementById('filterValue').value;
+            
+            if (filterValue === 'custom') {
+                if (!validateDates()) {
+                    e.preventDefault(); // Prevent form submission if validation fails
+                    return false;
+                }
             }
         });
 

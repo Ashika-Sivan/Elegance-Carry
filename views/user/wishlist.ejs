@@ -111,12 +111,13 @@
         box-shadow: 0px 5px 15px rgba(0, 0, 0, 0.2);
     }
 
-    /* Product Image */
+    /* Product Image - REDUCED SIZE */
     .product-img-wrap {
         position: relative;
         overflow: hidden;
         border-bottom: 1px solid #f0f0f0;
-        aspect-ratio: 3 / 4; /* Reduced aspect ratio for smaller images */
+        aspect-ratio: 1 / 1.2; /* Reduced from 3/4 to make images smaller */
+        max-height: 200px; /* Added max-height to control image size */
     }
 
     .product-img {
@@ -336,7 +337,8 @@
         }
 
         .product-img-wrap {
-            aspect-ratio: 3 / 4;
+            aspect-ratio: 1 / 1.1;
+            max-height: 180px;
         }
     }
 
@@ -354,7 +356,8 @@
         }
 
         .product-img-wrap {
-            aspect-ratio: 2 / 3; /* Further reduced for tablets */
+            aspect-ratio: 1 / 1;
+            max-height: 160px;
         }
 
         .product-name {
@@ -428,7 +431,8 @@
         }
 
         .product-img-wrap {
-            aspect-ratio: 1 / 1; /* Square images for mobile to keep them small */
+            aspect-ratio: 1 / 1;
+            max-height: 140px;
         }
 
         .product-info {
@@ -514,6 +518,7 @@
         }
     }
 </style>
+
 
 <div style="margin-bottom: 10rem;">
     <div class="container-wrapper">
@@ -644,10 +649,44 @@
         </main>
     </div>
 </div>
-
 <%- include("../../views/layouts/user/footer") %>
 
 <script>
+// function removeFromWishlist(productId) {
+//     fetch('/wishlist', {
+//         method: 'PATCH',
+//         headers: {
+//             'Content-Type': 'application/json'
+//         },
+//         body: JSON.stringify({ productId: productId })
+//     })
+//     .then(response => response.json())
+//     .then(data => {
+//         if (data.success) {
+//             window.location.reload();
+//         } else {
+//             Swal.fire({
+//                 title: "Error!",
+//                 text: data.message,
+//                 icon: "error",
+//                 confirmButtonText: "OK"
+//             });
+//         }
+//     })
+//     .catch(error => {
+//         console.error('Error:', error);
+//         Swal.fire({
+//             title: "Error!",
+//             text: "Something went wrong. Please try again.",
+//             icon: "error",
+//             confirmButtonText: "OK"
+//         });
+//     });
+// }
+
+
+
+
 function removeFromWishlist(productId) {
     fetch('/wishlist', {
         method: 'PATCH',
@@ -659,7 +698,17 @@ function removeFromWishlist(productId) {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            window.location.reload();
+            // Show success popup for removal
+            Swal.fire({
+                title: "Removed!",
+                text: "Product removed from wishlist successfully!",
+                icon: "success",
+                showConfirmButton: false,
+                timer: 1500,
+                timerProgressBar: true
+            }).then(() => {
+                window.location.reload();
+            });
         } else {
             Swal.fire({
                 title: "Error!",
@@ -679,6 +728,7 @@ function removeFromWishlist(productId) {
         });
     });
 }
+
 
 function addToCart(productId) {
     fetch('/cart', {
@@ -715,6 +765,22 @@ function addToCart(productId) {
             icon: "error",
             confirmButtonText: "OK"
         });
+    });
+}
+
+function showWishlistSuccess() {
+    Swal.fire({
+        title: "Added to Wishlist!",
+        text: "Product has been added to your wishlist successfully!",
+        icon: "success",
+        showConfirmButton: false,
+        timer: 2000,
+        timerProgressBar: true,
+        toast: true,
+        position: 'top-end',
+        background: '#fff',
+        color: '#333',
+        iconColor: '#ff3f6c'
     });
 }
 </script>

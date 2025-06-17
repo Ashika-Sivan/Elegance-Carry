@@ -92,7 +92,7 @@ const razorpay = new Razorpay({
                 if (totalAmount >= coupon.minimumPrice) {//check the total Amount is greater than minimum Price
                     couponDiscount = coupon.discountAmount;//save the discount amount 
                     appliedCouponCode = coupon.name;//name for later use
-                    await Coupon.updateOne(//update coupon usage
+                    await Coupon.updateOne(
                         { _id: coupon._id },
                         {
                             $inc: { usedCount: 1 },
@@ -105,7 +105,7 @@ const razorpay = new Razorpay({
                     });
 
                    
-                    req.session.appliedCoupon = null;//since coupon used clear it from session
+                    req.session.appliedCoupon = null;
                 } else {
                     console.log("Coupon not applied: Total amount below minimum price", {
                         totalAmount,
@@ -191,7 +191,7 @@ const razorpay = new Razorpay({
                 const savedOrder = await newOrder.save();
 
                 for (const item of cart.items) {
-                    await Product.updateOne(              //decrement the quatity of the produuct from cart
+                    await Product.updateOne(              
                         { _id: item.productId._id },
                         { $inc: { quantity: -item.quantity } }
                     );
@@ -425,7 +425,16 @@ const cancelOrder = async (req, res) => {
              (order.paymentStatus === "Completed" || order.paymentStatus === "Paid")) ||
             order.paymentMethod === "Wallet"
         ) {
-            // console.log(`Processing refund of ${refundAmount} to wallet`);
+            
+
+            if(item.quantity>2){
+                refundAmount=refundAmount*0.5
+                console.log('refunded to wallet',refundAmount)
+            }else{
+                console.log('refunded full amounnt')
+            }
+            
+
             try {
                 const refundResult = await walletRefund(
                     userId,
@@ -568,7 +577,7 @@ const loadViewDetailsPage = async (req, res) => {
         res.render('viewDetails', {
             order: order,
             
-            // totalAmount:order.finalAmount+de
+            
         });
 
     } catch (error) {

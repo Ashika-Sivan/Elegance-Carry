@@ -4,6 +4,7 @@ const Brand=require('../../models/brandSchema')
 const HttpStatus = require('../../enum/httpStatus');
 const OrderStatus = require('../../enum/orderStatus');
 const Messages = require("../../enum/messages");
+const { name } = require("ejs");
 
 
 
@@ -52,6 +53,7 @@ const addCategory = async (req, res) => {
             return res.status(HttpStatus.BAD_REQUEST).json({ error: "Category already exists" });
         }
 
+    
         const newCategory = new Category({
             name,
             description,
@@ -95,40 +97,53 @@ const getEditCategory = async (req, res) => {
         res.redirect("/pageerror");
     }
 };
-
 const editCategory = async (req, res) => {
     try {
-        const id = req.params.id;
         const { categoryName, description } = req.body;
+        const categoryId = req.params.id;
+
+        if (!categoryName || !description) {
+            return res.status(HttpStatus.BAD_REQUEST).json({
+                success: false,
+                message: "Category name and description are required",
+            });
+        }
 
         const existingCategory = await Category.findOne({
-            name: { $regex: new RegExp(`^${categoryName}$`, 'i') },
-            _id: { $ne: id }
+            name: categoryName,
+            _id: { $ne: categoryId },
         });
 
         if (existingCategory) {
-            return res.status(HttpStatus.BAD_REQUEST).json({ 
-                error: "Category exists, please choose another name" 
+            return res.status(HttpStatus.BAD_REQUEST).json({
+                success: false,
+                message: "Category with this name already exists",
             });
         }
 
         const updatedCategory = await Category.findByIdAndUpdate(
-            id,
-            {
-                name: categoryName,
-                description: description,
-            },
-            { new: true }
+            categoryId,
+            { name: categoryName, description },
+            { new: true, runValidators: true }
         );
 
-        if (updatedCategory) {
-              return res.status(200).json({ success:true,message: "Category updated successfully" });
-        } else {
-            res.status(HttpStatus.NOT_FOUND).json({ error: Messages.CATEGORY_NOT_FOUND });
+        if (!updatedCategory) {
+            return res.status(HttpStatus.NOT_FOUND).json({
+                success: false,
+                message: "Category not found",
+            });
         }
+
+        return res.status(HttpStatus.OK).json({
+            success: true,
+            message: "Category updated successfully",
+        });
     } catch (error) {
-        console.error('Error updating category:', error);
-        res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({ error:Messages.INTERNAL_SERVER_ERROR });
+        console.error("Error in editCategory:", error);
+        return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
+            success: false,
+            message: "An error occurred while updating the category",
+        });
     }
 };
 

@@ -33,7 +33,7 @@ const addBrand = async (req, res) => {
     try {
         const brandName = req.body.name.trim();
 
-        // Validate brand name
+      
         if (!brandName) {
             return res.status(HttpStatus.BAD_REQUEST).json({
                 success: false,

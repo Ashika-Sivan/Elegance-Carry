@@ -200,7 +200,7 @@ const approveReturn = async (req, res) => {
             });
         }
 
-//find the product with the statys returned
+
         const returnRequestedItems = order.orderedItems.filter(item => item.status === OrderStatus.RETURN_REQUEST);
         if (returnRequestedItems.length === 0) {
             console.log("No return requested items found in order:", order.orderId);
@@ -226,7 +226,6 @@ const approveReturn = async (req, res) => {
             order.orderedItems[itemIndex].status = OrderStatus.RETURNED;
             order.orderedItems[itemIndex].returnApprovalDate = new Date();
 
-          //if the product return then the product stocke is restocked
             if (item.product) {
                 await Product.updateOne(
                     { _id: item.product._id },

@@ -37,7 +37,6 @@ const loadAboutPage=async(req,res)=>{
   }
 }
 
-
 const loadHomePage = async (req, res) => {
   try {
     const userId = req.session.user;
@@ -58,19 +57,17 @@ const loadHomePage = async (req, res) => {
       }
     }
 
-
     const bestSellerProducts = await Product.find({ isBlocked: false })
       .populate("category")
       .populate("brand")
       .sort({ soldCount: -1 }) 
       .limit(8);
 
-//produt wiyh some offers is shown as featured products
     const featuredProducts = await Product.find({
       isBlocked: false,
       isFeatured: true,
       $or: [
-        { 'productOffer': { $gt: 0 } },          ///filtering produt that have offer greater than 0
+        { 'productOffer': { $gt: 0 } },          
         { 'category.categoryOffer': { $gt: 0 } }
       ]
     })
@@ -78,22 +75,24 @@ const loadHomePage = async (req, res) => {
       .populate("brand")
       .limit(8);
 
-    const processProducts = async (products) => {
-      return await Promise.all(products.map(async (product) => {
+    
+    let userWishlistProductIds = [];
+    if (userId) {
+      const wishlist = await Wishlist.findOne({ userId });
+      if (wishlist && wishlist.products.length > 0) {
+        userWishlistProductIds = wishlist.products.map(item => item.productId.toString());
+      }
+    }
+
+    const processProducts = (products) => {
+      return products.map((product) => {
         const productData = product.toObject(); 
 
+        productData.inWishlist = userWishlistProductIds.includes(product._id.toString());
 
-        if (userId) {
-          const wishlist = await Wishlist.findOne({ userId });
-          productData.inWishlist = wishlist ? wishlist.products.includes(product._id) : false;
-        } else {
-          productData.inWishlist = false;
-        }
-
-        
+      
         const categoryOffer = product.category?.categoryOffer || 0;
         const productOfferPercentage = product.productOffer || 0;
-
 
         const offerPercentage = Math.max(productOfferPercentage, categoryOffer);
         const offerType = productOfferPercentage > categoryOffer ? "product" : "category";
@@ -105,11 +104,11 @@ const loadHomePage = async (req, res) => {
           };
         }
         return productData;
-      }));
+      });
     };
 
-    const processedBestSellers = await processProducts(bestSellerProducts);
-    const processedFeaturedProducts = await processProducts(featuredProducts);
+    const processedBestSellers = processProducts(bestSellerProducts);
+    const processedFeaturedProducts = processProducts(featuredProducts);
 
     res.render("home", {
       user,
@@ -121,6 +120,7 @@ const loadHomePage = async (req, res) => {
     res.status(500).render("errorPage", { message: Messages.INTERNAL_SERVER_ERROR });
   }
 };
+
 
 function generateOtp() {
   return Math.floor(100000 + Math.random() * 900000).toString();// numbers from 100000 to 900000

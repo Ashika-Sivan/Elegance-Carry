@@ -185,10 +185,12 @@ const walletRefund = async (userId, amount, orderId) => {
         
         return savedWallet;
     } catch (error) {
-        // console.error('Error in walletRefund:', error);
+        
         throw new Error(`Failed to process wallet refund: ${error.message}`);
     }
 }
+
+
 const deductWalletBalance = async (userId, amount, orderId) => {
     try {
         
@@ -206,7 +208,7 @@ const deductWalletBalance = async (userId, amount, orderId) => {
 
        
         wallet.walletHistory.push({
-            transactionId: uuidv4(),//random unique id
+            transactionId: uuidv4(),
             transactionType: 'debit',
             amount: amount,
             date: new Date(),

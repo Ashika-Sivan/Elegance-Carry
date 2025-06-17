@@ -76,13 +76,13 @@ const addProducts = async (req, res) => {
             }
         }
 
-        // Validate category
+      
         const categoryId = await Category.findOne({ name: products.category });
         if (!categoryId) {
             return res.status(400).send("Invalid category name");
         }
 
-        // Create new product
+
         const newProduct = new Product({
             productName: products.productName,
             description: products.description,
@@ -112,7 +112,7 @@ const getAllProducts = async (req, res) => {
         const page = parseInt(req.query.page) || 1;
         const limit = 5;
 
-        console.log("Search term:", search); 
+        // console.log("Search term:", search); 
         const matchingBrands = await Brand.find({
             name: { $regex: new RegExp(search, "i") },
             isBlocked: false,
@@ -136,13 +136,16 @@ const getAllProducts = async (req, res) => {
             .exec();
 
         const count = await Product.countDocuments(query);
-        let sum=0
-        const productSum=productData.forEach((item)=>{
-            sum+=item.salePrice
+        //    let sum=0
+        // const productSum=productData.forEach((item)=>{
+        //     sum+=item.salePrice
 
-        })
+        // })
+       
 
         const category = await Category.find({ isListed: true });
+       
+     
         const brand = await Brand.find({ isBlocked: false });
 
         if (category && brand) {
@@ -152,8 +155,10 @@ const getAllProducts = async (req, res) => {
                 totalPages: Math.ceil(count / limit),
                 cat: category,
                 brand: brand,
-                search: search, 
-                sum
+                search: search
+                // sum
+                // findCategory,
+            
             });
         } else {
             res.render("page-404");
@@ -163,6 +168,9 @@ const getAllProducts = async (req, res) => {
         res.redirect("/pageerror");
     }
 };
+
+
+
 
 const blockProduct = async (req, res) => {
     try {
@@ -273,15 +281,17 @@ const editProduct = async (req, res) => {
         );
 
         if (!updatedProduct) {
-            throw new Error('Failed to update product');
+           return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({success:false,messsage:'failed to update product'})
         }
 
-        console.log('Updated product:', updatedProduct); // Debug log
-        res.redirect("/admin/products");
+        return res.status(HttpStatus.OK).json({success:true,message:'product updated successfully'})
 
     } catch (error) {
         console.error('Edit product error:', error);
-        res.redirect("/pageerror");
+        return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
+            success: false,
+            message: error.message || "An error occurred while updating the product",
+        });
     }
 };
 
