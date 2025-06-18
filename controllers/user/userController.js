@@ -219,7 +219,6 @@ const signup = async (req, res) => {
       });
     }
 
-    // Store user data in session
     req.session.userData = {
       name,
       phone,
@@ -447,6 +446,7 @@ const creditWallet = async (userId, amount, description) => {
   }
 };
 
+
 const resendOtp = async (req, res) => {
   try {
     const { email } = req.session.userData;
@@ -578,7 +578,7 @@ const logout = async (req, res) => {
 
   }
 }
-//this controller is or logged in users
+
 const loadShoppingPage = async (req, res) => {
   try {
     const user = req.session.user;
@@ -606,19 +606,19 @@ const loadShoppingPage = async (req, res) => {
       isBlocked: false
     };
 
-    // Category filter
+
     if (req.query.category) {
       query.category = req.query.category;
     } else {
       query.category = { $in: categoryIds };
     }
 
-    // Brand filter
+
     if (req.query.brand) {
       query.brand = req.query.brand;
     }
 
-    // Search functionality - Fixed
+  
     if (req.query.search && req.query.search.trim()) {
       const searchRegex = new RegExp(req.query.search.trim(), 'i');
       query.$or = [

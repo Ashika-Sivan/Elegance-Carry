@@ -21,7 +21,6 @@ passport.use(
               { email: profile.emails[0].value }
             ]
           });
-  
           if (user) {
             if (user.isBlocked) {
               return done(null, false, { message: 'Your account has been blocked.' });
@@ -51,13 +50,13 @@ passport.use(
   );
 
   
-  //passport call to store userid in the sesssion here only user id
+  
   passport.serializeUser((user, done) => {
     done(null, user.id);
   });
   
-  passport.deserializeUser(async (id, done) => {//here the details of the user
-    try {
+  passport.deserializeUser(async (id, done) => {
+    try {//when user make a req fetch the user information from db with their id,and blocked user are prevented
       const user = await User.findById(id);
       if (user && user.isBlocked) {
         return done(null, false);
