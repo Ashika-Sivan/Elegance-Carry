@@ -28,13 +28,16 @@ router.get('/about',userController.loadAboutPage)
 
 
 router.get('/auth/google', passport.authenticate('google', { scope: ['profile', 'email'] }));
-
 router.get(
   '/auth/google/callback',
   passport.authenticate('google', { failureRedirect: '/signup?googleSignup=error' }),
   (req, res) => {
     const { status } = req.authInfo || {};
-    res.redirect(`/signup?googleSignup=${status}`);
+    if (status === 'success') {
+      res.redirect('/');
+    } else {
+      res.redirect(`/signup?googleSignup=${status}`);
+    }
   }
 );
 
