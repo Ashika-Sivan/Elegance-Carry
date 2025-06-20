@@ -23,7 +23,7 @@ const razorpay = new Razorpay({
 const getWalletPage = async (req, res) => {
     try {
         if (!req.session.user) {
-            // console.log('User not found in session');
+            // console.log('User not found in session');Q
             return res.redirect('/login');
         }
         

@@ -28,6 +28,7 @@ try {
   
 }
 }
+
 const loadAboutPage=async(req,res)=>{
   try{
     res.render('about')
@@ -369,7 +370,7 @@ const verifyOtp = async (req, res) => {
     });
     await newUserWallet.save();
 
-
+//clear session 
     delete req.session.userOtp;
     delete req.session.userData;
     delete req.session.otpExpiry;

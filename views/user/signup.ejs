@@ -161,8 +161,8 @@
                         <small class="form-text text-muted">Enter a friend's referral code to earn bonus credits</small>
                     </div>
 
-                    <!-- <label for="referralCode">Referral Code (Optional)</label>
-                    <input type="text" name="referralCode" placeholder="Enter referral code"> -->
+                    <label for="referralCode">Referral Code (Optional)</label>
+                    <input type="text" name="referralCode" placeholder="Enter referral code">
 
                     <% if (locals.message && message.length > 0) { %>
                         <div class="alert alert-danger text-center"><%= message %></div>
@@ -190,9 +190,8 @@
 
 
     <script>
-        // Check for Google signup success on page load
+     
         document.addEventListener("DOMContentLoaded", function () {
-            // Check URL parameters for Google signup success
             const urlParams = new URLSearchParams(window.location.search);
             const googleSignup = urlParams.get('googleSignup');
             
@@ -209,7 +208,6 @@
                     }
                 }).then((result) => {
                     if (result.isConfirmed) {
-                        // Clean up URL parameters
                         const url = new URL(window.location);
                         url.searchParams.delete('googleSignup');
                         window.history.replaceState({}, document.title, url);
@@ -232,15 +230,20 @@
             const error4 = document.getElementById("error4");
             const error5 = document.getElementById("error5");
 
+
             function validateName() {
-                const nameval = nameid.value.trim();
-                const namepattern = /^[A-Za-z]{4,}$/;
-                if (!namepattern.test(nameval)) {
-                    error1.innerHTML = "Name must be at least 4 letters and contain only alphabets";
-                } else {
-                    error1.innerHTML = "";
-                }
-            }
+            const nameval = nameid.value.trim();
+            const namepattern = /^[A-Za-z]+(?: [A-Za-z]+)*$/;
+
+            if (!namepattern.test(nameval)) {
+          error1.innerHTML = "Name must be at least 3 characters and contain only letters and spaces";
+           nameid.style.borderColor = "red";
+    } else {
+        error1.innerHTML = "";
+        nameid.style.borderColor = "green";
+    }
+}
+
 
             function validateEmail() {
                 const emailval = emailid.value.trim();

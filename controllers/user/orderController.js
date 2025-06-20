@@ -79,7 +79,7 @@ const razorpay = new Razorpay({
         let couponSource = couponId || (req.session.appliedCoupon ? req.session.appliedCoupon.couponId : null);
         
 
-        if (couponSource) {
+        if (couponSource) {//check it i sa valid coupon
             const coupon = await Coupon.findOne({
                 _id: couponSource,
                 expiryOn: { $gte: new Date() },
@@ -94,18 +94,19 @@ const razorpay = new Razorpay({
                     appliedCouponCode = coupon.name;//name for later use
                     await Coupon.updateOne(
                         { _id: coupon._id },
-                        {
+                        {                          //marked as count
                             $inc: { usedCount: 1 },
                             $push: { userId: userId },
                         }
                     );
-                    console.log("Coupon Applied Successfully:", {
-                        couponDiscount,
-                        appliedCouponCode,
-                    });
+
+                    // console.log("Coupon Applied Successfully:", {
+                    //     couponDiscount,
+                    //     appliedCouponCode,
+                    // });
 
                    
-                    req.session.appliedCoupon = null;
+                    req.session.appliedCoupon = null;//clear session
                 } else {
                     console.log("Coupon not applied: Total amount below minimum price", {
                         totalAmount,

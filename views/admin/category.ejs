@@ -368,6 +368,7 @@
       });
     }
 
+
     function handleFormSubmit(event) {
       event.preventDefault();
       if (!validateForm()) return;
@@ -383,8 +384,16 @@
           return response.json().then(err => { throw new Error(err.error); });
         }
         return response.json();
+      }).then((data)=>{
+        Swal.fire({
+          icon:'success',
+          title:'Success',
+          text:'Category addedd successfully',
+           confirmButtonColor: '#3085d6'
+        })
+        .then(data => location.reload())
       })
-      .then(data => location.reload())
+      
       .catch(error => {
         if (error.message === "Category already exist") {
           Swal.fire({ icon: 'error', title: "Oops", text: "Category already exists" });
@@ -394,6 +403,10 @@
       });
     }
 
+    
+    
+    
+    
     function validateForm() {
       clearErrorMessages();
       const name = document.getElementsByName("name")[0].value.trim();

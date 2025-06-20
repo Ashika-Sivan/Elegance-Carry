@@ -67,6 +67,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
  <script>
+
   document.getElementById('editCategoryForm').addEventListener('submit', async function(e) {
     e.preventDefault();
     const form = e.target;
@@ -102,7 +103,7 @@
       } else {
         Swal.fire({
           title: 'Error!',
-          text: result.error || 'Something went wrong',
+          text:  result.message||result.error||'Something went wrong',
           icon: 'error',
           confirmButtonText: 'OK'
         });
@@ -117,6 +118,9 @@
       });
     }
   });
+
+
+
 </script> 
  
 

@@ -109,10 +109,12 @@ const editCategory = async (req, res) => {
             });
         }
 
-        const existingCategory = await Category.findOne({
-            name: categoryName,
-            _id: { $ne: categoryId },
-        });
+      const existingCategory = await Category.findOne({
+        name: { $regex: new RegExp(`^${categoryName}$`, 'i') }, 
+        _id: { $ne: categoryId },
+    });
+
+    
 
         if (existingCategory) {
             return res.status(HttpStatus.BAD_REQUEST).json({
