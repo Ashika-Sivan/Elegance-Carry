@@ -27,11 +27,17 @@ router.patch("/creditWallet",userAuth,userController.creditWallet)
 router.get('/about',userController.loadAboutPage)
 
 
-router.get('/auth/google',passport.authenticate('google',{scope:['profile','email']}))
-router.get('/auth/google/callback',passport.authenticate('google',{failureRedirect:"/signup"}),(req,res)=>{
-    req.session.user = req.user._id
-    res.redirect('/')
-});
+router.get('/auth/google', passport.authenticate('google', { scope: ['profile', 'email'] }));
+
+router.get(
+  '/auth/google/callback',
+  passport.authenticate('google', { failureRedirect: '/signup?googleSignup=error' }),
+  (req, res) => {
+    const { status } = req.authInfo || {};
+    res.redirect(`/signup?googleSignup=${status}`);
+  }
+);
+
 
 router.get("/login",userController.loadLogin)
 router.post("/login",userController.login);  
