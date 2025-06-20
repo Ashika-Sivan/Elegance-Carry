@@ -26,20 +26,11 @@ router.post("/resend-otp",userController.resendOtp);
 router.patch("/creditWallet",userAuth,userController.creditWallet)
 router.get('/about',userController.loadAboutPage)
 
-
-router.get('/auth/google', passport.authenticate('google', { scope: ['profile', 'email'] }));
-router.get(
-  '/auth/google/callback',
-  passport.authenticate('google', { failureRedirect: '/signup?googleSignup=error' }),
-  (req, res) => {
-    const { status } = req.authInfo || {};
-    if (status === 'success') {
-      res.redirect('/');
-    } else {
-      res.redirect(`/signup?googleSignup=${status}`);
-    }
-  }
-);
+router.get('/auth/google',passport.authenticate('google',{scope:['profile','email']}))
+router.get('/auth/google/callback',passport.authenticate('google',{failureRedirect:"/signup"}),(req,res)=>{
+    req.session.user = req.user._id
+    res.redirect('/')
+});
 
 
 router.get("/login",userController.loadLogin)

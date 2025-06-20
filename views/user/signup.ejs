@@ -118,7 +118,6 @@
             <div class="signup-form-section">
                 <h3 class="text-center">Create Your Account</h3>
                 <form id="signform" method="post" action="/signup">
-                    <!-- Form fields remain unchanged -->
                     <div class="mb-3">
                         <label for="fullName" class="form-label">Full Name</label>
                         <input type="text" class="form-control" id="fullName" name="name" placeholder="Enter full name">
@@ -144,6 +143,7 @@
                         </div>
                         <div class="text-danger small" id="error4"></div>
                     </div>
+                    
                     <div class="mb-3 position-relative">
                         <label for="cPassword" class="form-label">Confirm Password</label>
                         <div class="input-group">
@@ -154,13 +154,16 @@
                         </div>
                         <div class="text-danger small" id="error5"></div>
                     </div>
+
                     <div class="form-group">
                         <label for="referralCode">Referral Code (Optional)</label>
                         <input type="text" id="referralCode" name="referralCode" placeholder="Enter referral code" maxlength="6">
                         <small class="form-text text-muted">Enter a friend's referral code to earn bonus credits</small>
                     </div>
+
                     <label for="referralCode">Referral Code (Optional)</label>
                     <input type="text" name="referralCode" placeholder="Enter referral code">
+
                     <% if (locals.message && message.length > 0) { %>
                         <div class="alert alert-danger text-center"><%= message %></div>
                     <% } %>
@@ -170,8 +173,9 @@
                     <p>or sign up with</p>
                     <div class="social-signup">
                         <a href="/auth/google" id="googleSignup">
-                            <i class="fa-brands fa-google"></i>
-                        </a>
+                            <i class="fa-brands fa-google" ></i>
+                            <!-- <img src="/img/googlesign.webp" alt="Google Login" /> -->
+                          </a>
                     </div>
                 </div>
                 <div class="login-link">
@@ -184,44 +188,19 @@
         </div>
     </div>
 
+
     <script>
+     
         document.addEventListener("DOMContentLoaded", function () {
             const urlParams = new URLSearchParams(window.location.search);
             const googleSignup = urlParams.get('googleSignup');
             
-            if (googleSignup) {
-                let title, text, icon, confirmButtonText, redirectUrl;
-                if (googleSignup === 'success') {
-                    title = 'Welcome!';
-                    text = 'Your account has been created successfully with Google!';
-                    icon = 'success';
-                    confirmButtonText = 'Get Started';
-                    redirectUrl = '/'; 
-                } else if (googleSignup === 'exists') {
-                    title = 'Account Exists';
-                    text = 'You already have an account. Please log in to continue.';
-                    icon = 'info';
-                    confirmButtonText = 'Go to Login';
-                    redirectUrl = '/login';
-                } else if (googleSignup === 'blocked') {
-                    title = 'Account Blocked';
-                    text = 'Your account has been blocked. Please contact support.';
-                    icon = 'error';
-                    confirmButtonText = 'OK';
-                    redirectUrl = '/signup';
-                } else {
-                    title = 'Error';
-                    text = 'An error occurred during Google signup. Please try again.';
-                    icon = 'error';
-                    confirmButtonText = 'OK';
-                    redirectUrl = '/signup';
-                }
-
+            if (googleSignup === 'success') {
                 Swal.fire({
-                    title: title,
-                    text: text,
-                    icon: icon,
-                    confirmButtonText: confirmButtonText,
+                    title: 'Welcome!',
+                    text: 'Your account has been created successfully with Google!',
+                    icon: 'success',
+                    confirmButtonText: 'Get Started',
                     confirmButtonColor: '#ff3f6c',
                     allowOutsideClick: false,
                     customClass: {
@@ -232,12 +211,13 @@
                         const url = new URL(window.location);
                         url.searchParams.delete('googleSignup');
                         window.history.replaceState({}, document.title, url);
-                        window.location.href = redirectUrl;
+                        
+                        // Optionally redirect to dashboard or home page
+                        // window.location.href = '/dashboard';
                     }
                 });
             }
 
-            // Remainder of the script (form validation, referral code, togglePassword) unchanged
             const signform = document.getElementById("signform");
             const nameid = document.getElementById("fullName");
             const emailid = document.getElementById("email");
@@ -250,17 +230,20 @@
             const error4 = document.getElementById("error4");
             const error5 = document.getElementById("error5");
 
+
             function validateName() {
-                const nameval = nameid.value.trim();
-                const namepattern = /^[A-Za-z]+(?: [A-Za-z]+)*$/;
-                if (!namepattern.test(nameval)) {
-                    error1.innerHTML = "Name must be at least 3 characters and contain only letters and spaces";
-                    nameid.style.borderColor = "red";
-                } else {
-                    error1.innerHTML = "";
-                    nameid.style.borderColor = "green";
-                }
-            }
+            const nameval = nameid.value.trim();
+            const namepattern = /^[A-Za-z]+(?: [A-Za-z]+)*$/;
+
+            if (!namepattern.test(nameval)) {
+          error1.innerHTML = "Name must be at least 3 characters and contain only letters and spaces";
+           nameid.style.borderColor = "red";
+    } else {
+        error1.innerHTML = "";
+        nameid.style.borderColor = "green";
+    }
+}
+
 
             function validateEmail() {
                 const emailval = emailid.value.trim();
@@ -307,126 +290,148 @@
                     e.preventDefault();
                 }
             });
-
-            function togglePassword(inputId, iconId) {
-                const passwordField = document.getElementById(inputId);
-                const icon = document.getElementById(iconId);
-                if (passwordField.type === "password") {
-                    passwordField.type = "text";
-                    icon.classList.remove("fa-eye");
-                    icon.classList.add("fa-eye-slash");
-                } else {
-                    passwordField.type = "password";
-                    icon.classList.remove("fa-eye-slash");
-                    icon.classList.add("fa-eye");
-                }
-            }
-
-            const referralCodeInput = document.getElementById('referralCode');
-            let validationTimeout;
-
-            if (referralCodeInput) {
-                const statusContainer = document.createElement('div');
-                statusContainer.style.marginTop = '5px';
-                referralCodeInput.parentNode.appendChild(statusContainer);
-
-                const loadingSpinner = document.createElement('span');
-                loadingSpinner.innerHTML = '⟳';
-                loadingSpinner.style.display = 'none';
-                loadingSpinner.style.marginRight = '5px';
-                loadingSpinner.className = 'loading-spinner';
-                statusContainer.appendChild(loadingSpinner);
-
-                const style = document.createElement('style');
-                style.innerHTML = `
-                    .loading-spinner {
-                        display: inline-block;
-                        animation: spin 1s linear infinite;
-                    }
-                    @keyframes spin {
-                        0% { transform: rotate(0deg); }
-                        100% { transform: rotate(360deg); }
-                    }
-                    .valid-code {
-                        color: green;
-                        font-weight: bold;
-                    }
-                    .invalid-code {
-                        color: red;
-                    }
-                    .swal-custom-popup {
-                        font-family: "Nunito Sans", sans-serif !important;
-                    }
-                `;
-                document.head.appendChild(style);
-
-                const statusMessage = document.createElement('span');
-                statusMessage.style.fontSize = '12px';
-                statusContainer.appendChild(statusMessage);
-
-                function verifyReferralCode(code) {
-                    if (code.length !== 6) return;
-                    loadingSpinner.style.display = 'inline-block';
-                    statusMessage.textContent = 'Checking...';
-                    statusMessage.style.color = 'gray';
-                    fetch('/verify-referral', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify({ referralCode: code })
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        loadingSpinner.style.display = 'none';
-                        if (data.valid) {
-                            statusMessage.textContent = `Valid code! You and ${data.referrerName || 'your friend'} will receive bonus credits.`;
-                            statusMessage.className = 'valid-code';
-                            referralCodeInput.style.borderColor = 'green';
-                        } else {
-                            statusMessage.textContent = 'Invalid referral code.';
-                            statusMessage.className = 'invalid-code';
-                            referralCodeInput.style.borderColor = 'red';
-                        }
-                    })
-                    .catch(error => {
-                        loadingSpinner.style.display = 'none';
-                        statusMessage.textContent = 'Error checking code. You can still submit the form.';
-                        statusMessage.style.color = 'gray';
-                        console.error('Error:', error);
-                    });
-                }
-
-                referralCodeInput.addEventListener('input', function() {
-                    this.value = this.value.toUpperCase();
-                    clearTimeout(validationTimeout);
-                    const code = this.value.trim();
-                    if (code === '') {
-                        loadingSpinner.style.display = 'none';
-                        statusMessage.textContent = '';
-                        statusMessage.className = '';
-                        this.style.borderColor = '';
-                        return;
-                    }
-                    if (!/^[A-Z0-9]*$/.test(code)) {
-                        statusMessage.textContent = 'Only letters and numbers allowed';
-                        statusMessage.className = 'invalid-code';
-                        return;
-                    }
-                    if (code.length === 6) {
-                        validationTimeout = setTimeout(() => {
-                            verifyReferralCode(code);
-                        }, 500);
-                    } else {
-                        loadingSpinner.style.display = 'none';
-                        statusMessage.textContent = 'Referral code must be 6 characters';
-                        statusMessage.style.color = 'gray';
-                        statusMessage.className = '';
-                    }
-                });
-            }
         });
+
+        function togglePassword(inputId, iconId) {
+        const passwordField = document.getElementById(inputId);
+        const icon = document.getElementById(iconId);
+        if (passwordField.type === "password") {
+            passwordField.type = "text";
+            icon.classList.remove("fa-eye");
+            icon.classList.add("fa-eye-slash");
+        } else {
+            passwordField.type = "password";
+            icon.classList.remove("fa-eye-slash");
+            icon.classList.add("fa-eye");
+        }
+    }
+
+
+document.addEventListener('DOMContentLoaded', function() {
+  const referralCodeInput = document.getElementById('referralCode');
+  let validationTimeout;
+  
+  if (referralCodeInput) {
+    const statusContainer = document.createElement('div');
+    statusContainer.style.marginTop = '5px';
+    referralCodeInput.parentNode.appendChild(statusContainer);
+    
+    const loadingSpinner = document.createElement('span');
+    loadingSpinner.innerHTML = '⟳';
+    loadingSpinner.style.display = 'none';
+    loadingSpinner.style.marginRight = '5px';
+    loadingSpinner.className = 'loading-spinner';
+    statusContainer.appendChild(loadingSpinner);
+    
+
+    const style = document.createElement('style');
+    style.innerHTML = `
+      .loading-spinner {
+        display: inline-block;
+        animation: spin 1s linear infinite;
+      }
+      @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+      .valid-code {
+        color: green;
+        font-weight: bold;
+      }
+      .invalid-code {
+        color: red;
+      }
+      .swal-custom-popup {
+        font-family: "Nunito Sans", sans-serif !important;
+      }
+    `;
+    document.head.appendChild(style);
+    
+    const statusMessage = document.createElement('span');
+    statusMessage.style.fontSize = '12px';
+    statusContainer.appendChild(statusMessage);
+    
+ 
+    function verifyReferralCode(code) {
+      if (code.length !== 6) return;
+      
+
+      loadingSpinner.style.display = 'inline-block';
+      statusMessage.textContent = 'Checking...';
+      statusMessage.style.color = 'gray';
+      
+     
+      fetch('/verify-referral', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ referralCode: code })
+      })
+      .then(response => response.json())
+      .then(data => {
+        loadingSpinner.style.display = 'none';
+        
+        if (data.valid) {
+          statusMessage.textContent = `Valid code! You and ${data.referrerName || 'your friend'} will receive bonus credits.`;
+          statusMessage.className = 'valid-code';
+          referralCodeInput.style.borderColor = 'green';
+        } else {
+          statusMessage.textContent = 'Invalid referral code.';
+          statusMessage.className = 'invalid-code';
+          referralCodeInput.style.borderColor = 'red';
+        }
+      })
+      .catch(error => {
+        loadingSpinner.style.display = 'none';
+        statusMessage.textContent = 'Error checking code. You can still submit the form.';
+        statusMessage.style.color = 'gray';
+        console.error('Error:', error);
+      });
+    }
+    
+   
+    referralCodeInput.addEventListener('input', function() {
+      this.value = this.value.toUpperCase();
+      
+ 
+      clearTimeout(validationTimeout);
+      
+      const code = this.value.trim();
+   
+      if (code === '') {
+        loadingSpinner.style.display = 'none';
+        statusMessage.textContent = '';
+        statusMessage.className = '';
+        this.style.borderColor = '';
+        return;
+      }
+      
+    
+      if (!/^[A-Z0-9]*$/.test(code)) {
+        statusMessage.textContent = 'Only letters and numbers allowed';
+        statusMessage.className = 'invalid-code';
+        return;
+      }
+      
+     
+      if (code.length === 6) {
+        validationTimeout = setTimeout(() => {
+          verifyReferralCode(code);
+        }, 500);
+      } else {
+        loadingSpinner.style.display = 'none';
+        statusMessage.textContent = 'Referral code must be 6 characters';
+        statusMessage.style.color = 'gray';
+        statusMessage.className = '';
+      }
+    });
+  }
+});
+  
+    
     </script>
-    <script src="https://kit.fontawesome.com/your-kit-code.js" crossorigin="anonymous"></script>
+
 </body>
 </html>
+<script src="https://kit.fontawesome.com/your-kit-code.js" crossorigin="anonymous"></script>
