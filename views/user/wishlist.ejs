@@ -563,7 +563,7 @@
                                         <div class="product-card position-relative">
                                             <!-- Product image -->
                                             <div class="product-img-wrap position-relative">
-                                                <a href="/product/<%= product._id %>" class="product-img">
+                                                <a href="/productDetails?id=<%= product._id %>" class="product-img">
                                                     <% if (product.productImage && product.productImage.length > 0) { %>
                                                         <img src="/img/<%= product.productImage[0] %>" alt="<%= product.productName %>">
                                                     <% } else { %>
@@ -731,6 +731,7 @@ function removeFromWishlist(productId) {
 
 
 function addToCart(productId) {
+    // Step 1: Add to cart
     fetch('/cart', {
         method: 'POST',
         headers: {
@@ -741,12 +742,34 @@ function addToCart(productId) {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            Swal.fire({
-                title: "Success!",
-                text: "Product added to cart!",
-                icon: "success",
-                showConfirmButton: false,
-                timer: 2000
+           
+            fetch('/wishlist', {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ productId: productId })
+            })
+            .then(res => res.json())
+            .then(wishlistData => {
+                if (wishlistData.success) {
+                    Swal.fire({
+                        title: "Success!",
+                        text: "Product moved to cart and removed from wishlist.",
+                        icon: "success",
+                        showConfirmButton: false,
+                        timer: 2000
+                    }).then(() => {
+                        window.location.reload();
+                    });
+                } else {
+                    Swal.fire({
+                        title: "Carted, but...",
+                        text: "Product added to cart, but failed to remove from wishlist.",
+                        icon: "warning",
+                        confirmButtonText: "OK"
+                    });
+                }
             });
         } else {
             Swal.fire({
@@ -767,6 +790,8 @@ function addToCart(productId) {
         });
     });
 }
+
+
 
 function showWishlistSuccess() {
     Swal.fire({

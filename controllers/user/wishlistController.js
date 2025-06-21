@@ -79,7 +79,7 @@ const updateWishlist = async (req, res) => {
 
 
     const product=await Product.findById(productId);
-    if(!product&&product.isBlocked){
+    if(!product||product.isBlocked){
       return res.json({
         success:false,
         message:Messages.PRODUCT_NOT_FOUND

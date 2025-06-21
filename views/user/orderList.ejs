@@ -243,6 +243,33 @@
         cursor: pointer;
         font-weight: 600;
     }
+    .pagination {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+.pagination a, .pagination span {
+    padding: 6px 12px;
+    border: 1px solid #ccc;
+    text-decoration: none;
+    color: #333;
+    border-radius: 4px;
+}
+
+.pagination .active {
+    background-color: #ff3f6c;
+    color: white;
+    border-color: #ff3f6c;
+}
+
+.pagination .disabled {
+    color: #999;
+    pointer-events: none;
+    border-color: #ddd;
+}
+
 
     /* Responsive Styles */
     @media (max-width: 1024px) {
@@ -479,6 +506,31 @@
             <% } else { %>
                 <p>No orders found.</p>
             <% } %>
+            <!-- Pagination -->
+        <% if (totalPage > 1) { %>
+        <div class="pagination">
+        <% if (currentPage > 1) { %>
+            <a href="?page=<%= currentPage - 1 %>">&laquo; Prev</a>
+        <% } else { %>
+            <span class="disabled">&laquo; Prev</span>
+        <% } %>
+
+        <% for (let i = 1; i <= totalPage; i++) { %>
+            <% if (i === currentPage) { %>
+                <span class="active"><%= i %></span>
+            <% } else { %>
+                <a href="?page=<%= i %>"><%= i %></a>
+            <% } %>
+        <% } %>
+
+        <% if (currentPage < totalPage) { %>
+            <a href="?page=<%= currentPage + 1 %>">Next &raquo;</a>
+        <% } else { %>
+            <span class="disabled">Next &raquo;</span>
+        <% } %>
+    </div>
+<% } %>
+
         </div>
     </main>
 </div>
@@ -512,7 +564,7 @@
 </div>
 
 <script>
-// Cancel Item Function
+
 function cancelOrderItem(orderId, itemId, refundAmount) {
     Swal.fire({
         title: 'Cancel Item',

@@ -136,12 +136,6 @@ const getAllProducts = async (req, res) => {
             .exec();
 
         const count = await Product.countDocuments(query);
-        //    let sum=0
-        // const productSum=productData.forEach((item)=>{
-        //     sum+=item.salePrice
-
-        // })
-       
 
         const category = await Category.find({ isListed: true });
        
@@ -155,8 +149,9 @@ const getAllProducts = async (req, res) => {
                 totalPages: Math.ceil(count / limit),
                 cat: category,
                 brand: brand,
-                search: search
-                // sum
+                search: search,
+                
+             
                 // findCategory,
             
             });

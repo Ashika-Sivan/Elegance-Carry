@@ -534,31 +534,33 @@ const login = async (req, res) => {
   try {
     const { email, password } = req.body;
     const findUser = await User.findOne({ isAdmin: false, email })
+    
     if (!findUser) {
-      return res.render("login", { message:Messages.USER_NOT_FOUND })
-
+      return res.render("login", { message: Messages.USER_NOT_FOUND })
     }
+    
     if (findUser.isBlocked) {
-      return res.render("login", { message:Messages. USER_BLOCKED_BY_ADMIN })
+      return res.render("login", { message: Messages.USER_BLOCKED_BY_ADMIN })
     }
 
     const passwordMatch = await bcrypt.compare(password, findUser.password)
     if (!passwordMatch) {
       return res.render("login", { message: "incorrect password" })
-
     }
+
     req.session.user = findUser._id;
-    req.session.isAuthenticated=true
+    req.session.isAuthenticated = true;
     console.log("Session saved user:", req.session.user);
-    res.redirect("/")
+    
+   
+    return res.render("login", { success: 'true' });
 
   } catch (error) {
     console.error("login error", error);
     res.render("login", { message: "login failed.please try again" })
-
-
   }
 }
+
 
 const logout = async (req, res) => {
   try {
@@ -568,7 +570,7 @@ const logout = async (req, res) => {
         return res.redirect("/pageNotFound")
 
       }
-      return res.redirect("/login")
+      return res.redirect("/login?logout=success")
     })
 
 
@@ -579,6 +581,9 @@ const logout = async (req, res) => {
 
   }
 }
+
+
+
 
 const loadShoppingPage = async (req, res) => {
   try {

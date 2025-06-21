@@ -13,6 +13,9 @@
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css"
     />
+    <!-- SweetAlert2 CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/sweetalert2/11.10.5/sweetalert2.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/sweetalert2/11.10.5/sweetalert2.min.css">
    <style>
   .fa-google {
     font-size: 30px;
@@ -192,8 +195,23 @@
         </div>
       </div>
     </div>
-  </body>
-</html>
+
+    <%if(locals.success && success === 'true'){%>
+    <script>
+      Swal.fire({
+        title: 'Login Successful!',
+        text: 'Welcome back! You will be redirected to the home page.',
+        icon: 'success',
+        showConfirmButton: false,
+        timer: 1000,
+        timerProgressBar: true,
+        allowOutsideClick: false
+      }).then((result) => {
+        window.location.href = '/';
+      });
+    </script>
+    <%}%>
+
     <script>
       const emailid = document.getElementById("email");
       const passid = document.getElementById("password");
@@ -241,7 +259,6 @@
         });
       });
 
-
       document.getElementById("togglePassword").addEventListener("click", function() {
         const passwordField = document.getElementById("password");
         if (passwordField.type === "password") {
@@ -256,4 +273,6 @@
       });
     </script>
 
-<script src="https://kit.fontawesome.com/your-kit-code.js" crossorigin="anonymous"></script>
+    <script src="https://kit.fontawesome.com/your-kit-code.js" crossorigin="anonymous"></script>
+  </body>
+</html>

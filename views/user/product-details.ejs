@@ -10,6 +10,10 @@
       font-family: 'Roboto', sans-serif;
       background-color: #f8f9fa;
     }
+    #toast-container > .toast-warning {
+  background-color: #ffeeba !important;
+  color: black !important;
+}
 
     .breadcrumb-container {
       background-color: #343a40;
@@ -459,6 +463,8 @@
         toastr.warning('Maximum available quantity reached');
       }
     }
+
+
 
     function decreaseQuantity() {
       const quantityInput = document.getElementById("quantity");

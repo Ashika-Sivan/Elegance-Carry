@@ -311,10 +311,16 @@ const verifyPayment = async (req, res) => {
 
 const loadOrderListPage=async(req,res)=>{
     try {
+        const page=parseInt(req.query.page)||1
+        const limit=5
+        const skip=(page-1)*limit
         const userId=req.session.user
         if(!userId){
             return res.redirect("/login");
         }
+
+        const totalOrder=await Order.countDocuments({user:userId})
+        const totalPage=Math.ceil(totalOrder/limit)
         const orders=await  Order.find({user:userId})
             .populate({
                 path:"orderedItems.product",
@@ -322,7 +328,12 @@ const loadOrderListPage=async(req,res)=>{
                 select:"productName productImage"
             })
             .sort({createdAt:-1});
-            res.render("orderList",{orders})
+            res.render("orderList",{
+                orders,
+                currentPage:page,
+                totalOrder,
+                totalPage
+            })
         
     } catch (error) {
         res.status(HttpStatus.INTERNAL_SERVER_ERROR).render("errorPage", { message: Messages.INTERNAL_SERVER_ERROR});
