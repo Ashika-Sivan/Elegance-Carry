@@ -18,7 +18,7 @@ router.get("/",userController.loadHomePage)
 router.get("/shop",userController.loadShoppingPage)
 
 
-router.get("/signup",userController.loadSignup)
+router.get("/signup",  userController.loadSignup)
 // router.get("/shop",userController.loadShopping)//because we have to render thats why we give get
 router.post("/signup",userController.signup)
 router.post("/verify-otp",userController.verifyOtp);

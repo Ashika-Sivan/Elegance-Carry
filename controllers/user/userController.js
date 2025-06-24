@@ -21,8 +21,12 @@ const pageNotFound = async (req, res, next) => {
 
 const loadSignup = async (req, res) => {
 try {
-  return res.render("signup")
-  
+
+  if(req.session.user) {
+    res.redirect('/');
+  } else {
+    return res.render("signup")
+  }
 } catch (error) {
   return res.status(500).json({message:Messages.INTERNAL_SERVER_ERROR})
   
