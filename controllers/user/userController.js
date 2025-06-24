@@ -49,7 +49,7 @@ const loadHomePage = async (req, res) => {
    
     if (userId) {
       user = await User.findById(userId);
-      console.log(user)
+      // console.log(user)
       
       if (user && user.isBlocked) {
         req.session.destroy((err) => {
@@ -318,7 +318,7 @@ const verifyOtp = async (req, res) => {
     });
 
     await saveUserData.save();
-    console.log("New user created:", saveUserData._id);
+    // console.log("New user created:", saveUserData._id);
 
 
     if (user.referredBy) {
@@ -356,7 +356,7 @@ const verifyOtp = async (req, res) => {
         { $push: { redeemedUsers: saveUserData._id } }
       );
 
-      console.log("Referral bonus credited to referrer:", user.referredBy);
+      // console.log("Referral bonus credited to referrer:", user.referredBy);
     }
 
    
@@ -455,7 +455,7 @@ const creditWallet = async (userId, amount, description) => {
 const resendOtp = async (req, res) => {
   try {
     const { email } = req.session.userData;
-    console.log("email-------------", email);
+    // console.log("email-------------", email);
 
     if (!email) {
       return res.status(HttpStatus.BAD_REQUEST).json({ success: false, message: Messages.EMAIL_NOT_FOUND })
@@ -469,7 +469,7 @@ const resendOtp = async (req, res) => {
     req.session.userOtp = otp;
     req.session.otpExpiry = Date.now() + 5 * 60 * 1000
 
-    console.log('the resend otp is ', otp);
+    // console.log('the resend otp is ', otp);
     res.status(HttpStatus.OK).json({ success: true, message: Messages.OTP_SUCCESS })
 
   } catch (error) {
@@ -554,7 +554,7 @@ const login = async (req, res) => {
 
     req.session.user = findUser._id;
     req.session.isAuthenticated = true;
-    console.log("Session saved user:", req.session.user);
+    // console.log("Session saved user:", req.session.user);
     
    
     return res.render("login", { success: 'true' });
@@ -592,7 +592,7 @@ const logout = async (req, res) => {
 const loadShoppingPage = async (req, res) => {
   try {
     const user = req.session.user;
-    console.log(req.session.user)
+    // console.log(req.session.user)
     const userData = await User.findById(user);
     const categories = await Category.find({ isListed: true });
     const categoryIds = categories.map(category => category._id.toString());

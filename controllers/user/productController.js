@@ -37,7 +37,7 @@ const productDetails = async (req, res) => {
                 inWishlist=wishlist.products.some(item=>item.productId.toString()===productId)
             }
         }
-        console.log("--------------",product.brand.name);
+        // console.log("--------------",product.brand.name);
         
         const category=await Category.find()
 

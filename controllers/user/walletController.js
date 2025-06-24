@@ -17,13 +17,9 @@ const razorpay = new Razorpay({
     key_secret: process.env.RAZORPAY_KEY_SECRET,
   });
 
-
-
-
 const getWalletPage = async (req, res) => {
     try {
         if (!req.session.user) {
-            // console.log('User not found in session');Q
             return res.redirect('/login');
         }
         
