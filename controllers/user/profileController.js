@@ -61,7 +61,7 @@ const sendVerificationEmail=async(email,otp)=>{
 
 
 
-const forgotEmailValid=async(req,res)=>{
+const forgotEmailValid=async(req,res)=>{//store in the temporary session
     try {
         const {email}=req.body;
         const findUser=await User.findOne({email:email});
@@ -123,13 +123,13 @@ const getForgotPassPage=async(req,res)=>{
 }
 
 
-const verifyForgotPassOtp = async (req, res) => {
+const verifyForgotPassOtp = async (req, res) => {//otp verification
     console.log('--------forgot password OTP verification');
     
     try {
         const enteredOtp = req.body.otp;
         
-        if (!req.session.userOtp) {
+        if (!req.session.userOtp) {//sended otp
             return res.json({
                 success: false,
                 message: "No OTP found. Please request a new verification code."

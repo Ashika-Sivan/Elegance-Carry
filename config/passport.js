@@ -11,8 +11,8 @@ passport.use(
       {
         clientID: process.env.GOOGLE_CLIENT_ID,//provided by gogl ecloud
         clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-        // callbackURL: 'https://elegancecarry.store/auth/google/callback'
-        callbackURL:'http://localhost:3000/auth/google/callback'
+        callbackURL: 'https://elegancecarry.store/auth/google/callback'
+        // callbackURL:'http://localhost:3000/auth/google/callback' 
       },
       async (accessToken, refreshToken, profile, done) => {//access google api,to get new accesstoken ,contail logged in user google profile data,callback to tell passport wheather auth successd or failed
         try {//checking existing user
