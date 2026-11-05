@@ -331,7 +331,7 @@ body {
                   </span>
                 <% } %>
                 <a href="/productDetails?id=<%= product._id %>">
-                  <img src="/img/<%= product.productImage && product.productImage[0] %>" class="card-img-top img-fluid" alt="<%= product.productName %>">
+                  <img src="<%= getImageUrl(product.productImage && product.productImage[0]) %>" class="card-img-top img-fluid" alt="<%= product.productName %>">
                 </a>
                 <div class="card-body">
                   <h5 class="card-title"><%= product.productName %></h5>
@@ -377,7 +377,7 @@ body {
                   <% } %>
                   <a href="/productDetails?id=<%= product._id %>">
                     <img 
-                      src="/img/<%= product.productImage[0] || 'placeholder.jpg' %>" 
+                      src="<%= getImageUrl(product.productImage[0]) %>" 
                       class="card-img-top img-fluid" 
                       alt="<%= product.productName %>">
                   </a>
@@ -446,7 +446,7 @@ function addToCart(productId) {
               <span class="wishlist-btn position-absolute top-0 end-0 p-2">❤️</span>
               <a href="/productDetails?id=<%= product._id %>">
                 <img 
-                  src="/img/<%= product.productImage && product.productImage[0] %>" 
+                  src="<%= getImageUrl(product.productImage && product.productImage[0]) %>" 
                   class="card-img-top"
                   alt="<%= product.productName %>"
                 >

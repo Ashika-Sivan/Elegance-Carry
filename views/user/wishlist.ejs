@@ -565,7 +565,7 @@
                                             <div class="product-img-wrap position-relative">
                                                 <a href="/productDetails?id=<%= product._id %>" class="product-img">
                                                     <% if (product.productImage && product.productImage.length > 0) { %>
-                                                        <img src="/img/<%= product.productImage[0] %>" alt="<%= product.productName %>">
+                                                        <img src="<%= getImageUrl(product.productImage[0]) %>" alt="<%= product.productName %>">
                                                     <% } else { %>
                                                         <img src="/img/default.jpg" alt="No Image Available">
                                                     <% } %>

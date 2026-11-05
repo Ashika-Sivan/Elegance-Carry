@@ -269,7 +269,7 @@
                 <% order.orderedItems.forEach(item => { %>
                   <% if (item.product) { %>
                     <div class="flex items-center gap-3 mb-2">
-        <img src="/img/<%= item.product.productImage ? item.product.productImage[0] : 'default.jpg' %>"
+        <img src="<%= getImageUrl(item.product.productImage ? item.product.productImage[0] : null) %>"
      alt="<%= item.product.productName || 'Unknown Product' %>" class="rounded">
                       <div class="flex flex-col">
                         <span><%= item.product.productName || 'Product Removed' %> x <%= item.quantity %></span>

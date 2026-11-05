@@ -288,7 +288,7 @@
                         <% order.orderedItems.forEach(item=> { %>
                             <div class="item-card">
                                 <div class="item-image">
-                                    <img src="/img/<%= item.product.productImage ? item.product.productImage[0] : 'default.png' %>"
+                                    <img src="<%= getImageUrl(item.product.productImage ? item.product.productImage[0] : null) %>"
                                         alt="<%= item.product.productName %>">
                                 </div>
                                 <div class="item-details">

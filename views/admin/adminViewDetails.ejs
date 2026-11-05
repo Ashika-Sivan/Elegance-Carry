@@ -280,7 +280,7 @@
                     <% order.orderedItems.forEach(item => { %>
                     <tr>
                         <td>
-                            <img src="/img/<%= item.product.productImage[0] %>" 
+                            <img src="<%= getImageUrl(item.product.productImage ? item.product.productImage[0] : null) %>" 
                                 alt="<%= item.product.productName %>" 
                                 class="product-image">
                         </td>

@@ -589,7 +589,7 @@
           <% } %>
           <div class="product-card-content">
             <a href="/productDetails?id=<%= product._id %>">
-              <img src="/img/<%= product.productImage && product.productImage[0] %>" alt="<%= product.productName %>">
+              <img src="<%= getImageUrl(product.productImage && product.productImage[0]) %>" alt="<%= product.productName %>">
             </a>
             <h5><%= product.productName %></h5>
             <p>₹<%= product.salePrice.toLocaleString('en-IN') %></p>

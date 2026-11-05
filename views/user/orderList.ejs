@@ -452,7 +452,7 @@
                                 <div class="order-items">
                                     <div class="order-image">
                                         <img
-                                            src="/img/<%= item.product.productImage ? item.product.productImage[0] : 'default.png' %>"
+                                            src="<%= getImageUrl(item.product.productImage ? item.product.productImage[0] : null) %>"
                                             alt="<%= item.product.productName %>"
                                         >
                                     </div>

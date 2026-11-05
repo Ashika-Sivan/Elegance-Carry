@@ -5,6 +5,7 @@ const User = require("../../models/userSchema")
 const fs = require("fs")
 const path = require("path");
 const sharp = require("sharp");//to resize images
+const cloudinary = require("../../config/cloudinary");
 const { log } = require("console");
 const mongoose=require('mongoose')
 const HttpStatus = require('../../enum/httpStatus');
@@ -51,28 +52,9 @@ const addProducts = async (req, res) => {
         const images = [];
         if (req.files && req.files.length > 0) {
             for (const file of req.files) {
-                try {
-                    const resizedFilename = `resized-${Date.now()}-${file.filename}`;
-                    const resizedImagePath = path.join('public', 'img', resizedFilename);
-
-                   
-                    await sharp(file.path)
-                        .resize(440, 440, {
-                            fit: 'contain',
-                            background: { r: 255, g: 255, b: 255, alpha: 1 }
-                        })
-                        .jpeg({ quality: 90 })
-                        .toFile(resizedImagePath);
-
-                    images.push(resizedFilename);
-
-                    await fs.unlink(file.path).catch(err => {
-                        console.warn(`Warning: Could not delete original file ${file.path}:`, err);
-                    });
-                } catch (error) {
-                    console.error(`Error processing image ${file.filename}:`, error);
-                   
-                }
+                // Cloudinary storage sets file.path to the hosted URL
+                const imageUrl = file.path || file.secure_url || file.url || file.filename;
+                images.push(imageUrl);
             }
         }
 
@@ -248,7 +230,7 @@ const editProduct = async (req, res) => {
       
         const images = [];
         if (req.files && req.files.length > 0) {
-            images.push(...req.files.map(file => file.filename));
+            images.push(...req.files.map(file => file.path || file.secure_url || file.url || file.filename));
         }
 
      
@@ -326,14 +308,26 @@ const deleteSingleImage = async (req, res) => {
         }
 
        
-        const imagePath = path.join(process.cwd(), "public", "img", imageNameToServer);
-        try {
-            if (fs.existsSync(imagePath)) {
-                fs.unlinkSync(imagePath);
+        if (imageNameToServer.startsWith("http://") || imageNameToServer.startsWith("https://")) {
+            // Attempt to remove from Cloudinary
+            try {
+                const parts = imageNameToServer.split("/");
+                const filenameWithExt = parts.pop();
+                const folder = parts.pop();
+                const publicId = `${folder}/${filenameWithExt.split(".")[0]}`;
+                await cloudinary.uploader.destroy(publicId);
+            } catch (cldErr) {
+                console.warn("Could not delete from Cloudinary:", cldErr);
             }
-        } catch (fsError) {
-            console.error("File system error:", fsError);
-     
+        } else {
+            const imagePath = path.join(process.cwd(), "public", "img", imageNameToServer);
+            try {
+                if (fs.existsSync(imagePath)) {
+                    fs.unlinkSync(imagePath);
+                }
+            } catch (fsError) {
+                console.error("File system error:", fsError);
+            }
         }
 
         return res.json({

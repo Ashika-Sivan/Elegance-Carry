@@ -840,7 +840,7 @@
                         <% cart.items.forEach((item) => { %>
                             <div class="order-item">
                                 <div class="order-image">
-                                    <img src="/img/<%= item.productId?.productImage?.[0] || 'default.png' %>"
+                                    <img src="<%= getImageUrl(item.productId?.productImage?.[0]) %>"
                                          alt="<%= item.productId?.productName || 'Product Image' %>">
                                 </div>
                                 <div class="order-details">

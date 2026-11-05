@@ -334,8 +334,8 @@
             <div class="main-image">
               <div class="zoom-lens"></div>
               <figure class="mb-3">
-                <img id="currentImage" src="/img/<%= product.productImage[0] %>" 
-                     data-zoom-image="/img/<%= product.productImage[0] %>" 
+                <img id="currentImage" src="<%= getImageUrl(product.productImage[0]) %>" 
+                     data-zoom-image="<%= getImageUrl(product.productImage[0]) %>" 
                      alt="Main Product Image"
                      onerror="this.src='/img/default-product.jpg'; console.error('Failed to load main image:', this.src)">
               </figure>
@@ -347,7 +347,7 @@
             <% product.productImage.forEach((image, index) => { %>
               <div class="thumbnail cursor-pointer"
                    onclick="switchImage('<%= image %>')">
-                <img src="/img/<%= image %>" alt="Thumbnail <%= index + 1 %>">
+                <img src="<%= getImageUrl(image) %>" alt="Thumbnail <%= index + 1 %>">
               </div>
             <% }); %>
           </div>
@@ -407,7 +407,7 @@
                 <div class="col">
                   <a href="/productDetails?id=<%= related._id %>" class="product-card h-100 text-decoration-none">
                     <div class="product-image position-relative">
-                      <img src="/img/<%= related.productImage[0] %>" alt="<%= related.productName %>" class="img-fluid" onerror="this.src='/img/default-product.jpg'">
+                      <img src="<%= getImageUrl(related.productImage[0]) %>" alt="<%= related.productName %>" class="img-fluid" onerror="this.src='/img/default-product.jpg'">
                       <div class="product-overlay d-flex align-items-center justify-content-center">
                         <button class="btn btn-primary">View Details</button>
                       </div>

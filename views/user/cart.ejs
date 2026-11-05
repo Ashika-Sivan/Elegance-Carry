@@ -188,7 +188,7 @@
             <% if (cart && cart.items.length > 0) { %>
                 <% cart.items.forEach(item => { %>
                     <div class="cart-item" id="cart-item-<%= item.productId._id %>">
-                        <img src="/img/<%= item.productId.productImage[0] %>" alt="<%=item.productId.productName%>">
+                        <img src="<%= getImageUrl(item.productId.productImage[0]) %>" alt="<%=item.productId.productName%>">
                         <div class="cart-item-details">
                             <div class="cart-item-title"><%= item.productId.productName %></div>
                             <div class="cart-item-price">₹<%= item.productId.salePrice %></div>

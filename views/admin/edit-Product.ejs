@@ -321,7 +321,7 @@
                             <% for(let i=0; i<product.productImage.length; i++) { %>
                                 <div class="image-container">
                                     <img class="rounded" style="width: 100px; height: 100px; object-fit: cover;"
-                                        src="/img/<%=product.productImage[i]%>" alt="Product image">
+                                        src="<%= getImageUrl(product.productImage[i]) %>" alt="Product image">
                                     <button type="button" class="btn btn-danger btn-sm mt-2"
                                         onclick="deleteSingleImage('<%=product.productImage[i]%>', '<%=product._id%>')">
                                         <i class="fas fa-trash"></i>

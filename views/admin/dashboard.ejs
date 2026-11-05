@@ -312,7 +312,7 @@
                                 <td><%= product.productName %></td>
                                 <td>
                                     <% if (product.productImage && product.productImage.length > 0) { %>
-                                        <img src="/img/<%= product.productImage[0] %>" alt="<%= product.productName %>" width="50" height="50">
+                                        <img src="<%= getImageUrl(product.productImage[0]) %>" alt="<%= product.productName %>" width="50" height="50">
                                     <% } else { %>
                                         <span>No Image</span>
                                     <% } %>
