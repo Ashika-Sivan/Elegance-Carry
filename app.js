@@ -55,14 +55,26 @@ app.use((req, res, next) => {
     next();
 });
 
+// Database connection middleware for serverless invocations
+app.use(async (req, res, next) => {
+    try {
+        await connectDB();
+    } catch (err) {
+        console.error("Database connection failure:", err);
+    }
+    next();
+});
+
 app.use('/', userRouter); 
 app.use('/admin', adminRouter); 
 app.use(errorHandler); 
 
+if (process.env.NODE_ENV !== 'production' && !process.env.VERCEL) {
+    const serverPort = PORT || 4000;
+    app.listen(serverPort, () => {
+        console.log(`server is running http://localhost:${serverPort}`);
+        console.log(`admin server is running in http://localhost:${serverPort}/admin/login`);
+    });
+}
 
-
-app.listen(process.env.PORT, () => {
-    console.log(`server is running http://localhost:${PORT}`);
-    console.log(`admin server is running in http://localhost:${PORT}/admin/login`);
-    
-});
+module.exports = app;
